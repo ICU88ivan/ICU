@@ -269,37 +269,47 @@
             </div>
           </div>
 
-          <!-- Рассчитанные показатели -->
+           <!-- Рассчитанные показатели (Спойлер) -->
           <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="calc_title">Рассчитанные показатели</h2>
-            
-            <div class="space-y-3 mb-6">
-              <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                <span class="text-gray-600" data-i18n="osm_lbl">Осмолярность плазмы:</span>
-                <span id="osmolality" class="font-bold text-lg">290 мосм/л</span>
-              </div>
-              <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                <span class="text-gray-600" data-i18n="tbw_lbl">Общая вода (TBW):</span>
-                <span id="totalWater" class="font-bold">42 л</span>
-              </div>
-              <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                <span class="text-gray-600" data-i18n="status_lbl">Статус тоничности:</span>
-                <span id="status" class="font-bold text-green-600">Норма</span>
-              </div>
-              <div class="flex justify-between items-center py-1">
-                <span class="text-gray-600" data-i18n="disorder_lbl">Тип нарушения:</span>
-                <span id="disorderType" class="font-bold text-gray-800 text-right max-w-[60%]">Не определен</span>
-              </div>
-            </div>
+            <details class="group marker:content-['']">
+              <summary class="flex justify-between items-center cursor-pointer list-none outline-none">
+                <h2 class="text-xl font-semibold text-gray-800" data-i18n="calc_title">Рассчитанные показатели</h2>
+                <!-- Иконка стрелочки -->
+                <span class="text-gray-500 transition-transform duration-300 group-open:rotate-180 no-print">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </summary>
+              
+              <!-- Содержимое спойлера -->
+              <div class="mt-4 pt-4 border-t border-gray-100">
+                <div class="space-y-3 mb-6">
+                  <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                    <span class="text-gray-600" data-i18n="osm_lbl">Осмолярность плазмы:</span>
+                    <span id="osmolality" class="font-bold text-lg">290 мосм/л</span>
+                  </div>
+                  <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                    <span class="text-gray-600" data-i18n="tbw_lbl">Общая вода (TBW):</span>
+                    <span id="totalWater" class="font-bold">42 л</span>
+                  </div>
+                  <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                    <span class="text-gray-600" data-i18n="status_lbl">Статус тоничности:</span>
+                    <span id="status" class="font-bold text-green-600">Норма</span>
+                  </div>
+                  <div class="flex justify-between items-center py-1">
+                    <span class="text-gray-600" data-i18n="disorder_lbl">Тип нарушения:</span>
+                    <span id="disorderType" class="font-bold text-gray-800 text-right max-w-[60%]">Не определен</span>
+                  </div>
+                </div>
 
-            <!-- Формула Геннари -->
-            <div class="note" style="margin: 0; padding: 10px;" id="formula_block">
-              <!-- Заполняется через JS -->
-            </div>
-
+                <!-- Формула Геннари -->
+                <div class="note" style="margin: 0; padding: 10px;" id="formula_block">
+                  <!-- Заполняется через JS -->
+                </div>
+              </div>
+            </details>
           </div>
-
-        </div>
 
         <!-- КОЛОНКА 3 -->
         <div class="lg:col-span-1 space-y-6">
