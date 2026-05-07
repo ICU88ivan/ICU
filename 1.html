@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Виды шока / Types of Shock</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px 10px; line-height: 1.35; color:#111; background-color: #fcfcfc;}
+    
+    /* Расширенный контейнер для лучшего заполнения экрана */
+    .container { max-width: 1440px; width: 96%; margin: 0 auto; background: #fff; padding: 20px 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); box-sizing: border-box; }
+    h1, h2, h3 { margin: 0.5em 0; color: #1a1a1a; }
+    
+    /* Переключатель языков */
+    .lang-switcher { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 20px; }
+    .lang-btn { cursor: pointer; padding: 8px 16px; border: 1px solid #0b57d0; background: #fff; color: #0b57d0; border-radius: 6px; font-weight: bold; font-size: 14px; transition: all 0.2s ease; }
+    .lang-btn:hover { background: #f0f4f9; }
+    .lang-btn.active { background: #0b57d0; color: #fff; }
+
+    /* Дизайн блока автора */
+    .author-card { display: flex; align-items: center; gap: 20px; background: #ffffff; border: 1px solid #e0e4e8; border-radius: 12px; padding: 24px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); transition: box-shadow 0.3s; }
+    .author-card:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+    .author-avatar { font-size: 3rem; background: #f0f4f9; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
+    .author-info h2 { margin: 0 0 8px 0; font-size: 1.3rem; }
+    .author-info p { margin: 4px 0; color: #4a4a4a; font-size: 0.95rem; }
+    .author-info a { color: #0b57d0; text-decoration: none; font-weight: 500; }
+    .author-info a:hover { text-decoration: underline; }
+
+    /* Таблицы и заметки */
+    .note { margin: 8px 0 18px; padding: 12px 16px; background:#f6f7f9; border:1px solid #e6e8ee; border-radius: 8px; }
+    table { border-collapse: collapse; width: 100%; margin: 14px 0 22px; font-size: 0.95rem; }
+    th, td { border: 1px solid #ddd; padding: 10px 12px; vertical-align: middle; }
+    th { background: #f2f4f7; font-weight: 700; color: #222; }
+    .center { text-align:center; }
+    .badge { font-weight:700; }
+    .wrap { overflow-x:auto; }
+    
+    /* Специфичные настройки для основной большой таблицы (чтобы влезала в экран) */
+    .main-table { font-size: 13px; } /* Уменьшенный шрифт */
+    .main-table th, .main-table td { padding: 8px 6px; } /* Уменьшенные отступы */
+    .main-table th { line-height: 1.2; }
+    .sub-text { font-size: 0.85em; font-weight: 400; color: #555; display: block; margin-top: 3px; }
+
+    /* Скрытие контента */
+    .lang-content { display: none; }
+    .lang-content.active { display: block; animation: fadeIn 0.4s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- Кнопки переключения языка -->
+  <div class="lang-switcher">
+    <button class="lang-btn active" id="btn-ru" onclick="switchLang('ru')">Русский</button>
+    <button class="lang-btn" id="btn-en" onclick="switchLang('en')">English</button>
+  </div>
+
+  <!-- РУССКАЯ ВЕРСИЯ -->
+  <div id="content-ru" class="lang-content active">
+    <!-- Автор -->
+    <div class="author-card">
+      <div class="author-avatar">👨‍⚕️</div>
+      <div class="author-info">
+        <h2>Об авторе</h2>
+        <p>Информация подготовлена: <strong>Бабковым Иваном Леонидовичем</strong> — врачом-анестезиологом-реаниматологом, сотрудником кафедры анестезиологии и реаниматологии с курсом ПК УО "БГМУ".</p>
+        <p>
+          Подробнее об авторе:
+          <a href="https://www.bsmu.by/personalii/babkov-ivan-leonidovich/?sphrase_id=325251" target="_blank" rel="noopener noreferrer">профиль на сайте БГМУ</a>.
+        </p>
+        <p>
+          <a href="mailto:i@ibabkow.ru" class="email-link" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0b57d0; margin-top: 4px;">
+            <img alt="Написать письмо" src="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27%230b57d0%27%3E%3Cpath%20d%3D%27M2%204V20C2%2021.1%202.9%2022%204%2022H20C21.1%2022%2022%2021.1%2022%2020V4C22%202.9%2021.1%202%2020%202H4C2.9%202%202%202.9%202%204ZM4%206L12%2012L20%206V20H4V6Z%27/%3E%3C/svg%3E" width="18" height="18" />
+            <span>i@ibabkow.ru</span>
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <h1>🫀 Виды шока и гемодинамические профили</h1>
+
+    <div class="note">
+      <div style="margin-bottom: 6px;"><b>Условные обозначения:</b></div>
+      <div>⬆️ — повышен | ⬇️ — снижен | ↔️ — норма | ⬆️⬆️ — значительно повышен | ⬇️⬇️ — значительно снижен</div>
+    </div>
+
+    <h2>📊 ОСНОВНАЯ ТАБЛИЦА</h2>
+    <div class="wrap">
+      <table class="main-table">
+        <thead>
+          <tr>
+            <th>Показатель</th>
+            <th class="center">Гиповолемический</th>
+            <th class="center">Кардиогенный</th>
+            <th class="center">Обструктивный<span class="sub-text">(ТЭЛА / тампонада)</span></th>
+            <th class="center">Септический<br>ранний</th>
+            <th class="center">Септический<br>поздний</th>
+            <th class="center">Анафилактический</th>
+            <th class="center">Нейрогенный</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>АД систолическое</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬆️ / ↔️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td></tr>
+          <tr><td>АД среднее (MAP)</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td></tr>
+          <tr><td>ЧСС</td><td class="center">⬆️⬆️</td><td class="center">⬆️ / ↔️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬇️ / ↔️</td></tr>
+          <tr><td>ЦВД (норма 2–8 мм рт.ст.)</td><td class="center">⬇️⬇️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬇️ / ↔️</td><td class="center">⬆️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>ДЗЛК (норма 6–12 мм рт.ст.)</td><td class="center">⬇️⬇️</td><td class="center">⬆️⬆️ (&gt;18)</td><td class="center">⬆️ / ↔️</td><td class="center">⬇️</td><td class="center">⬇️ / ↔️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>МОК (норма 4–6 л/мин)</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬆️⬆️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>СИ (норма 2,5–4,0 л/мин/м²)</td><td class="center">⬇️⬇️ (&lt;2,2)</td><td class="center">⬇️⬇️ (&lt;1,8)</td><td class="center">⬇️⬇️</td><td class="center">⬆️⬆️ (&gt;4,0)</td><td class="center">⬇️⬇️ (&lt;2,2)</td><td class="center">⬇️⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>ОПСС (норма 800–1200)</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️ / ↔️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td></tr>
+          <tr><td>ФВ ЛЖ (норма ≥55%)</td><td class="center">↔️ / ⬆️</td><td class="center">⬇️⬇️ (&lt;40%)</td><td class="center">↔️ / ⬇️</td><td class="center">⬆️ / ↔️</td><td class="center">⬇️</td><td class="center">↔️</td><td class="center">↔️</td></tr>
+          <tr><td>УО (норма 60–100 мл)</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬆️ / ↔️</td><td class="center">⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td></tr>
+          <tr><td>SvO₂ (норма &gt;70%)</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️ (&lt;50%)</td><td class="center">⬇️⬇️</td><td class="center">⬆️⬆️ (&gt;80%)</td><td class="center">⬇️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>Лактат</td><td class="center">⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️</td><td class="center">↔️ / ⬆️</td></tr>
+          <tr><td>Температура кожи</td><td class="center">Холодная, бледная</td><td class="center">Холодная, бледная</td><td class="center">Холодная</td><td class="center">Тёплая, гиперемия</td><td class="center">Холодная</td><td class="center">Тёплая → холодная</td><td class="center">Тёплая</td></tr>
+          <tr><td>Диурез</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>Тип гемодинамики</td><td class="center"><b>Гиподинамический</b></td><td class="center"><b>Гиподинамический</b></td><td class="center"><b>Гиподинамический</b></td><td class="center"><b>Гипердинамический</b></td><td class="center"><b>Гиподинамический</b></td><td class="center"><b>Гиподинамический</b></td><td class="center"><b>Гиподинамический</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>🔍 Краткие профили (пояснения)</h2>
+    <h3>1) 🩸 Гиповолемический шок</h3>
+    <table>
+      <tbody>
+        <tr><th style="width:35%;">Причины</th><td>Кровопотеря, дегидратация, ожоги, рвота/диарея</td></tr>
+        <tr><th>Преднагрузка (ЦВД / ДЗЛК)</th><td>⬇️⬇️</td></tr>
+        <tr><th>Постнагрузка (ОПСС)</th><td>⬆️⬆️ (компенсаторный спазм)</td></tr>
+        <tr><th>МОК / СИ</th><td>⬇️⬇️</td></tr>
+        <tr><th>ФВ ЛЖ</th><td>↔️ / ⬆️ (гипердинамия при малом объёме)</td></tr>
+        <tr><th>Ключевой признак</th><td>Спавшиеся вены, жажда, сухие слизистые</td></tr>
+        <tr><th>Ответ на инфузию</th><td><b>✅ Положительный</b></td></tr>
+      </tbody>
+    </table>
+
+    <h3>2) ❤️ Кардиогенный шок</h3>
+    <table>
+      <tbody>
+        <tr><th style="width:35%;">Причины</th><td>ИМ, кардиомиопатия, тяжёлые аритмии, миокардит</td></tr>
+        <tr><th>Преднагрузка</th><td>⬆️⬆️ (застой)</td></tr>
+        <tr><th>Постнагрузка (ОПСС)</th><td>⬆️⬆️</td></tr>
+        <tr><th>МОК / СИ</th><td>⬇️⬇️ (СИ &lt; 1,8)</td></tr>
+        <tr><th>ФВ ЛЖ</th><td>⬇️⬇️ (&lt;40%, нередко &lt;25%)</td></tr>
+        <tr><th>Ключевой признак</th><td>Влажные хрипы, отёк лёгких, набухшие вены шеи</td></tr>
+        <tr><th>Ответ на инфузию</th><td><b>❌ Отрицательный</b></td></tr>
+      </tbody>
+    </table>
+
+    <h3>3) 🔴 Обструктивный шок (ТЭЛА / тампонада)</h3>
+    <table>
+      <thead>
+        <tr><th></th><th>ТЭЛА</th><th>Тампонада сердца</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>ЦВД</th><td>⬆️⬆️</td><td>⬆️⬆️</td></tr>
+        <tr><th>ДЗЛК</th><td>↔️ / ⬇️</td><td>⬆️</td></tr>
+        <tr><th>МОК / СИ</th><td>⬇️⬇️</td><td>⬇️⬇️</td></tr>
+        <tr><th>ФВ ПЖ</th><td>⬇️⬇️</td><td>⬇️⬇️</td></tr>
+        <tr><th>ФВ ЛЖ</th><td>↔️ / ⬇️</td><td>↔️ / ⬇️</td></tr>
+        <tr><th>ОПСС</th><td>⬆️⬆️</td><td>⬆️⬆️</td></tr>
+        <tr><th>Ключевые признаки</th><td>D-димер, S1Q3T3, перегрузка ПЖ</td><td>Триада Бека, парадоксальный пульс</td></tr>
+      </tbody>
+    </table>
+
+    <h3>4) 🌡️ Септический шок</h3>
+    <table>
+      <thead>
+        <tr><th></th><th>Ранняя фаза (“тёплый шок”)</th><th>Поздняя фаза (“холодный шок”)</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>МОК / СИ</th><td>⬆️⬆️ (гипердинамия)</td><td>⬇️⬇️</td></tr>
+        <tr><th>ОПСС</th><td>⬇️⬇️</td><td>⬇️⬇️ / ↔️</td></tr>
+        <tr><th>ФВ ЛЖ</th><td>↔️ / ⬆️</td><td>⬇️ (септическая кардиомиопатия)</td></tr>
+        <tr><th>SvO₂</th><td>⬆️⬆️ (шунтирование)</td><td>⬇️</td></tr>
+        <tr><th>Лактат</th><td>⬆️</td><td>⬆️⬆️</td></tr>
+        <tr><th>Кожа</th><td>Тёплая, розовая</td><td>Холодная, мраморная</td></tr>
+      </tbody>
+    </table>
+
+    <h3>5) ⚡ Анафилактический шок</h3>
+    <table>
+      <tbody>
+        <tr><th style="width:35%;">Причины</th><td>Аллергены, лекарства, укусы насекомых</td></tr>
+        <tr><th>ОПСС</th><td>⬇️⬇️ (массивная вазодилатация + капилляроутечка)</td></tr>
+        <tr><th>МОК / СИ</th><td>⬇️⬇️</td></tr>
+        <tr><th>ЧСС</th><td>⬆️⬆️</td></tr>
+        <tr><th>Ключевые признаки</th><td>Бронхоспазм, крапивница, отёк Квинке</td></tr>
+        <tr><th>Лечение 1-й линии</th><td>Адреналин 0,3–0,5 мг в/м</td></tr>
+      </tbody>
+    </table>
+
+    <h3>6) 🧠 Нейрогенный шок</h3>
+    <table>
+      <tbody>
+        <tr><th style="width:35%;">Причины</th><td>Травма спинного мозга выше Th6</td></tr>
+        <tr><th>ОПСС</th><td>⬇️⬇️ (потеря симпатического тонуса)</td></tr>
+        <tr><th>ЧСС</th><td>⬇️ / ↔️ (брадикардия!)</td></tr>
+        <tr><th>МОК / СИ</th><td>⬇️</td></tr>
+        <tr><th>Кожа</th><td>Тёплая, сухая (нет компенсаторного вазоспазма)</td></tr>
+        <tr><th>Ключевое отличие</th><td>Брадикардия на фоне гипотонии</td></tr>
+      </tbody>
+    </table>
+
+    <h2>📌 Сводная “шпаргалка” (по ключевым отличиям)</h2>
+    <div class="wrap">
+      <table class="main-table">
+        <thead>
+          <tr>
+            <th>Признак</th>
+            <th>Гиповолемич.</th>
+            <th>Кардиогенный</th>
+            <th>Обструктивн.</th>
+            <th>Септич. ранний</th>
+            <th>Септич. поздний</th>
+            <th>Анафилак.</th>
+            <th>Нейрогенный</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>ЦВД</td><td class="center">⬇️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬇️</td><td class="center">⬆️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>ОПСС</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬇️</td><td class="center">⬇️ / ↔️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>СИ</td><td class="center">⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️</td><td class="center">⬆️⬆️</td><td class="center">⬇️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>ФВ ЛЖ</td><td class="center">↔️</td><td class="center">⬇️⬇️</td><td class="center">↔️ / ⬇️</td><td class="center">⬆️ / ↔️</td><td class="center">⬇️</td><td class="center">↔️</td><td class="center">↔️</td></tr>
+          <tr><td>ЧСС</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center"><b>⬇️</b></td></tr>
+          <tr><td>Кожа</td><td class="center">Холодная</td><td class="center">Холодная</td><td class="center">Холодная</td><td class="center">Тёплая</td><td class="center">Холодная</td><td class="center">Тёплая</td><td class="center">Тёплая</td></tr>
+          <tr><td>Ответ на инфузию</td><td class="center"><b>✅+</b></td><td class="center"><b>❌</b></td><td class="center"><b>❌/⚠️</b></td><td class="center"><b>✅</b></td><td class="center"><b>⚠️</b></td><td class="center"><b>✅</b></td><td class="center"><b>✅</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- АНГЛИЙСКАЯ ВЕРСИЯ -->
+  <div id="content-en" class="lang-content">
+    <!-- Author -->
+    <div class="author-card">
+      <div class="author-avatar">👨‍⚕️</div>
+      <div class="author-info">
+        <h2>About the Author</h2>
+        <p>Prepared by: <strong>Ivan L. Babkov</strong> — Anesthesiologist-Resuscitator, Department of Anesthesiology and Reanimatology, Belarusian State Medical University (BSMU).</p>
+        <p>
+          More about the author:
+          <a href="https://www.bsmu.by/personalii/babkov-ivan-leonidovich/?sphrase_id=325251" target="_blank" rel="noopener noreferrer">BSMU Profile</a>.
+        </p>
+        <p>
+          <a href="mailto:i@ibabkow.ru" class="email-link" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0b57d0; margin-top: 4px;">
+            <img alt="Email Author" src="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27%230b57d0%27%3E%3Cpath%20d%3D%27M2%204V20C2%2021.1%202.9%2022%204%2022H20C21.1%2022%2022%2021.1%2022%2020V4C22%202.9%2021.1%202%2020%202H4C2.9%202%202%202.9%202%204ZM4%206L12%2012L20%206V20H4V6Z%27/%3E%3C/svg%3E" width="18" height="18" />
+            <span>i@ibabkow.ru</span>
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <h1>🫀 Types of Shock and Hemodynamic Profiles</h1>
+
+    <div class="note">
+      <div style="margin-bottom: 6px;"><b>Legend:</b></div>
+      <div>⬆️ — increased | ⬇️ — decreased | ↔️ — normal | ⬆️⬆️ — significantly increased | ⬇️⬇️ — significantly decreased</div>
+    </div>
+
+    <h2>📊 MAIN TABLE</h2>
+    <div class="wrap">
+      <table class="main-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th class="center">Hypovolemic</th>
+            <th class="center">Cardiogenic</th>
+            <th class="center">Obstructive<span class="sub-text">(PE / Tamponade)</span></th>
+            <th class="center">Early<br>Septic</th>
+            <th class="center">Late<br>Septic</th>
+            <th class="center">Anaphylactic</th>
+            <th class="center">Neurogenic</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Systolic BP</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬆️ / ↔️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td></tr>
+          <tr><td>Mean BP (MAP)</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td><td class="center">&lt; 65</td></tr>
+          <tr><td>Heart Rate (HR)</td><td class="center">⬆️⬆️</td><td class="center">⬆️ / ↔️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬇️ / ↔️</td></tr>
+          <tr><td>CVP (normal 2–8 mmHg)</td><td class="center">⬇️⬇️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬇️ / ↔️</td><td class="center">⬆️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>PAWP (normal 6–12 mmHg)</td><td class="center">⬇️⬇️</td><td class="center">⬆️⬆️ (&gt;18)</td><td class="center">⬆️ / ↔️</td><td class="center">⬇️</td><td class="center">⬇️ / ↔️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>CO (normal 4–6 L/min)</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬆️⬆️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>CI (normal 2.5–4.0 L/min/m²)</td><td class="center">⬇️⬇️ (&lt;2.2)</td><td class="center">⬇️⬇️ (&lt;1.8)</td><td class="center">⬇️⬇️</td><td class="center">⬆️⬆️ (&gt;4.0)</td><td class="center">⬇️⬇️ (&lt;2.2)</td><td class="center">⬇️⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>SVR (normal 800–1200)</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️ / ↔️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td></tr>
+          <tr><td>LVEF (normal ≥55%)</td><td class="center">↔️ / ⬆️</td><td class="center">⬇️⬇️ (&lt;40%)</td><td class="center">↔️ / ⬇️</td><td class="center">⬆️ / ↔️</td><td class="center">⬇️</td><td class="center">↔️</td><td class="center">↔️</td></tr>
+          <tr><td>SV (normal 60–100 ml)</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬆️ / ↔️</td><td class="center">⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td></tr>
+          <tr><td>SvO₂ (normal &gt;70%)</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️ (&lt;50%)</td><td class="center">⬇️⬇️</td><td class="center">⬆️⬆️ (&gt;80%)</td><td class="center">⬇️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>Lactate</td><td class="center">⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️</td><td class="center">⬆️⬆️</td><td class="center">⬆️</td><td class="center">↔️ / ⬆️</td></tr>
+          <tr><td>Skin Temperature</td><td class="center">Cold, pale</td><td class="center">Cold, pale</td><td class="center">Cold</td><td class="center">Warm, flushed</td><td class="center">Cold</td><td class="center">Warm → cold</td><td class="center">Warm</td></tr>
+          <tr><td>Urine Output</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>Hemodynamic Type</td><td class="center"><b>Hypodynamic</b></td><td class="center"><b>Hypodynamic</b></td><td class="center"><b>Hypodynamic</b></td><td class="center"><b>Hyperdynamic</b></td><td class="center"><b>Hypodynamic</b></td><td class="center"><b>Hypodynamic</b></td><td class="center"><b>Hypodynamic</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>🔍 Short Profiles (Explanations)</h2>
+
+    <h3>1) 🩸 Hypovolemic Shock</h3>
+    <table>
+      <tbody>
+        <tr><th style="width:35%;">Causes</th><td>Blood loss, dehydration, burns, vomiting/diarrhea</td></tr>
+        <tr><th>Preload (CVP / PAWP)</th><td>⬇️⬇️</td></tr>
+        <tr><th>Afterload (SVR)</th><td>⬆️⬆️ (compensatory vasospasm)</td></tr>
+        <tr><th>CO / CI</th><td>⬇️⬇️</td></tr>
+        <tr><th>LVEF</th><td>↔️ / ⬆️ (hyperdynamic due to low volume)</td></tr>
+        <tr><th>Key Signs</th><td>Collapsed veins, thirst, dry mucous membranes</td></tr>
+        <tr><th>Fluid Responsiveness</th><td><b>✅ Positive</b></td></tr>
+      </tbody>
+    </table>
+
+    <h3>2) ❤️ Cardiogenic Shock</h3>
+    <table>
+      <tbody>
+        <tr><th style="width:35%;">Causes</th><td>MI, cardiomyopathy, severe arrhythmias, myocarditis</td></tr>
+        <tr><th>Preload</th><td>⬆️⬆️ (congestion)</td></tr>
+        <tr><th>Afterload (SVR)</th><td>⬆️⬆️</td></tr>
+        <tr><th>CO / CI</th><td>⬇️⬇️ (CI &lt; 1.8)</td></tr>
+        <tr><th>LVEF</th><td>⬇️⬇️ (&lt;40%, often &lt;25%)</td></tr>
+        <tr><th>Key Signs</th><td>Wet rales, pulmonary edema, engorged neck veins</td></tr>
+        <tr><th>Fluid Responsiveness</th><td><b>❌ Negative</b></td></tr>
+      </tbody>
+    </table>
+
+    <h3>3) 🔴 Obstructive Shock (PE / Tamponade)</h3>
+    <table>
+      <thead>
+        <tr><th></th><th>Pulmonary Embolism (PE)</th><th>Cardiac Tamponade</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>CVP</th><td>⬆️⬆️</td><td>⬆️⬆️</td></tr>
+        <tr><th>PAWP</th><td>↔️ / ⬇️</td><td>⬆️</td></tr>
+        <tr><th>CO / CI</th><td>⬇️⬇️</td><td>⬇️⬇️</td></tr>
+        <tr><th>RVEF</th><td>⬇️⬇️</td><td>⬇️⬇️</td></tr>
+        <tr><th>LVEF</th><td>↔️ / ⬇️</td><td>↔️ / ⬇️</td></tr>
+        <tr><th>SVR</th><td>⬆️⬆️</td><td>⬆️⬆️</td></tr>
+        <tr><th>Key Signs</th><td>D-dimer, S1Q3T3, RV strain</td><td>Beck's triad, pulsus paradoxus</td></tr>
+      </tbody>
+    </table>
+
+    <h3>4) 🌡️ Septic Shock</h3>
+    <table>
+      <thead>
+        <tr><th></th><th>Early Phase ("Warm Shock")</th><th>Late Phase ("Cold Shock")</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>CO / CI</th><td>⬆️⬆️ (hyperdynamic)</td><td>⬇️⬇️</td></tr>
+        <tr><th>SVR</th><td>⬇️⬇️</td><td>⬇️⬇️ / ↔️</td></tr>
+        <tr><th>LVEF</th><td>↔️ / ⬆️</td><td>⬇️ (septic cardiomyopathy)</td></tr>
+        <tr><th>SvO₂</th><td>⬆️⬆️ (shunting)</td><td>⬇️</td></tr>
+        <tr><th>Lactate</th><td>⬆️</td><td>⬆️⬆️</td></tr>
+        <tr><th>Skin</th><td>Warm, flushed</td><td>Cold, mottled</td></tr>
+      </tbody>
+    </table>
+
+    <h3>5) ⚡ Anaphylactic Shock</h3>
+    <table>
+      <tbody>
+        <tr><th style="width:35%;">Causes</th><td>Allergens, drugs, insect stings</td></tr>
+        <tr><th>SVR</th><td>⬇️⬇️ (massive vasodilation + capillary leak)</td></tr>
+        <tr><th>CO / CI</th><td>⬇️⬇️</td></tr>
+        <tr><th>HR</th><td>⬆️⬆️</td></tr>
+        <tr><th>Key Signs</th><td>Bronchospasm, urticaria, angioedema</td></tr>
+        <tr><th>1st-line Treatment</th><td>Epinephrine 0.3–0.5 mg IM</td></tr>
+      </tbody>
+    </table>
+
+    <h3>6) 🧠 Neurogenic Shock</h3>
+    <table>
+      <tbody>
+        <tr><th style="width:35%;">Causes</th><td>Spinal cord injury above T6</td></tr>
+        <tr><th>SVR</th><td>⬇️⬇️ (loss of sympathetic tone)</td></tr>
+        <tr><th>HR</th><td>⬇️ / ↔️ (bradycardia!)</td></tr>
+        <tr><th>CO / CI</th><td>⬇️</td></tr>
+        <tr><th>Skin</th><td>Warm, dry (no compensatory vasospasm)</td></tr>
+        <tr><th>Key Difference</th><td>Bradycardia accompanied by hypotension</td></tr>
+      </tbody>
+    </table>
+
+    <h2>📌 Summary Cheat Sheet (Key Differences)</h2>
+    <div class="wrap">
+      <table class="main-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Hypovolemic</th>
+            <th>Cardiogenic</th>
+            <th>Obstructive</th>
+            <th>Early Septic</th>
+            <th>Late Septic</th>
+            <th>Anaphylactic</th>
+            <th>Neurogenic</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>CVP</td><td class="center">⬇️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬇️</td><td class="center">⬆️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>SVR</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬇️</td><td class="center">⬇️ / ↔️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>CI</td><td class="center">⬇️</td><td class="center">⬇️⬇️</td><td class="center">⬇️</td><td class="center">⬆️⬆️</td><td class="center">⬇️</td><td class="center">⬇️</td><td class="center">⬇️</td></tr>
+          <tr><td>LVEF</td><td class="center">↔️</td><td class="center">⬇️⬇️</td><td class="center">↔️ / ⬇️</td><td class="center">⬆️ / ↔️</td><td class="center">⬇️</td><td class="center">↔️</td><td class="center">↔️</td></tr>
+          <tr><td>HR</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center">⬆️</td><td class="center"><b>⬇️</b></td></tr>
+          <tr><td>Skin</td><td class="center">Cold</td><td class="center">Cold</td><td class="center">Cold</td><td class="center">Warm</td><td class="center">Cold</td><td class="center">Warm</td><td class="center">Warm</td></tr>
+          <tr><td>Fluid Response</td><td class="center"><b>✅+</b></td><td class="center"><b>❌</b></td><td class="center"><b>❌/⚠️</b></td><td class="center"><b>✅</b></td><td class="center"><b>⚠️</b></td><td class="center"><b>✅</b></td><td class="center"><b>✅</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Скрипт для переключения языков -->
+<script>
+  function switchLang(lang) {
+    // Обновляем активные классы для кнопок
+    document.getElementById('btn-ru').classList.remove('active');
+    document.getElementById('btn-en').classList.remove('active');
+    document.getElementById('btn-' + lang).classList.add('active');
+
+    // Переключаем отображение контента
+    document.getElementById('content-ru').classList.remove('active');
+    document.getElementById('content-en').classList.remove('active');
+    document.getElementById('content-' + lang).classList.add('active');
+    
+    // Меняем lang атрибут у тега html
+    document.documentElement.lang = lang;
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Водно-электролитный баланс / Water-Electrolyte Balance</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* ===== Базовые стили ===== */
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 24px 10px; 
+      line-height: 1.35; 
+      color: #111; 
+      background-color: #fcfcfc;
+    }
+    .custom-container { 
+      max-width: 1500px; 
+      width: 97%; 
+      margin: 0 auto; 
+      background: #fff; 
+      padding: 20px 30px; 
+      border-radius: 12px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+      box-sizing: border-box; 
+      position: relative;
+    }
+    
+    /* ===== Переключатель языка ===== */
+    .lang-toggle {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      display: flex;
+      background: #f0f4f9;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e0e4e8;
+      z-index: 10;
+    }
+    .lang-btn {
+      padding: 6px 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #666;
+      transition: all 0.2s;
+    }
+    .lang-btn.active {
+      background: #0b57d0;
+      color: #fff;
+    }
+
+    /* ===== Блок автора ===== */
+    .author-card { 
+      display: flex; align-items: center; gap: 20px; 
+      background: #ffffff; border: 1px solid #e0e4e8; border-radius: 12px; 
+      padding: 24px; margin-bottom: 30px; margin-top: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04); transition: box-shadow 0.3s; 
+    }
+    .author-card:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+    .author-avatar { 
+      font-size: 3rem; background: #f0f4f9; width: 80px; height: 80px; 
+      display: flex; align-items: center; justify-content: center; 
+      border-radius: 50%; flex-shrink: 0; 
+    }
+    .author-info h2 { margin: 0 0 8px 0; font-size: 1.3rem; font-weight: bold; color: #1a1a1a; }
+    .author-info p { margin: 4px 0; color: #4a4a4a; font-size: 0.95rem; }
+    .author-info a { color: #0b57d0; text-decoration: none; font-weight: 500; }
+    .author-info a:hover { text-decoration: underline; }
+
+    /* Блоки с примечаниями */
+    .note { 
+      margin: 18px 0; padding: 12px 16px; background: #f6f7f9; 
+      border: 1px solid #e6e8ee; border-radius: 8px; font-size: 0.95rem; line-height: 1.5;
+    }
+
+    /* ===== Стили симулятора ===== */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      height: 6px;
+      border-radius: 4px;
+      background-color: #e5e7eb;
+      outline: none;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: #3b82f6;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .symptom-indicator { transition: opacity 0.3s ease; }
+
+    /* ===== Стили для печати ===== */
+    @media print {
+      @page { size: A4 portrait; margin: 8mm; }
+      body * { visibility: hidden !important; }
+      #printArea, #printArea * { visibility: visible !important; }
+      #printArea {
+        position: absolute; left: 0; top: 0;
+        width: 100%; max-width: 210mm !important; margin: 0 auto;
+      }
+      .custom-container { padding: 0 !important; box-shadow: none !important; }
+      .no-print { display: none !important; }
+      .grid { gap: 6mm !important; display: block !important;}
+      .lg\:col-span-1 { margin-bottom: 20px !important; }
+      .bg-white.rounded-lg.shadow-md {
+        padding: 12px !important; margin-bottom: 10px !important;
+        box-shadow: none !important; border: 1px solid #ddd !important;
+        break-inside: avoid !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="custom-container">
+
+    <!-- Language Toggle -->
+    <div class="lang-toggle no-print">
+      <button class="lang-btn active" onclick="setLang('ru')" id="btn-ru">Русский</button>
+      <button class="lang-btn" onclick="setLang('en')" id="btn-en">English</button>
+    </div>
+
+    <!-- ================= БЛОК АВТОРА ================= -->
+    <div class="author-card no-print">
+      <div class="author-avatar">👨‍⚕️</div>
+      <div class="author-info" id="author_block">
+        <!-- Заполняется через JS -->
+      </div>
+    </div>
+
+    <!-- Заголовок -->
+    <div class="text-center mb-8 pr-12 no-print">
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2" data-i18n="main_title">
+        Водно-электролитный баланс: интерактивная симуляция
+      </h1>
+      <p class="text-lg text-gray-600" data-i18n="main_subtitle">
+        Изучите нарушения водно-электролитного баланса и принципы их диагностики
+      </p>
+    </div>
+
+    <!-- Вводный текст -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 rounded no-print">
+      <p class="text-blue-800 italic" data-i18n="intro_quote">
+        "Что происходит, когда хрупкий баланс воды и электролитов в организме нарушается?
+        В этой интерактивной симуляции вы можете исследовать, как изменения уровня электролитов,
+        белка и других параметров влияют на распределение жидкостей, осмолярность плазмы и вызывают
+        клинические симптомы."
+      </p>
+    </div>
+
+    <!-- Область для печати -->
+    <div id="printArea">
+      <h1 class="text-2xl font-bold text-gray-800 mb-4" style="visibility: hidden; display: none;" data-i18n="print_title">
+        Клинический случай: Водно-электролитный баланс
+      </h1>
+
+      <!-- Сетка 3 колонки -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- КОЛОНКА 1 -->
+        <div class="lg:col-span-1 space-y-6">
+          
+          <!-- Параметры пациента -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="patient_params">Параметры пациента</h2>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="weight_lbl">Вес (кг)</label>
+                <input type="range" id="weight" min="40" max="120" value="70" class="no-print" />
+                <span id="weightValue" class="text-sm font-bold text-blue-600 block">70 кг</span>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="gender_lbl">Пол</label>
+                <div class="flex space-x-4 no-print">
+                  <label class="inline-flex items-center">
+                    <input type="radio" name="gender" value="male" checked class="form-radio text-blue-600" />
+                    <span class="ml-2" data-i18n="gender_male">Мужской</span>
+                  </label>
+                  <label class="inline-flex items-center">
+                    <input type="radio" name="gender" value="female" class="form-radio text-blue-600" />
+                    <span class="ml-2" data-i18n="gender_female">Женский</span>
+                  </label>
+                </div>
+                <span id="genderValue" class="text-sm font-bold text-blue-600 block mt-1 print:hidden">Мужской</span>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" data-i18n="age_lbl">Возраст</label>
+                <select id="age" class="w-full p-2 border border-gray-300 rounded no-print">
+                  <option value="young" data-i18n="age_young">Молодой (18-40)</option>
+                  <option value="middle" data-i18n="age_middle">Средний (41-65)</option>
+                  <option value="elderly" data-i18n="age_elderly">Пожилой (65+)</option>
+                </select>
+                <span id="ageValue" class="text-sm font-bold text-blue-600 block mt-1 print:hidden">Молодой (18-40)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Электролиты -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="electrolytes_title">Электролиты и метаболиты</h2>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <span data-i18n="na_lbl">Натрий (Na<sup>+</sup>):</span> <span id="sodiumValue" class="font-bold text-blue-600">140 ммоль/л</span>
+                </label>
+                <input type="range" id="sodium" min="110" max="170" value="140" class="no-print" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <span data-i18n="k_lbl">Калий (K<sup>+</sup>):</span> <span id="potassiumValue" class="font-bold text-blue-600">4.0 ммоль/л</span>
+                </label>
+                <input type="range" id="potassium" min="2.0" max="7.0" step="0.1" value="4.0" class="no-print" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <span data-i18n="glu_lbl">Глюкоза:</span> <span id="glucoseValue" class="font-bold text-blue-600">5.0 ммоль/л</span>
+                </label>
+                <input type="range" id="glucose" min="3.0" max="30.0" step="0.1" value="5.0" class="no-print" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <span data-i18n="urea_lbl">Мочевина:</span> <span id="ureaValue" class="font-bold text-blue-600">5.0 ммоль/л</span>
+                </label>
+                <input type="range" id="urea" min="2.0" max="40.0" step="0.1" value="5.0" class="no-print" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- КОЛОНКА 2 -->
+        <div class="lg:col-span-1 space-y-6">
+          
+          <!-- Доп. лабораторные показатели -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="cbc_title">Общий анализ крови и белок</h2>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <span data-i18n="ht_lbl">Гематокрит (Ht):</span> <span id="htValue" class="font-bold text-blue-600">48%</span>
+                </label>
+                <input type="range" id="ht" min="20" max="70" step="0.1" value="48" class="no-print" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <span data-i18n="hb_lbl">Гемоглобин (Hb):</span> <span id="hbValue" class="font-bold text-blue-600">140 г/л</span> 
+                </label>
+                <input type="range" id="hb" min="60" max="220" step="1" value="140" class="no-print" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <span data-i18n="tp_lbl">Общий белок:</span> <span id="totalProteinValue" class="font-bold text-blue-600">70 г/л</span> 
+                </label>
+                <input type="range" id="totalProtein" min="30" max="120" step="0.1" value="70" class="no-print" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Рассчитанные показатели -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="calc_title">Рассчитанные показатели</h2>
+            
+            <div class="space-y-3 mb-6">
+              <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                <span class="text-gray-600" data-i18n="osm_lbl">Осмолярность плазмы:</span>
+                <span id="osmolality" class="font-bold text-lg">290 мосм/л</span>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                <span class="text-gray-600" data-i18n="tbw_lbl">Общая вода (TBW):</span>
+                <span id="totalWater" class="font-bold">42 л</span>
+              </div>
+              <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                <span class="text-gray-600" data-i18n="status_lbl">Статус тоничности:</span>
+                <span id="status" class="font-bold text-green-600">Норма</span>
+              </div>
+              <div class="flex justify-between items-center py-1">
+                <span class="text-gray-600" data-i18n="disorder_lbl">Тип нарушения:</span>
+                <span id="disorderType" class="font-bold text-gray-800 text-right max-w-[60%]">Не определен</span>
+              </div>
+            </div>
+
+            <!-- Формула Геннари -->
+            <div class="note" style="margin: 0; padding: 10px;" id="formula_block">
+              <!-- Заполняется через JS -->
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- КОЛОНКА 3 -->
+        <div class="lg:col-span-1 space-y-6">
+          
+          <!-- Клинические сценарии -->
+          <div class="bg-white rounded-lg shadow-md p-6 no-print">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="scenarios_title">Готовые сценарии</h2>
+            <select id="scenarioSelect" class="w-full p-2 border border-gray-300 rounded mb-4 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+              <!-- Опции заполняются через JS -->
+            </select>
+            
+            <div id="scenarioDescription" class="text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-200 hidden"></div>
+            
+            <button id="applyScenario" class="mt-3 w-full bg-blue-600 text-white font-medium py-2 px-4 rounded hover:bg-blue-700 transition-colors hidden" data-i18n="apply_btn">
+              Применить сценарий
+            </button>
+          </div>
+
+          <!-- Клинические проявления -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="symptoms_title">Возможная клиника</h2>
+            <p class="text-xs text-gray-500 mb-3 leading-tight" data-i18n="symptoms_desc">Симптомы подсвечиваются в зависимости от рассчитанного типа дисгидрии и уровня электролитов.</p>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div id="thirst" class="symptom-indicator opacity-30 flex items-center p-2 bg-gray-100 rounded border border-gray-200">
+                <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                <span class="text-sm font-medium text-gray-700" data-i18n="thirst">Жажда</span>
+              </div>
+              <div id="edema" class="symptom-indicator opacity-30 flex items-center p-2 bg-gray-100 rounded border border-gray-200">
+                <div class="w-3 h-3 bg-blue-400 rounded-full mr-2"></div>
+                <span class="text-sm font-medium text-gray-700" data-i18n="edema">Отёки</span>
+              </div>
+              <div id="dryMucous" class="symptom-indicator opacity-30 flex items-center p-2 bg-gray-100 rounded border border-gray-200">
+                <div class="w-3 h-3 bg-orange-400 rounded-full mr-2"></div>
+                <span class="text-sm font-medium text-gray-700" data-i18n="dry_mucous">Сухость слизистых</span>
+              </div>
+              <div id="tachycardia" class="symptom-indicator opacity-30 flex items-center p-2 bg-gray-100 rounded border border-gray-200">
+                <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                <span class="text-sm font-medium text-gray-700" data-i18n="tachycardia">Тахикардия</span>
+              </div>
+              <div id="hypotension" class="symptom-indicator opacity-30 flex items-center p-2 bg-gray-100 rounded border border-gray-200">
+                <div class="w-3 h-3 bg-gray-500 rounded-full mr-2"></div>
+                <span class="text-sm font-medium text-gray-700" data-i18n="hypotension">Гипотензия</span>
+              </div>
+              <div id="neurological" class="symptom-indicator opacity-30 flex items-center p-2 bg-gray-100 rounded border border-gray-200">
+                <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                <span class="text-sm font-medium text-gray-700" data-i18n="cns">Неврология (ЦНС)</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Кнопка печати -->
+    <div class="mt-8 flex justify-end no-print">
+      <button id="printButton" class="bg-gray-700 text-white py-2 px-5 rounded-lg hover:bg-gray-800 transition-colors font-medium flex items-center shadow-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+        </svg>
+        <span data-i18n="print_btn">Распечатать отчёт</span>
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // ==========================================
+    // ЛОКАЛИЗАЦИЯ (DICTIONARY)
+    // ==========================================
+    const dict = {
+      ru: {
+        main_title: "Водно-электролитный баланс: интерактивная симуляция",
+        main_subtitle: "Изучите нарушения водно-электролитного баланса и принципы их диагностики",
+        intro_quote: '"Что происходит, когда хрупкий баланс воды и электролитов в организме нарушается? В этой интерактивной симуляции вы можете исследовать, как изменения уровня электролитов, белка и других параметров влияют на распределение жидкостей, осмолярность плазмы и вызывают клинические симптомы."',
+        print_title: "Клинический случай: Водно-электролитный баланс",
+        
+        patient_params: "Параметры пациента",
+        weight_lbl: "Вес (кг)",
+        gender_lbl: "Пол",
+        gender_male: "Мужской",
+        gender_female: "Женский",
+        age_lbl: "Возраст",
+        age_young: "Молодой (18-40)",
+        age_middle: "Средний (41-65)",
+        age_elderly: "Пожилой (65+)",
+        
+        electrolytes_title: "Электролиты и метаболиты",
+        na_lbl: "Натрий (Na<sup>+</sup>):",
+        k_lbl: "Калий (K<sup>+</sup>):",
+        glu_lbl: "Глюкоза:",
+        urea_lbl: "Мочевина:",
+        
+        cbc_title: "Общий анализ крови и белок",
+        ht_lbl: "Гематокрит (Ht):",
+        hb_lbl: "Гемоглобин (Hb):",
+        tp_lbl: "Общий белок:",
+        
+        calc_title: "Рассчитанные показатели",
+        osm_lbl: "Осмолярность плазмы:",
+        tbw_lbl: "Общая вода (TBW):",
+        status_lbl: "Статус тоничности:",
+        disorder_lbl: "Тип нарушения:",
+        
+        scenarios_title: "Готовые сценарии",
+        apply_btn: "Применить сценарий",
+        scenario_placeholder: "Выберите клинический случай...",
+        
+        symptoms_title: "Возможная клиника",
+        symptoms_desc: "Симптомы подсвечиваются в зависимости от рассчитанного типа дисгидрии и уровня электролитов.",
+        thirst: "Жажда",
+        edema: "Отёки",
+        dry_mucous: "Сухость слизистых",
+        tachycardia: "Тахикардия",
+        hypotension: "Гипотензия",
+        cns: "Неврология (ЦНС)",
+        
+        print_btn: "Распечатать отчёт",
+
+        // Динамические тексты
+        units: { kg: "кг", mmol: "ммоль/л", g_l: "г/л", l: "л", mosm: "мосм/л" },
+        status: {
+          hypo: "Гипоосмолярность",
+          hyper: "Гиперосмолярность",
+          norm: "Норма (Изоосмолярность)"
+        },
+        disorders: {
+          hypoDehyd: "Гипотоническая дегидратация",
+          isoDehyd: "Изотоническая дегидратация",
+          hyperDehyd: "Гипертоническая дегидратация",
+          hypoOver: "Гипотоническая гипергидратация",
+          isoOver: "Изотоническая гипергидратация",
+          hyperOver: "Гипертоническая гипергидратация",
+          pseudoHypo: "Изотоническая гипонатриемия (псевдо)",
+          hyperNat: "Гипернатриемия без нарушения тоничности",
+          normNorm: "Нормальный водно-электролитный баланс",
+          hypoNorm: "Гипоосмолярность (нормоволемия)",
+          hyperNorm: "Гиперосмолярность (нормоволемия)",
+          unidentified: "Не определен"
+        },
+        
+        author: `
+          <h2>Об авторе</h2>
+          <p>Информация подготовлена: <strong>Бабковым Иваном Леонидовичем</strong> — врачом-анестезиологом-реаниматологом, сотрудником кафедры анестезиологии и реаниматологии с курсом ПК УО "БГМУ".</p>
+          <p>Подробнее об авторе: <a href="https://www.bsmu.by/personalii/babkov-ivan-leonidovich/?sphrase_id=325251" target="_blank" rel="noopener noreferrer">профиль на сайте БГМУ</a>.</p>
+          <p>
+            <a href="mailto:i@ibabkow.ru" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0b57d0; margin-top: 4px;">
+              <img alt="Написать письмо" src="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27%230b57d0%27%3E%3Cpath%20d%3D%27M2%204V20C2%2021.1%202.9%2022%204%2022H20C21.1%2022%2022%2021.1%2022%2020V4C22%202.9%2021.1%202%2020%202H4C2.9%202%202%202.9%202%204ZM4%206L12%2012L20%206V20H4V6Z%27/%3E%3C/svg%3E" width="18" height="18" />
+              <span>i@ibabkow.ru</span>
+            </a>
+          </p>`,
+        
+        formula: `
+          <b style="color:#0b57d0; font-size:0.9em;">Формула Генри Геннари (F. John Gennari):</b><br>
+          <code style="background:#d6e9ff; padding:4px 8px; border-radius:4px; border:1px solid #a0c4f0; font-size:0.95em; display:inline-block; margin:6px 0; word-break:break-word;">
+            Осмолярность ≈ 2 × ([Na⁺] + [K⁺]) + мочевина + глюкоза + 0.03 × [общий белок]
+          </code><br>
+          <span style="font-size:0.8em; color:#555; line-height:1.3; display:block;">
+            Оригинальная формула опубликована в 1984 г. в <i>New England Journal of Medicine (NEJM)</i>. 
+            В данном калькуляторе используется модификация <b>UCSF Health, 2024</b> (Медицинский центр Калифорнийского университета в Сан-Франциско).
+          </span>`
+      },
+      en: {
+        main_title: "Water-Electrolyte Balance: Interactive Simulation",
+        main_subtitle: "Explore disorders of water-electrolyte balance and their diagnostic principles",
+        intro_quote: '"What happens when the fragile balance of water and electrolytes in the body is disrupted? In this interactive simulation, you can explore how changes in electrolytes, protein, and other parameters affect fluid distribution, plasma osmolality, and cause clinical symptoms."',
+        print_title: "Clinical Case: Water-Electrolyte Balance",
+        
+        patient_params: "Patient Parameters",
+        weight_lbl: "Weight (kg)",
+        gender_lbl: "Gender",
+        gender_male: "Male",
+        gender_female: "Female",
+        age_lbl: "Age",
+        age_young: "Young (18-40)",
+        age_middle: "Middle (41-65)",
+        age_elderly: "Elderly (65+)",
+        
+        electrolytes_title: "Electrolytes & Metabolites",
+        na_lbl: "Sodium (Na<sup>+</sup>):",
+        k_lbl: "Potassium (K<sup>+</sup>):",
+        glu_lbl: "Glucose:",
+        urea_lbl: "Urea:",
+        
+        cbc_title: "CBC & Total Protein",
+        ht_lbl: "Hematocrit (Ht):",
+        hb_lbl: "Hemoglobin (Hb):",
+        tp_lbl: "Total Protein:",
+        
+        calc_title: "Calculated Values",
+        osm_lbl: "Plasma Osmolality:",
+        tbw_lbl: "Total Body Water (TBW):",
+        status_lbl: "Tonicity Status:",
+        disorder_lbl: "Disorder Type:",
+        
+        scenarios_title: "Clinical Scenarios",
+        apply_btn: "Apply Scenario",
+        scenario_placeholder: "Select a clinical case...",
+        
+        symptoms_title: "Possible Symptoms",
+        symptoms_desc: "Symptoms are highlighted based on the calculated type of dyshydria and electrolyte levels.",
+        thirst: "Thirst",
+        edema: "Edema",
+        dry_mucous: "Dry Mucous",
+        tachycardia: "Tachycardia",
+        hypotension: "Hypotension",
+        cns: "Neurological (CNS)",
+        
+        print_btn: "Print Report",
+
+        // Динамические тексты
+        units: { kg: "kg", mmol: "mmol/L", g_l: "g/L", l: "L", mosm: "mOsm/L" },
+        status: {
+          hypo: "Hypoosmolality",
+          hyper: "Hyperosmolality",
+          norm: "Normal (Isoosmolality)"
+        },
+        disorders: {
+          hypoDehyd: "Hypotonic Dehydration",
+          isoDehyd: "Isotonic Dehydration",
+          hyperDehyd: "Hypertonic Dehydration",
+          hypoOver: "Hypotonic Overhydration",
+          isoOver: "Isotonic Overhydration",
+          hyperOver: "Hypertonic Overhydration",
+          pseudoHypo: "Isotonic Hyponatremia (Pseudo)",
+          hyperNat: "Hypernatremia without tonicity change",
+          normNorm: "Normal Water-Electrolyte Balance",
+          hypoNorm: "Hypoosmolality (Normovolemia)",
+          hyperNorm: "Hyperosmolality (Normovolemia)",
+          unidentified: "Unidentified"
+        },
+
+        author: `
+          <h2>About the Author</h2>
+          <p>Information prepared by: <strong>Ivan L. Babkov</strong> — Anesthesiologist-Resuscitator, Department of Anesthesiology and Intensive Care, Belarusian State Medical University.</p>
+          <p>More about the author: <a href="https://www.bsmu.by/personalii/babkov-ivan-leonidovich/?sphrase_id=325251" target="_blank" rel="noopener noreferrer">BSMU Profile (RU)</a>.</p>
+          <p>
+            <a href="mailto:i@ibabkow.ru" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0b57d0; margin-top: 4px;">
+              <img alt="Email" src="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27%230b57d0%27%3E%3Cpath%20d%3D%27M2%204V20C2%2021.1%202.9%2022%204%2022H20C21.1%2022%2022%2021.1%2022%2020V4C22%202.9%2021.1%202%2020%202H4C2.9%202%202%202.9%202%204ZM4%206L12%2012L20%206V20H4V6Z%27/%3E%3C/svg%3E" width="18" height="18" />
+              <span>i@ibabkow.ru</span>
+            </a>
+          </p>`,
+        
+        formula: `
+          <b style="color:#0b57d0; font-size:0.9em;">Henry Gennari Formula (F. John Gennari):</b><br>
+          <code style="background:#d6e9ff; padding:4px 8px; border-radius:4px; border:1px solid #a0c4f0; font-size:0.95em; display:inline-block; margin:6px 0; word-break:break-word;">
+            Osmolality ≈ 2 × ([Na⁺] + [K⁺]) + Urea + Glucose + 0.03 × [Total Protein]
+          </code><br>
+          <span style="font-size:0.8em; color:#555; line-height:1.3; display:block;">
+            The original formula was published in 1984 in the <i>New England Journal of Medicine (NEJM)</i>. 
+            This calculator uses the <b>UCSF Health, 2024</b> modification (University of California, San Francisco Medical Center).
+          </span>`
+      }
+    };
+
+    const scenariosDict = {
+      ru: [
+        { id: "hypotonicDehydration", name: "Гипотоническая дегидратация", desc: "Пациент 45 лет, длительный приём диуретиков. Жалобы на слабость, гипотензию. Анализы: Na⁺ 128, Ht 52%, Hb 165 г/л, общий белок 85 г/л. Наблюдается выраженная гемоконцентрация и гипоосмолярность." },
+        { id: "isotonicDehydration", name: "Изотоническая дегидратация", desc: "Пациент 30 лет, травма с кровопотерей до гемодилюции. АД 90/60, ЧСС 110. Анализы: Na⁺ 141, Ht 51%, Hb 162 г/л, белок 82 г/л. Осмолярность в норме, признаки гемоконцентрации." },
+        { id: "hypertonicDehydration", name: "Гипертоническая дегидратация", desc: "Пациент 70 лет, лишён доступа к воде несколько дней. Выраженная жажда. Анализы: Na⁺ 152, Ht 54%, Hb 170 г/л, белок 88 г/л. Гемоконцентрация на фоне гиперосмолярности." },
+        { id: "hypotonicOverhydration", name: "Гипотоническая гипергидратация", desc: "Пациентка 60 лет, с ХСН и отёками. Анализы: Na⁺ 125, Ht 36%, Hb 110 г/л, общий белок 58 г/л. Явная гемодилюция и снижение осмолярности плазмы (водная интоксикация)." },
+        { id: "isotonicOverhydration", name: "Изотоническая гипергидратация", desc: "Пациентка 55 лет, ХСН после избыточной инфузии изотонических растворов. Одышка, отеки. Анализы: Na⁺ 139, Ht 35%, Hb 115 г/л, белок 55 г/л. Гемодилюция при нормальной осмолярности." },
+        { id: "hypertonicOverhydration", name: "Гипертоническая гипергидратация", desc: "Пациент 68 лет, ХБП, получил избыток гипертонического р-ра. Анализы: Na⁺ 158, Ht 37%, Hb 118 г/л, белок 59 г/л. Гемодилюция и высочайшая осмолярность." },
+        { id: "normotonicHyponatremia", name: "Гипонатриемия без нарушения тоничности", desc: "Пациент 60 лет с декомпенсированным СД. Na⁺ 128, Глюкоза 18, Мочевина 14. Расчетная осмолярность в норме за счёт глюкозы и мочевины. Это транслокационная (псевдо) гипонатриемия." },
+        { id: "normotonicHypernatremia", name: "Гипернатриемия без нарушения тоничности", desc: "Пациент 40 лет с несахарным диабетом (начальная стадия компенсации). Na⁺ 150. Гематокрит и белок в норме." },
+        { id: "hypokalemia", name: "Тяжелая гипокалиемия", desc: "Пациент 50 лет, злоупотребляет фуросемидом. Мышечная слабость. K⁺ 2.8 ммоль/л. Высокий риск аритмий." },
+        { id: "hyperkalemia", name: "Тяжелая гиперкалиемия", desc: "Пациент 65 лет, острая почечная недостаточность. K⁺ 6.5 ммоль/л. На ЭКГ: высокие зубцы T, риск остановки сердца." }
+      ],
+      en: [
+        { id: "hypotonicDehydration", name: "Hypotonic dehydration", desc: "A 45 y.o. patient on prolonged diuretics. Complains of weakness, hypotension. Labs: Na⁺ 128, Ht 52%, Hb 165 g/L, TP 85 g/L. Marked hemoconcentration and hypoosmolality." },
+        { id: "isotonicDehydration", name: "Isotonic dehydration", desc: "A 30 y.o. patient, trauma with blood loss prior to hemodilution. BP 90/60, HR 110. Labs: Na⁺ 141, Ht 51%, Hb 162 g/L, TP 82 g/L. Normal osmolality, signs of hemoconcentration." },
+        { id: "hypertonicDehydration", name: "Hypertonic dehydration", desc: "A 70 y.o. patient deprived of water for days. Severe thirst. Labs: Na⁺ 152, Ht 54%, Hb 170 g/L, TP 88 g/L. Hemoconcentration with hyperosmolality." },
+        { id: "hypotonicOverhydration", name: "Hypotonic overhydration", desc: "A 60 y.o. female with CHF and edema. Labs: Na⁺ 125, Ht 36%, Hb 110 g/L, TP 58 g/L. Clear hemodilution and decreased osmolality (water intoxication)." },
+        { id: "isotonicOverhydration", name: "Isotonic overhydration", desc: "A 55 y.o. female, CHF after excessive isotonic fluid infusion. Dyspnea, edema. Labs: Na⁺ 139, Ht 35%, Hb 115 g/L, TP 55 g/L. Hemodilution with normal osmolality." },
+        { id: "hypertonicOverhydration", name: "Hypertonic overhydration", desc: "A 68 y.o. patient, CKD, received excessive hypertonic saline. Labs: Na⁺ 158, Ht 37%, Hb 118 g/L, TP 59 g/L. Hemodilution and extreme hyperosmolality." },
+        { id: "normotonicHyponatremia", name: "Hyponatremia without tonicity change", desc: "A 60 y.o. patient with decompensated DM. Na⁺ 128, Glu 18, Urea 14. Calculated osmolality is normal due to glucose and urea (Translocational/Pseudohyponatremia)." },
+        { id: "normotonicHypernatremia", name: "Hypernatremia without tonicity change", desc: "A 40 y.o. patient with diabetes insipidus (early compensation). Na⁺ 150. Hematocrit and protein are normal." },
+        { id: "hypokalemia", name: "Severe hypokalemia", desc: "A 50 y.o. patient abusing furosemide. Muscle weakness. K⁺ 2.8 mmol/L. High risk of arrhythmias." },
+        { id: "hyperkalemia", name: "Severe hyperkalemia", desc: "A 65 y.o. patient, acute renal failure. K⁺ 6.5 mmol/L. ECG: tall peaked T waves, risk of cardiac arrest." }
+      ]
+    };
+
+    let currentLang = 'ru';
+
+    // Текущие данные пациента
+    let currentPatientData = {
+      weight: 70, gender: 'male', age: 'young',
+      sodium: 140, potassium: 4.0, glucose: 5.0, urea: 5.0,
+      ht: 48, hb: 140, totalProtein: 70,
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      applyLanguage(currentLang);
+      initializeEventListeners();
+      updateCalculations();
+    });
+
+    // Установка языка
+    function setLang(lang) {
+      currentLang = lang;
+      document.getElementById('btn-ru').classList.toggle('active', lang === 'ru');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      applyLanguage(lang);
+      
+      // Сброс описания сценария при смене языка, если оно было открыто
+      document.getElementById('scenarioDescription').classList.add('hidden');
+      document.getElementById('applyScenario').classList.add('hidden');
+      
+      updateCalculations();
+    }
+
+    function applyLanguage(lang) {
+      // Статичные тексты
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[lang][key]) {
+          el.innerHTML = dict[lang][key];
+        }
+      });
+      
+      // Блоки с HTML (автор, формула)
+      document.getElementById('author_block').innerHTML = dict[lang].author;
+      document.getElementById('formula_block').innerHTML = dict[lang].formula;
+
+      // Обновление выпадающего списка сценариев
+      const selectEl = document.getElementById('scenarioSelect');
+      selectEl.innerHTML = `<option value="">${dict[lang].scenario_placeholder}</option>`;
+      scenariosDict[lang].forEach(scen => {
+        selectEl.innerHTML += `<option value="${scen.id}">${scen.name}</option>`;
+      });
+    }
+
+    // Обработчики событий
+    function initializeEventListeners() {
+      document.getElementById('weight').addEventListener('input', e => {
+        currentPatientData.weight = parseInt(e.target.value);
+        updateCalculations();
+      });
+
+      document.querySelectorAll('input[name="gender"]').forEach(radio => {
+        radio.addEventListener('change', e => {
+          currentPatientData.gender = e.target.value;
+          updateCalculations();
+        });
+      });
+
+      document.getElementById('age').addEventListener('change', e => {
+        currentPatientData.age = e.target.value;
+        updateCalculations();
+      });
+
+      ['sodium', 'potassium', 'glucose', 'urea', 'ht', 'hb', 'totalProtein'].forEach(id => {
+        document.getElementById(id).addEventListener('input', e => {
+          currentPatientData[id] = parseFloat(e.target.value);
+          updateCalculations();
+        });
+      });
+
+      document.getElementById('scenarioSelect').addEventListener('change', e => {
+        const scenarioId = e.target.value;
+        const descriptionEl = document.getElementById('scenarioDescription');
+        const applyBtn = document.getElementById('applyScenario');
+
+        if (scenarioId) {
+          const scenObj = scenariosDict[currentLang].find(s => s.id === scenarioId);
+          if (scenObj) {
+            descriptionEl.textContent = scenObj.desc;
+            descriptionEl.classList.remove('hidden');
+            applyBtn.classList.remove('hidden');
+          }
+        } else {
+          descriptionEl.classList.add('hidden');
+          applyBtn.classList.add('hidden');
+        }
+      });
+
+      document.getElementById('applyScenario').addEventListener('click', () => {
+        const scenario = document.getElementById('scenarioSelect').value;
+        applyScenario(scenario);
+      });
+
+      document.getElementById('printButton').addEventListener('click', () => {
+        const printTitle = document.querySelector('#printArea h1');
+        printTitle.style.visibility = 'visible';
+        printTitle.style.display = 'block';
+        window.print();
+        printTitle.style.visibility = 'hidden';
+        printTitle.style.display = 'none';
+      });
+    }
+
+    // Основная функция пересчёта данных
+    function updateCalculations() {
+      const u = dict[currentLang].units;
+
+      // Обновление значений на UI
+      for (const key in currentPatientData) {
+        const el = document.getElementById(key);
+        if (el && el.type === 'range') el.value = currentPatientData[key];
+
+        const valueEl = document.getElementById(key + 'Value');
+        if (valueEl) {
+          let unit = ` ${u.kg}`;
+          if (['sodium', 'potassium', 'glucose', 'urea'].includes(key)) unit = ` ${u.mmol}`;
+          else if (key === 'ht') unit = '%';
+          else if (['hb', 'totalProtein'].includes(key)) unit = ` ${u.g_l}`;
+
+          valueEl.textContent = `${currentPatientData[key]}${unit}`;
+        }
+      }
+
+      // Пол и возраст (для печати)
+      document.getElementById('genderValue').textContent =
+        document.querySelector(`input[name="gender"][value="${currentPatientData.gender}"] + span`).textContent;
+      const ageSelect = document.getElementById('age');
+      document.getElementById('ageValue').textContent = ageSelect.options[ageSelect.selectedIndex].text;
+
+      // Расчет TBW
+      let tbwCoefficient = 0.6;
+      if (currentPatientData.gender === 'female') {
+        tbwCoefficient = (currentPatientData.age === 'elderly') ? 0.45 : 0.5;
+      } else {
+        tbwCoefficient = (currentPatientData.age === 'elderly') ? 0.5 : 0.6;
+      }
+      const tbw = currentPatientData.weight * tbwCoefficient;
+
+      // НОВАЯ ФОРМУЛА ОСМОЛЯРНОСТИ (Gennari, 1984)
+      const osmolality = 2 * (currentPatientData.sodium + currentPatientData.potassium) 
+                       + currentPatientData.urea 
+                       + currentPatientData.glucose 
+                       + 0.03 * currentPatientData.totalProtein;
+
+      document.getElementById('osmolality').textContent = `${Math.round(osmolality)} ${u.mosm}`;
+      document.getElementById('totalWater').textContent = `${Math.round(tbw)} ${u.l}`;
+
+      updateStatus(osmolality);
+      determineDisorderType(osmolality);
+      updateSymptoms();
+    }
+
+    // Статус тоничности
+    function updateStatus(osmolality) {
+      const statusEl = document.getElementById('status');
+      const st = dict[currentLang].status;
+      
+      if (osmolality < 285) {
+        statusEl.textContent = st.hypo;
+        statusEl.className = 'font-bold text-blue-600';
+      } else if (osmolality > 310) {
+        statusEl.textContent = st.hyper;
+        statusEl.className = 'font-bold text-red-600';
+      } else {
+        statusEl.textContent = st.norm;
+        statusEl.className = 'font-bold text-green-600';
+      }
+    }
+
+    // Тип дизгидрии
+    function determineDisorderType(osmolality) {
+      const disorderTypeEl = document.getElementById('disorderType');
+      const { ht, hb, totalProtein, sodium } = currentPatientData;
+      const d = dict[currentLang].disorders;
+
+      const isHemoconcentrated = (ht > 50 && hb > 155 && totalProtein > 80);
+      const isHemodiluted = (ht < 40 && hb < 120 && totalProtein < 60);
+
+      let disorderType = d.unidentified;
+      let colorClass = 'text-gray-600';
+      let isDehyd = false;
+      let isOverhyd = false;
+
+      if (isHemoconcentrated) {
+        isDehyd = true;
+        if (osmolality < 285) { disorderType = d.hypoDehyd; colorClass = 'text-blue-700'; }
+        else if (osmolality > 310) { disorderType = d.hyperDehyd; colorClass = 'text-red-700'; }
+        else { disorderType = d.isoDehyd; colorClass = 'text-orange-600'; }
+      } else if (isHemodiluted) {
+        isOverhyd = true;
+        if (osmolality < 285) { disorderType = d.hypoOver; colorClass = 'text-blue-500'; }
+        else if (osmolality > 310) { disorderType = d.hyperOver; colorClass = 'text-red-500'; }
+        else { disorderType = d.isoOver; colorClass = 'text-purple-600'; }
+      } else {
+        if (osmolality >= 285 && osmolality <= 310) {
+          if (sodium < 135) { disorderType = d.pseudoHypo; colorClass = 'text-teal-600'; }
+          else if (sodium > 145) { disorderType = d.hyperNat; colorClass = 'text-amber-600'; }
+          else { disorderType = d.normNorm; colorClass = 'text-green-600'; }
+        } else if (osmolality < 285) { disorderType = d.hypoNorm; colorClass = 'text-blue-600'; }
+        else if (osmolality > 310) { disorderType = d.hyperNorm; colorClass = 'text-red-600'; }
+      }
+
+      // Сохраняем флаги для индикаторов
+      disorderTypeEl.dataset.isDehyd = isDehyd;
+      disorderTypeEl.dataset.isOverhyd = isOverhyd;
+
+      disorderTypeEl.textContent = disorderType;
+      disorderTypeEl.className = 'font-bold text-right max-w-[60%] ' + colorClass;
+    }
+
+    // Симптомы
+    function updateSymptoms() {
+      document.querySelectorAll('.symptom-indicator').forEach(el => {
+        el.classList.add('opacity-30');
+        el.classList.remove('ring-2', 'ring-offset-1', 'ring-red-400');
+      });
+
+      const { sodium, potassium } = currentPatientData;
+      const el = document.getElementById('disorderType');
+      const isDehyd = el.dataset.isDehyd === 'true';
+      const isOverhyd = el.dataset.isOverhyd === 'true';
+
+      if (isDehyd) {
+        document.getElementById('thirst').classList.remove('opacity-30');
+        document.getElementById('dryMucous').classList.remove('opacity-30');
+        document.getElementById('tachycardia').classList.remove('opacity-30');
+        document.getElementById('hypotension').classList.remove('opacity-30');
+      }
+
+      if (isOverhyd) {
+        document.getElementById('edema').classList.remove('opacity-30');
+        document.getElementById('neurological').classList.remove('opacity-30');
+      }
+
+      if (sodium < 125 || sodium > 155 || potassium < 2.5 || potassium > 6.5) {
+        document.getElementById('neurological').classList.remove('opacity-30');
+        document.getElementById('neurological').classList.add('ring-2', 'ring-red-400');
+      }
+    }
+
+    // Применение сценария
+    function applyScenario(scenario) {
+      const scenarios = {
+        hypotonicDehydration: { weight: 70, gender: 'male', age: 'middle', sodium: 128, potassium: 3.8, ht: 52, hb: 165, totalProtein: 85, glucose: 5, urea: 5 },
+        isotonicDehydration: { weight: 80, gender: 'male', age: 'young', sodium: 141, potassium: 4.1, ht: 51, hb: 162, totalProtein: 82, glucose: 6, urea: 6 },
+        hypertonicDehydration: { weight: 65, gender: 'male', age: 'elderly', sodium: 152, potassium: 4.2, ht: 54, hb: 170, totalProtein: 88, glucose: 7, urea: 8 },
+        hypotonicOverhydration: { weight: 60, gender: 'female', age: 'elderly', sodium: 125, potassium: 4.0, ht: 36, hb: 110, totalProtein: 58, glucose: 5, urea: 4 },
+        isotonicOverhydration: { weight: 70, gender: 'female', age: 'middle', sodium: 139, potassium: 4.0, ht: 35, hb: 115, totalProtein: 55, glucose: 5, urea: 5 },
+        hypertonicOverhydration: { weight: 80, gender: 'male', age: 'elderly', sodium: 158, potassium: 4.5, ht: 37, hb: 118, totalProtein: 59, glucose: 6, urea: 12 },
+        normotonicHyponatremia: { weight: 75, gender: 'male', age: 'middle', sodium: 128, potassium: 4.0, ht: 45, hb: 140, totalProtein: 70, glucose: 18, urea: 14 },
+        normotonicHypernatremia: { weight: 70, gender: 'male', age: 'young', sodium: 150, potassium: 4.0, ht: 49, hb: 158, totalProtein: 78, glucose: 5, urea: 7 },
+        hypokalemia: { weight: 80, gender: 'male', age: 'middle', sodium: 138, potassium: 2.8, ht: 46, hb: 135, totalProtein: 72, glucose: 6, urea: 5 },
+        hyperkalemia: { weight: 75, gender: 'male', age: 'elderly', sodium: 140, potassium: 6.5, ht: 35, hb: 115, totalProtein: 65, glucose: 5, urea: 15 },
+      };
+
+      if (scenarios[scenario]) {
+        currentPatientData = { ...currentPatientData, ...scenarios[scenario] };
+        document.querySelector(`input[name="gender"][value="${currentPatientData.gender}"]`).checked = true;
+        document.getElementById('age').value = currentPatientData.age;
+      }
+
+      updateCalculations();
+      
+      document.getElementById('scenarioSelect').value = "";
+      document.getElementById('scenarioDescription').classList.add('hidden');
+      document.getElementById('applyScenario').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
