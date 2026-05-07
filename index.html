@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="page-title">Материалы по интенсивной терапии и реаниматологии</title>
+  
+  <!-- Подключение Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f7f9;
+      color: #1e293b;
+    }
+
+    /* Переключатель языка */
+    .lang-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(5px);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      z-index: 50;
+    }
+    .lang-btn {
+      padding: 6px 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.7);
+      transition: all 0.2s;
+    }
+    .lang-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .lang-btn.active {
+      background: #3b82f6; /* Синий Tailwind */
+      color: #fff;
+    }
+
+    /* Анимация кривой ЭКГ */
+    .ecg-path {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: draw-ecg 4s linear infinite;
+    }
+    @keyframes draw-ecg {
+      0% { stroke-dashoffset: 1000; }
+      50% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: -1000; }
+    }
+
+    /* Эффект наведения для карточек модулей */
+    .module-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .module-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    /* ===== Стили блока автора ===== */
+    .author-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: #ffffff;
+      border: 1px solid #e0e4e8;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      transition: box-shadow 0.3s;
+    }
+    .author-card:hover {
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+    .author-avatar {
+      font-size: 3rem;
+      background: #f0f4f9;
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .author-info h2 {
+      margin: 0 0 8px 0;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #1a1a1a;
+    }
+    .author-info p {
+      margin: 4px 0;
+      color: #4a4a4a;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .author-info a {
+      color: #0b57d0;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .author-info a:hover {
+      text-decoration: underline;
+    }
+    
+    @media (max-width: 640px) {
+      .author-card { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- HERO SECTION (Заголовок в медицинском стиле) -->
+  <header class="bg-slate-900 text-white relative overflow-hidden shadow-lg">
+    
+    <!-- Переключатель языка -->
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('ru')" id="btn-ru">Русский</button>
+      <button class="lang-btn" onclick="setLang('en')" id="btn-en">English</button>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-6 py-16 relative z-10">
+      <div class="flex items-center gap-4 mb-4 flex-wrap">
+        <span class="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider" data-i18n="badge_ic">Интенсивная терапия</span>
+        <span class="bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider" data-i18n="badge_res">Реаниматология</span>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight pr-10" data-i18n="hero_title">
+        Учебно-практические материалы
+      </h1>
+      <p class="text-lg md:text-xl text-slate-300 max-w-2xl" data-i18n="hero_subtitle">
+        Справочные таблицы и интерактивные симуляторы для врачей и студентов медицинских вузов.
+      </p>
+    </div>
+
+    <!-- Декоративная ЭКГ на заднем фоне -->
+    <svg class="absolute bottom-0 w-full h-32 opacity-20 pointer-events-none" preserveAspectRatio="none" viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg">
+      <path class="ecg-path" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M0,50 L300,50 L320,50 L330,20 L350,90 L360,50 L380,50 L400,30 L410,50 L700,50 L720,50 L730,20 L750,90 L760,50 L780,50 L800,30 L810,50 L1000,50" />
+    </svg>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-grow max-w-5xl mx-auto px-6 py-12 w-full">
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      <!-- Модуль 1: Шоки -->
+      <a href="1.html" class="module-card bg-white rounded-xl border-t-4 border-red-500 shadow-md p-6 flex flex-col h-full cursor-pointer group outline-none focus:ring-4 focus:ring-red-300">
+        <div class="bg-red-50 w-14 h-14 rounded-lg flex items-center justify-center mb-6 text-red-500">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-red-600 transition-colors" data-i18n="mod1_title">Гемодинамические профили шока</h3>
+        <p class="text-gray-600 text-sm mb-6 flex-grow" data-i18n="mod1_desc">
+          Подробная таблица с описанием гиповолемического, кардиогенного, обструктивного, септического и других видов шока. Включает гемодинамические изменения (САД, ЧСС, СВ, ЦВД) и реакцию на инфузию.
+        </p>
+        <div class="text-red-600 font-semibold text-sm flex items-center mt-auto">
+          <span data-i18n="btn_open">Открыть модуль</span>
+          <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </div>
+      </a>
+
+      <!-- Модуль 2: Дизгидрии (Статика) -->
+      <a href="2.html" class="module-card bg-white rounded-xl border-t-4 border-blue-500 shadow-md p-6 flex flex-col h-full cursor-pointer group outline-none focus:ring-4 focus:ring-blue-300">
+        <div class="bg-blue-50 w-14 h-14 rounded-lg flex items-center justify-center mb-6 text-blue-500">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors" data-i18n="mod2_title">Виды водно-электролитных нарушений</h3>
+        <p class="text-gray-600 text-sm mb-6 flex-grow" data-i18n="mod2_desc">
+          Классификация дизгидрий: гипо-, изо- и гиперосмолярная дегидратация и гипергидратация. Направления смещения воды, клинические симптомы, лаб. данные и формулы расчетов.
+        </p>
+        <div class="text-blue-600 font-semibold text-sm flex items-center mt-auto">
+          <span data-i18n="btn_open">Открыть модуль</span>
+          <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </div>
+      </a>
+
+      <!-- Модуль 3: Дизгидрии (Симулятор) -->
+      <a href="3.html" class="module-card bg-white rounded-xl border-t-4 border-indigo-500 shadow-md p-6 flex flex-col h-full cursor-pointer group outline-none focus:ring-4 focus:ring-indigo-300">
+        <div class="bg-indigo-50 w-14 h-14 rounded-lg flex items-center justify-center mb-6 text-indigo-500">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-indigo-600 transition-colors" data-i18n="mod3_title">Интерактивный калькулятор-симулятор</h3>
+        <p class="text-gray-600 text-sm mb-6 flex-grow" data-i18n="mod3_desc">
+          Геймифицированное обучение с расчетом осмолярности (формула Геннари). Интерактивные слайдеры электролитов, автоматическое определение тоничности и готовые клинические сценарии.
+        </p>
+        <div class="text-indigo-600 font-semibold text-sm flex items-center mt-auto">
+          <span data-i18n="btn_open">Открыть модуль</span>
+          <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- ================= БЛОК АВТОРА ================= -->
+    <div class="author-card" id="author_block">
+      <!-- Контент заполняется через JS (локализация) -->
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-slate-900 text-slate-400 py-6 text-center text-sm mt-auto">
+    <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+      <p data-i18n="footer_copy">&copy; 2026. Учебные материалы для врачей, интернов и студентов</p>
+      <p class="mt-2 md:mt-0 text-xs" data-i18n="footer_dept">Кафедра анестезиологии и реаниматологии с курсом ПК УО "БГМУ"</p>
+    </div>
+  </footer>
+
+  <!-- Скрипт локализации -->
+  <script>
+    const dict = {
+      ru: {
+        page_title: "Материалы по интенсивной терапии и реаниматологии",
+        badge_ic: "Интенсивная терапия",
+        badge_res: "Реаниматология",
+        hero_title: "Учебно-практические материалы",
+        hero_subtitle: "Справочные таблицы и интерактивные симуляторы для врачей и студентов медицинских вузов.",
+        
+        mod1_title: "Гемодинамические профили шока",
+        mod1_desc: "Подробная таблица с описанием гиповолемического, кардиогенного, обструктивного, септического и других видов шока. Включает гемодинамические изменения (САД, ЧСС, СВ, ЦВД) и реакцию на инфузию.",
+        
+        mod2_title: "Виды водно-электролитных нарушений",
+        mod2_desc: "Классификация дизгидрий: гипо-, изо- и гиперосмолярная дегидратация и гипергидратация. Направления смещения воды, клинические симптомы, лаб. данные и формулы расчетов.",
+        
+        mod3_title: "Интерактивный калькулятор-симулятор",
+        mod3_desc: "Геймифицированное обучение с расчетом осмолярности (формула Геннари). Интерактивные слайдеры электролитов, автоматическое определение тоничности и готовые клинические сценарии.",
+        
+        btn_open: "Открыть модуль",
+        
+        footer_copy: "&copy; 2026. Учебные материалы для врачей, интернов и студентов",
+        footer_dept: 'Кафедра анестезиологии и реаниматологии с курсом ПК УО "БГМУ"',
+
+        author_html: `
+          <div class="author-avatar">👨‍⚕️</div>
+          <div class="author-info">
+            <h2>Об авторе</h2>
+            <p>Материалы подготовлены: <strong>Бабковым Иваном Леонидовичем</strong> — врачом-анестезиологом-реаниматологом, сотрудником кафедры анестезиологии и реаниматологии с курсом ПК УО "БГМУ".</p>
+            <p>Подробнее об авторе: <a href="https://www.bsmu.by/personalii/babkov-ivan-leonidovich/?sphrase_id=325251" target="_blank" rel="noopener noreferrer">профиль на сайте БГМУ</a>.</p>
+            <p>
+              <a href="mailto:i@ibabkow.ru" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0b57d0; margin-top: 6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0b57d0" width="18" height="18">
+                  <path d="M2 4V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V4C22 2.9 21.1 2 20 2H4C2.9 2 2 2.9 2 4ZM4 6L12 12L20 6V20H4V6Z"/>
+                </svg>
+                <span>i@ibabkow.ru</span>
+              </a>
+            </p>
+          </div>
+        `
+      },
+      en: {
+        page_title: "Intensive Care and Resuscitation Materials",
+        badge_ic: "Intensive Care",
+        badge_res: "Resuscitation",
+        hero_title: "Educational and Practical Materials",
+        hero_subtitle: "Reference tables and interactive simulators for doctors and medical students.",
+        
+        mod1_title: "Hemodynamic Profiles of Shock",
+        mod1_desc: "Detailed table describing hypovolemic, cardiogenic, obstructive, septic, and other types of shock. Includes hemodynamic changes (SBP, HR, CO, CVP) and response to fluid challenge.",
+        
+        mod2_title: "Types of Water-Electrolyte Imbalances",
+        mod2_desc: "Classification of dyshydrias: hypo-, iso-, and hyperosmolar dehydration and overhydration. Fluid shift directions, clinical symptoms, lab data, and calculation formulas.",
+        
+        mod3_title: "Interactive Calculator-Simulator",
+        mod3_desc: "Gamified learning with osmolality calculation (Gennari formula). Interactive electrolyte sliders, automatic tonicity detection, and ready-made clinical scenarios.",
+        
+        btn_open: "Open Module",
+        
+        footer_copy: "&copy; 2026. Educational materials for doctors, interns, and students",
+        footer_dept: 'Department of Anesthesiology and Reanimatology with advanced training course, BSMU',
+
+        author_html: `
+          <div class="author-avatar">👨‍⚕️</div>
+          <div class="author-info">
+            <h2>About the Author</h2>
+            <p>Materials prepared by: <strong>Ivan L. Babkov, MD</strong> — Anesthesiologist-Intensivist, Department of Anesthesiology and Reanimatology with advanced training course, Belarusian State Medical University.</p>
+            <p>More about the author: <a href="https://www.bsmu.by/personalii/babkov-ivan-leonidovich/?sphrase_id=325251" target="_blank" rel="noopener noreferrer">BSMU profile (RU)</a>.</p>
+            <p>
+              <a href="mailto:i@ibabkow.ru" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0b57d0; margin-top: 6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0b57d0" width="18" height="18">
+                  <path d="M2 4V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V4C22 2.9 21.1 2 20 2H4C2.9 2 2 2.9 2 4ZM4 6L12 12L20 6V20H4V6Z"/>
+                </svg>
+                <span>i@ibabkow.ru</span>
+              </a>
+            </p>
+          </div>
+        `
+      }
+    };
+
+    function setLang(lang) {
+      // Обновляем активную кнопку
+      document.getElementById('btn-ru').classList.toggle('active', lang === 'ru');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      
+      // Обновляем title страницы
+      document.getElementById('page-title').textContent = dict[lang].page_title;
+
+      // Обновляем текстовые элементы по атрибуту data-i18n
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[lang][key]) {
+          el.innerHTML = dict[lang][key];
+        }
+      });
+      
+      // Обновляем блок автора (содержащий сложный HTML)
+      document.getElementById('author_block').innerHTML = dict[lang].author_html;
+    }
+
+    // Инициализация языка при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+      setLang('ru');
+    });
+  </script>
+
+</body>
+</html>
