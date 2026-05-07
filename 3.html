@@ -170,10 +170,10 @@
       <!-- Сетка 3 колонки -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- КОЛОНКА 1 -->
+        <!-- ================= КОЛОНКА 1 ================= -->
         <div class="lg:col-span-1 space-y-6">
           
-          <!-- Параметры пациента -->
+          <!-- Параметры пациента (Остается на месте) -->
           <div class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="patient_params">Параметры пациента</h2>
             <div class="space-y-4">
@@ -208,7 +208,96 @@
             </div>
           </div>
 
-          <!-- Электролиты -->
+          <!-- Рассчитанные показатели (Перемещено сюда, сделано спойлером) -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <details class="group marker:content-['']">
+              <summary class="flex justify-between items-center cursor-pointer list-none outline-none">
+                <h2 class="text-xl font-semibold text-gray-800" data-i18n="calc_title">Рассчитанные показатели</h2>
+                <!-- Иконка стрелочки -->
+                <span class="text-gray-500 transition-transform duration-300 group-open:rotate-180 no-print">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </summary>
+              
+              <div class="mt-4 pt-4 border-t border-gray-100">
+                <div class="space-y-3 mb-6">
+                  <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                    <span class="text-gray-600" data-i18n="osm_lbl">Осмолярность плазмы:</span>
+                    <span id="osmolality" class="font-bold text-lg">290 мосм/л</span>
+                  </div>
+                  <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                    <span class="text-gray-600" data-i18n="tbw_lbl">Общая вода (TBW):</span>
+                    <span id="totalWater" class="font-bold">42 л</span>
+                  </div>
+                  <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                    <span class="text-gray-600" data-i18n="status_lbl">Статус тоничности:</span>
+                    <span id="status" class="font-bold text-green-600">Норма</span>
+                  </div>
+                  <div class="flex justify-between items-center py-1">
+                    <span class="text-gray-600" data-i18n="disorder_lbl">Тип нарушения:</span>
+                    <span id="disorderType" class="font-bold text-gray-800 text-right max-w-[60%]">Не определен</span>
+                  </div>
+                </div>
+
+                <div class="note" style="margin: 0; padding: 10px;" id="formula_block">
+                  <!-- Заполняется через JS -->
+                </div>
+              </div>
+            </details>
+          </div>
+
+        </div>
+
+        <!-- ================= КОЛОНКА 2 ================= -->
+        <div class="lg:col-span-1 space-y-6">
+          
+          <!-- Общий анализ крови и белок (Остается на месте) -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="cbc_title">Общий анализ крови и белок</h2>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <span data-i18n="ht_lbl">Гематокрит (Ht):</span> <span id="htValue" class="font-bold text-blue-600">48%</span>
+                </label>
+                <input type="range" id="ht" min="20" max="70" step="0.1" value="48" class="no-print" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <span data-i18n="hb_lbl">Гемоглобин (Hb):</span> <span id="hbValue" class="font-bold text-blue-600">140 г/л</span> 
+                </label>
+                <input type="range" id="hb" min="60" max="220" step="1" value="140" class="no-print" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <span data-i18n="tp_lbl">Общий белок:</span> <span id="totalProteinValue" class="font-bold text-blue-600">70 г/л</span> 
+                </label>
+                <input type="range" id="totalProtein" min="30" max="120" step="0.1" value="70" class="no-print" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Готовые сценарии (Перемещено сюда из третьей колонки) -->
+          <div class="bg-white rounded-lg shadow-md p-6 no-print">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="scenarios_title">Готовые сценарии</h2>
+            <select id="scenarioSelect" class="w-full p-2 border border-gray-300 rounded mb-4 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+              <!-- Опции заполняются через JS -->
+            </select>
+            
+            <div id="scenarioDescription" class="text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-200 hidden"></div>
+            
+            <button id="applyScenario" class="mt-3 w-full bg-blue-600 text-white font-medium py-2 px-4 rounded hover:bg-blue-700 transition-colors hidden" data-i18n="apply_btn">
+              Применить сценарий
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ================= КОЛОНКА 3 ================= -->
+        <div class="lg:col-span-1 space-y-6">
+          
+          <!-- Электролиты и метаболиты (Перемещено сюда из первой колонки) -->
           <div class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="electrolytes_title">Электролиты и метаболиты</h2>
             <div class="space-y-4">
@@ -239,96 +328,7 @@
             </div>
           </div>
 
-        </div>
-
-        <!-- КОЛОНКА 2 -->
-        <div class="lg:col-span-1 space-y-6">
-          
-          <!-- Доп. лабораторные показатели -->
-          <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="cbc_title">Общий анализ крови и белок</h2>
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  <span data-i18n="ht_lbl">Гематокрит (Ht):</span> <span id="htValue" class="font-bold text-blue-600">48%</span>
-                </label>
-                <input type="range" id="ht" min="20" max="70" step="0.1" value="48" class="no-print" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  <span data-i18n="hb_lbl">Гемоглобин (Hb):</span> <span id="hbValue" class="font-bold text-blue-600">140 г/л</span> 
-                </label>
-                <input type="range" id="hb" min="60" max="220" step="1" value="140" class="no-print" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  <span data-i18n="tp_lbl">Общий белок:</span> <span id="totalProteinValue" class="font-bold text-blue-600">70 г/л</span> 
-                </label>
-                <input type="range" id="totalProtein" min="30" max="120" step="0.1" value="70" class="no-print" />
-              </div>
-            </div>
-          </div>
-
-           <!-- Рассчитанные показатели (Спойлер) -->
-          <div class="bg-white rounded-lg shadow-md p-6">
-            <details class="group marker:content-['']">
-              <summary class="flex justify-between items-center cursor-pointer list-none outline-none">
-                <h2 class="text-xl font-semibold text-gray-800" data-i18n="calc_title">Рассчитанные показатели</h2>
-                <!-- Иконка стрелочки -->
-                <span class="text-gray-500 transition-transform duration-300 group-open:rotate-180 no-print">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </summary>
-              
-              <!-- Содержимое спойлера -->
-              <div class="mt-4 pt-4 border-t border-gray-100">
-                <div class="space-y-3 mb-6">
-                  <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                    <span class="text-gray-600" data-i18n="osm_lbl">Осмолярность плазмы:</span>
-                    <span id="osmolality" class="font-bold text-lg">290 мосм/л</span>
-                  </div>
-                  <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                    <span class="text-gray-600" data-i18n="tbw_lbl">Общая вода (TBW):</span>
-                    <span id="totalWater" class="font-bold">42 л</span>
-                  </div>
-                  <div class="flex justify-between items-center py-1 border-b border-gray-100">
-                    <span class="text-gray-600" data-i18n="status_lbl">Статус тоничности:</span>
-                    <span id="status" class="font-bold text-green-600">Норма</span>
-                  </div>
-                  <div class="flex justify-between items-center py-1">
-                    <span class="text-gray-600" data-i18n="disorder_lbl">Тип нарушения:</span>
-                    <span id="disorderType" class="font-bold text-gray-800 text-right max-w-[60%]">Не определен</span>
-                  </div>
-                </div>
-
-                <!-- Формула Геннари -->
-                <div class="note" style="margin: 0; padding: 10px;" id="formula_block">
-                  <!-- Заполняется через JS -->
-                </div>
-              </div>
-            </details>
-          </div>
-
-        <!-- КОЛОНКА 3 -->
-        <div class="lg:col-span-1 space-y-6">
-          
-          <!-- Клинические сценарии -->
-          <div class="bg-white rounded-lg shadow-md p-6 no-print">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="scenarios_title">Готовые сценарии</h2>
-            <select id="scenarioSelect" class="w-full p-2 border border-gray-300 rounded mb-4 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
-              <!-- Опции заполняются через JS -->
-            </select>
-            
-            <div id="scenarioDescription" class="text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-200 hidden"></div>
-            
-            <button id="applyScenario" class="mt-3 w-full bg-blue-600 text-white font-medium py-2 px-4 rounded hover:bg-blue-700 transition-colors hidden" data-i18n="apply_btn">
-              Применить сценарий
-            </button>
-          </div>
-
-          <!-- Клинические проявления -->
+          <!-- Возможная клиника (Остается в третьей колонке, но теперь внизу) -->
           <div class="bg-white rounded-lg shadow-md p-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4" data-i18n="symptoms_title">Возможная клиника</h2>
             <p class="text-xs text-gray-500 mb-3 leading-tight" data-i18n="symptoms_desc">Симптомы подсвечиваются в зависимости от рассчитанного типа дисгидрии и уровня электролитов.</p>
@@ -364,7 +364,6 @@
         </div>
 
       </div>
-    </div>
 
     <!-- Кнопка печати -->
     <div class="mt-8 flex justify-end no-print">
