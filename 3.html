@@ -784,20 +784,20 @@
 
       if (isHemoconcentrated) {
         isDehyd = true;
-        if (osmolality < 275) { disorderType = d.hypoDehyd; colorClass = 'text-blue-700'; }
+        if (osmolality < 280) { disorderType = d.hypoDehyd; colorClass = 'text-blue-700'; }
         else if (osmolality > 300) { disorderType = d.hyperDehyd; colorClass = 'text-red-700'; }
         else { disorderType = d.isoDehyd; colorClass = 'text-orange-600'; }
       } else if (isHemodiluted) {
         isOverhyd = true;
-        if (osmolality < 275) { disorderType = d.hypoOver; colorClass = 'text-blue-500'; }
+        if (osmolality < 280) { disorderType = d.hypoOver; colorClass = 'text-blue-500'; }
         else if (osmolality > 300) { disorderType = d.hyperOver; colorClass = 'text-red-500'; }
         else { disorderType = d.isoOver; colorClass = 'text-purple-600'; }
       } else {
-        if (osmolality >= 275 && osmolality <= 310) {
+        if (osmolality >= 280 && osmolality <= 300) {
           if (sodium < 135) { disorderType = d.pseudoHypo; colorClass = 'text-teal-600'; }
           else if (sodium > 145) { disorderType = d.hyperNat; colorClass = 'text-amber-600'; }
           else { disorderType = d.normNorm; colorClass = 'text-green-600'; }
-        } else if (osmolality < 275) { disorderType = d.hypoNorm; colorClass = 'text-blue-600'; }
+        } else if (osmolality < 280) { disorderType = d.hypoNorm; colorClass = 'text-blue-600'; }
         else if (osmolality > 300) { disorderType = d.hyperNorm; colorClass = 'text-red-600'; }
       }
 
