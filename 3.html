@@ -756,10 +756,10 @@
       const statusEl = document.getElementById('status');
       const st = dict[currentLang].status;
       
-      if (osmolality < 285) {
+      if (osmolality < 280) {
         statusEl.textContent = st.hypo;
         statusEl.className = 'font-bold text-blue-600';
-      } else if (osmolality > 310) {
+      } else if (osmolality > 300) {
         statusEl.textContent = st.hyper;
         statusEl.className = 'font-bold text-red-600';
       } else {
