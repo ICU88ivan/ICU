@@ -431,7 +431,7 @@
         print_btn: "Распечатать отчёт",
 
         // Динамические тексты
-        units: { kg: "кг", mmol: "ммоль/л", g_l: "г/л", l: "л", mosm: "мосм/л" },
+        units: { kg: "кг", mmol: "ммоль/л", g_l: "г/л", l: "л", mosm: "мОсм/л" },
         status: {
           hypo: "Гипоосмолярность",
           hyper: "Гиперосмолярность",
@@ -784,21 +784,21 @@
 
       if (isHemoconcentrated) {
         isDehyd = true;
-        if (osmolality < 285) { disorderType = d.hypoDehyd; colorClass = 'text-blue-700'; }
-        else if (osmolality > 310) { disorderType = d.hyperDehyd; colorClass = 'text-red-700'; }
+        if (osmolality < 275) { disorderType = d.hypoDehyd; colorClass = 'text-blue-700'; }
+        else if (osmolality > 300) { disorderType = d.hyperDehyd; colorClass = 'text-red-700'; }
         else { disorderType = d.isoDehyd; colorClass = 'text-orange-600'; }
       } else if (isHemodiluted) {
         isOverhyd = true;
-        if (osmolality < 285) { disorderType = d.hypoOver; colorClass = 'text-blue-500'; }
-        else if (osmolality > 310) { disorderType = d.hyperOver; colorClass = 'text-red-500'; }
+        if (osmolality < 275) { disorderType = d.hypoOver; colorClass = 'text-blue-500'; }
+        else if (osmolality > 300) { disorderType = d.hyperOver; colorClass = 'text-red-500'; }
         else { disorderType = d.isoOver; colorClass = 'text-purple-600'; }
       } else {
-        if (osmolality >= 285 && osmolality <= 310) {
+        if (osmolality >= 275 && osmolality <= 310) {
           if (sodium < 135) { disorderType = d.pseudoHypo; colorClass = 'text-teal-600'; }
           else if (sodium > 145) { disorderType = d.hyperNat; colorClass = 'text-amber-600'; }
           else { disorderType = d.normNorm; colorClass = 'text-green-600'; }
-        } else if (osmolality < 285) { disorderType = d.hypoNorm; colorClass = 'text-blue-600'; }
-        else if (osmolality > 310) { disorderType = d.hyperNorm; colorClass = 'text-red-600'; }
+        } else if (osmolality < 275) { disorderType = d.hypoNorm; colorClass = 'text-blue-600'; }
+        else if (osmolality > 300) { disorderType = d.hyperNorm; colorClass = 'text-red-600'; }
       }
 
       // Сохраняем флаги для индикаторов
