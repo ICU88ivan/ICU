@@ -771,7 +771,7 @@
       const d = dict[currentLang].disorders;
 
       const isHemoconcentrated = (ht > 50 && hb > 155 && totalProtein > 80);
-      const isHemodiluted = (ht < 40 && hb < 120 && totalProtein < 60);
+      const isHemodiluted = (ht < 40 && hb < 120 && totalProtein < 55);
 
       let disorderType = d.unidentified;
       let colorClass = 'text-gray-600';
@@ -839,7 +839,7 @@
     function applyScenario(scenario) {
       const scenarios = {
         hypotonicDehydration: { weight: 70, gender: 'male', age: 'middle', sodium: 128, potassium: 3.8, ht: 52, hb: 165, totalProtein: 85, glucose: 4, urea: 4 },
-        isotonicDehydration: { weight: 80, gender: 'male', age: 'young', sodium: 136, potassium: 4.1, ht: 51, hb: 162, totalProtein: 80, glucose: 4, urea: 5 },
+        isotonicDehydration: { weight: 80, gender: 'male', age: 'young', sodium: 136, potassium: 4.1, ht: 65, hb: 162, totalProtein: 80, glucose: 4, urea: 5 },
         hypertonicDehydration: { weight: 65, gender: 'male', age: 'elderly', sodium: 152, potassium: 4.2, ht: 54, hb: 170, totalProtein: 88, glucose: 7, urea: 8 },
         hypotonicOverhydration: { weight: 60, gender: 'female', age: 'elderly', sodium: 125, potassium: 4.0, ht: 36, hb: 110, totalProtein: 58, glucose: 5, urea: 4 },
         isotonicOverhydration: { weight: 70, gender: 'female', age: 'middle', sodium: 139, potassium: 4.0, ht: 35, hb: 115, totalProtein: 55, glucose: 5, urea: 5 },
