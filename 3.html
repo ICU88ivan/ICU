@@ -445,7 +445,6 @@
           isoOver: "Изотоническая гипергидратация",
           hyperOver: "Гипертоническая гипергидратация",
           pseudoHypo: "Изотоническая гипонатриемия (псевдо)",
-          hyperNat: "Гипернатриемия без нарушения тоничности",
           normNorm: "Нормальный водно-электролитный баланс",
           hypoNorm: "Гипоосмолярность (нормоволемия)",
           hyperNorm: "Гиперосмолярность (нормоволемия)",
@@ -536,7 +535,6 @@
           isoOver: "Isotonic Overhydration",
           hyperOver: "Hypertonic Overhydration",
           pseudoHypo: "Isotonic Hyponatremia (Pseudo)",
-          hyperNat: "Hypernatremia without tonicity change",
           normNorm: "Normal Water-Electrolyte Balance",
           hypoNorm: "Hypoosmolality (Normovolemia)",
           hyperNorm: "Hyperosmolality (Normovolemia)",
@@ -575,7 +573,6 @@
         { id: "isotonicOverhydration", name: "Изотоническая гипергидратация", desc: "Пациентка 55 лет, ХСН после избыточной инфузии изотонических растворов. Одышка, отеки. Анализы: Na⁺ 139, Ht 35%, Hb 115 г/л, белок 55 г/л. Гемодилюция при нормальной осмолярности." },
         { id: "hypertonicOverhydration", name: "Гипертоническая гипергидратация", desc: "Пациент 68 лет, ХБП, получил избыток гипертонического р-ра. Анализы: Na⁺ 158, Ht 37%, Hb 118 г/л, белок 59 г/л. Гемодилюция и высочайшая осмолярность." },
         { id: "normotonicHyponatremia", name: "Гипонатриемия без нарушения тоничности", desc: "Пациент 60 лет с декомпенсированным СД. Na⁺ 128, Глюкоза 18, Мочевина 14. Расчетная осмолярность в норме за счёт глюкозы и мочевины. Это транслокационная (псевдо) гипонатриемия." },
-        { id: "normotonicHypernatremia", name: "Гипернатриемия без нарушения тоничности", desc: "Пациент 40 лет с несахарным диабетом (начальная стадия компенсации). Na⁺ 146. Гематокрит и белок в норме." },
         { id: "hypokalemia", name: "Тяжелая гипокалиемия", desc: "Пациент 50 лет, злоупотребляет фуросемидом. Мышечная слабость. K⁺ 2.8 ммоль/л. Высокий риск аритмий." },
         { id: "hyperkalemia", name: "Тяжелая гиперкалиемия", desc: "Пациент 65 лет, острая почечная недостаточность. K⁺ 6.5 ммоль/л. На ЭКГ: высокие зубцы T, риск остановки сердца." }
       ],
@@ -587,7 +584,6 @@
         { id: "isotonicOverhydration", name: "Isotonic overhydration", desc: "A 55 y.o. female, CHF after excessive isotonic fluid infusion. Dyspnea, edema. Labs: Na⁺ 139, Ht 35%, Hb 115 g/L, TP 55 g/L. Hemodilution with normal osmolality." },
         { id: "hypertonicOverhydration", name: "Hypertonic overhydration", desc: "A 68 y.o. patient, CKD, received excessive hypertonic saline. Labs: Na⁺ 158, Ht 37%, Hb 118 g/L, TP 59 g/L. Hemodilution and extreme hyperosmolality." },
         { id: "normotonicHyponatremia", name: "Hyponatremia without tonicity change", desc: "A 60 y.o. patient with decompensated DM. Na⁺ 128, Glu 18, Urea 14. Calculated osmolality is normal due to glucose and urea (Translocational/Pseudohyponatremia)." },
-        { id: "normotonicHypernatremia", name: "Hypernatremia without tonicity change", desc: "A 40 y.o. patient with diabetes insipidus (early compensation). Na⁺ 146. Hematocrit and protein are normal." },
         { id: "hypokalemia", name: "Severe hypokalemia", desc: "A 50 y.o. patient abusing furosemide. Muscle weakness. K⁺ 2.8 mmol/L. High risk of arrhythmias." },
         { id: "hyperkalemia", name: "Severe hyperkalemia", desc: "A 65 y.o. patient, acute renal failure. K⁺ 6.5 mmol/L. ECG: tall peaked T waves, risk of cardiac arrest." }
       ]
@@ -849,7 +845,6 @@
         isotonicOverhydration: { weight: 70, gender: 'female', age: 'middle', sodium: 139, potassium: 4.0, ht: 35, hb: 115, totalProtein: 55, glucose: 5, urea: 5 },
         hypertonicOverhydration: { weight: 80, gender: 'male', age: 'elderly', sodium: 158, potassium: 4.5, ht: 37, hb: 118, totalProtein: 59, glucose: 6, urea: 12 },
         normotonicHyponatremia: { weight: 75, gender: 'male', age: 'middle', sodium: 128, potassium: 4.0, ht: 45, hb: 140, totalProtein: 70, glucose: 18, urea: 14 },
-        normotonicHypernatremia: { weight: 70, gender: 'male', age: 'young', sodium: 146, potassium: 3.6, ht: 49, hb: 130, totalProtein: 50, glucose: 3, urea: 4 },
         hypokalemia: { weight: 80, gender: 'male', age: 'middle', sodium: 138, potassium: 2.8, ht: 46, hb: 135, totalProtein: 72, glucose: 6, urea: 5 },
         hyperkalemia: { weight: 75, gender: 'male', age: 'elderly', sodium: 140, potassium: 6.5, ht: 35, hb: 115, totalProtein: 65, glucose: 5, urea: 15 },
       };
