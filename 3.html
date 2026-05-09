@@ -315,9 +315,9 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                  <span data-i18n="glu_lbl">Глюкоза:</span> <span id="glucoseValue" class="font-bold text-blue-600">5.0 ммоль/л</span>
+                  <span data-i18n="glu_lbl">Глюкоза:</span> <span id="glucoseValue" class="font-bold text-blue-600">3.5 ммоль/л</span>
                 </label>
-                <input type="range" id="glucose" min="3.0" max="30.0" step="0.1" value="5.0" class="no-print" />
+                <input type="range" id="glucose" min="3.0" max="30.0" step="0.1" value="3.5" class="no-print" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -598,7 +598,7 @@
     // Текущие данные пациента
     let currentPatientData = {
       weight: 70, gender: 'male', age: 'young',
-      sodium: 140, potassium: 4.0, glucose: 5.0, urea: 5.0,
+      sodium: 140, potassium: 4.0, glucose: 3.5, urea: 5.0,
       ht: 48, hb: 140, totalProtein: 70,
     };
 
@@ -833,7 +833,7 @@
         document.getElementById('neurological').classList.remove('opacity-30');
       }
 
-      if (sodium < 125 || sodium > 155 || potassium < 2.5 || potassium > 6.5) {
+      if (sodium < 135 || sodium > 145 || potassium < 2.5 || potassium > 6.5) {
         document.getElementById('neurological').classList.remove('opacity-30');
         document.getElementById('neurological').classList.add('ring-2', 'ring-red-400');
       }
@@ -843,13 +843,13 @@
     function applyScenario(scenario) {
       const scenarios = {
         hypotonicDehydration: { weight: 70, gender: 'male', age: 'middle', sodium: 128, potassium: 3.8, ht: 52, hb: 165, totalProtein: 85, glucose: 5, urea: 5 },
-        isotonicDehydration: { weight: 80, gender: 'male', age: 'young', sodium: 141, potassium: 4.1, ht: 51, hb: 162, totalProtein: 82, glucose: 6, urea: 6 },
+        isotonicDehydration: { weight: 80, gender: 'male', age: 'young', sodium: 136, potassium: 4.1, ht: 51, hb: 162, totalProtein: 80, glucose: 4, urea: 5 },
         hypertonicDehydration: { weight: 65, gender: 'male', age: 'elderly', sodium: 152, potassium: 4.2, ht: 54, hb: 170, totalProtein: 88, glucose: 7, urea: 8 },
         hypotonicOverhydration: { weight: 60, gender: 'female', age: 'elderly', sodium: 125, potassium: 4.0, ht: 36, hb: 110, totalProtein: 58, glucose: 5, urea: 4 },
         isotonicOverhydration: { weight: 70, gender: 'female', age: 'middle', sodium: 139, potassium: 4.0, ht: 35, hb: 115, totalProtein: 55, glucose: 5, urea: 5 },
         hypertonicOverhydration: { weight: 80, gender: 'male', age: 'elderly', sodium: 158, potassium: 4.5, ht: 37, hb: 118, totalProtein: 59, glucose: 6, urea: 12 },
         normotonicHyponatremia: { weight: 75, gender: 'male', age: 'middle', sodium: 128, potassium: 4.0, ht: 45, hb: 140, totalProtein: 70, glucose: 18, urea: 14 },
-        normotonicHypernatremia: { weight: 70, gender: 'male', age: 'young', sodium: 150, potassium: 4.0, ht: 49, hb: 158, totalProtein: 78, glucose: 5, urea: 7 },
+        normotonicHypernatremia: { weight: 70, gender: 'male', age: 'young', sodium: 147, potassium: 4.0, ht: 49, hb: 151, totalProtein: 78, glucose: 5, urea: 7 },
         hypokalemia: { weight: 80, gender: 'male', age: 'middle', sodium: 138, potassium: 2.8, ht: 46, hb: 135, totalProtein: 72, glucose: 6, urea: 5 },
         hyperkalemia: { weight: 75, gender: 'male', age: 'elderly', sodium: 140, potassium: 6.5, ht: 35, hb: 115, totalProtein: 65, glucose: 5, urea: 15 },
       };
