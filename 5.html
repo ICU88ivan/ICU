@@ -1,0 +1,1733 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>КОС Симулятор — Анализ газов крови</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --acid-color: #ef4444;
+    --alk-color: #3b82f6;
+    --norm-color: #22c55e;
+    --warn-color: #f59e0b;
+    --meta-color: #8b5cf6;
+    --resp-color: #06b6d4;
+    --mixed-color: #f97316;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; }
+  
+  .glass {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+  }
+  .glass-dark {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+  }
+  
+  /* pH Scale */
+  .ph-scale {
+    background: linear-gradient(to right, #ef4444 0%, #f97316 20%, #22c55e 40%, #22c55e 60%, #3b82f6 80%, #8b5cf6 100%);
+    height: 20px;
+    border-radius: 10px;
+    position: relative;
+  }
+  .ph-marker {
+    position: absolute;
+    top: -8px;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 36px;
+    background: white;
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(255,255,255,0.8);
+    transition: left 0.5s ease;
+  }
+  
+  /* Parameter cards */
+  .param-card {
+    border-radius: 10px;
+    padding: 12px 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+  }
+  .param-card.acidosis { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); }
+  .param-card.alkalosis { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); }
+  .param-card.normal { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); }
+  .param-card.elevated { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4); }
+  .param-card.critical { background: rgba(239,68,68,0.3); border-color: #ef4444; animation: pulse-red 1s infinite; }
+  
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+  }
+  
+  /* Tabs */
+  .tab-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: #94a3b8;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: rgba(99,102,241,0.3);
+    border-color: rgba(99,102,241,0.6);
+    color: white;
+  }
+  .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.1); color: #e2e8f0; }
+  
+  /* Case cards */
+  .case-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+  }
+  .case-card:hover { transform: translateY(-3px); border-color: rgba(99,102,241,0.5); }
+  .case-card.selected { border-color: #6366f1; background: rgba(99,102,241,0.15); }
+  
+  /* Step indicator */
+  .step-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 14px;
+    transition: all 0.3s;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .step-dot.active { background: #6366f1; color: white; box-shadow: 0 0 12px rgba(99,102,241,0.6); }
+  .step-dot.done { background: #22c55e; color: white; }
+  .step-dot.pending { background: rgba(255,255,255,0.1); color: #64748b; }
+  
+  /* Slider */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.1);
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #6366f1;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(99,102,241,0.6);
+  }
+  
+  /* Chart containers */
+  .chart-wrap {
+    position: relative;
+    min-height: 220px;
+    max-height: 320px;
+    margin-bottom: 1rem;
+  }
+  
+  /* Diagnosis badge */
+  .diag-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .diag-resp-acid { background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #fca5a5; }
+  .diag-resp-alk { background: rgba(59,130,246,0.2); border: 1px solid #3b82f6; color: #93c5fd; }
+  .diag-meta-acid { background: rgba(139,92,246,0.2); border: 1px solid #8b5cf6; color: #c4b5fd; }
+  .diag-meta-alk { background: rgba(6,182,212,0.2); border: 1px solid #06b6d4; color: #67e8f9; }
+  .diag-mixed { background: rgba(249,115,22,0.2); border: 1px solid #f97316; color: #fdba74; }
+  
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+  ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 3px; }
+  
+  /* Mechanism flow */
+  .mech-step {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .mech-arrow { color: #6366f1; font-size: 18px; text-align: center; margin: 2px 0; }
+  
+  /* Sandbox sliders */
+  .sandbox-param { margin-bottom: 16px; }
+  .sandbox-param label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; }
+  
+  /* Compensation formula */
+  .formula-box {
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: monospace;
+    font-size: 13px;
+    margin: 8px 0;
+  }
+  
+  /* Navigation */
+  .nav-btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+    border: none;
+  }
+  .nav-btn-prev { background: rgba(255,255,255,0.1); color: #94a3b8; }
+  .nav-btn-prev:hover { background: rgba(255,255,255,0.15); color: white; }
+  .nav-btn-next { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+  .nav-btn-next:hover { opacity: 0.9; transform: translateX(2px); }
+  
+  /* Anion gap visual */
+  .ag-bar { height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; transition: all 0.5s; }
+  
+  /* Summary table */
+  .summary-row { transition: background 0.2s; }
+  .summary-row:hover { background: rgba(255,255,255,0.05); }
+  
+  /* Tooltip */
+  .tooltip { position: relative; }
+  .tooltip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .section-hidden { display: none; }
+  
+  @media (max-width: 768px) {
+    .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-cols-5 { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="sticky top-0 z-50" style="background: rgba(15,23,42,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.08);">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-2">
+    <div>
+      <h1 class="text-lg font-bold text-white">🫁 КОС Симулятор</h1>
+      <p class="text-xs text-slate-400">© 2026. Бабков Иван Леонидович</p>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <button class="tab-btn active" onclick="showSection('cases')">📋 Случаи</button>
+      <button class="tab-btn" onclick="showSection('sandbox')">🔬 Песочница</button>
+      <button class="tab-btn" onclick="showSection('algorithm')">📐 Алгоритм</button>
+      <button class="tab-btn" onclick="showSection('summary')">📊 Итоги</button>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+
+<!-- ===== SECTION: CASES ===== -->
+<div id="section-cases">
+  
+  <!-- Hook question -->
+  <div class="glass p-6 mb-6 text-center" style="background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1));">
+    <div class="text-4xl mb-3">🤔</div>
+    <h2 class="text-2xl font-bold text-white mb-2">Пациент задыхается. pH = 7,22. Что делать?</h2>
+    <p class="text-slate-300 text-sm max-w-2xl mx-auto">Разберите 10 реальных клинических случаев — от простого к сложному. Каждый шаг алгоритма объяснён интерактивно.</p>
+    <div class="flex justify-center gap-4 mt-4 flex-wrap">
+      <span class="diag-badge diag-resp-acid">🔴 Респираторный ацидоз</span>
+      <span class="diag-badge diag-resp-alk">🔵 Респираторный алкалоз</span>
+      <span class="diag-badge diag-meta-acid">🔴 Метаболический ацидоз</span>
+      <span class="diag-badge diag-meta-alk">🩵 Метаболический алкалоз</span>
+      <span class="diag-badge diag-mixed">🟠 Смешанное нарушение</span>
+    </div>
+  </div>
+
+  <!-- Case selector grid -->
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6" id="case-grid"></div>
+
+  <!-- Case viewer -->
+  <div id="case-viewer" class="glass p-0 overflow-hidden">
+    <!-- Scenario tab -->
+    <div id="case-scenario" class="p-6">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div>
+          <span id="case-num-badge" class="text-xs font-bold px-3 py-1 rounded-full mr-2" style="background: rgba(99,102,241,0.3); color: #a5b4fc;">Случай 1</span>
+          <span id="case-type-badge" class="diag-badge diag-resp-acid text-xs">Респираторный ацидоз</span>
+        </div>
+        <div class="flex gap-2">
+          <span id="case-difficulty" class="text-yellow-400 text-sm">★☆☆</span>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Left: scenario -->
+        <div>
+          <h3 class="text-lg font-bold text-white mb-1" id="case-title">«Задыхающийся таксист»</h3>
+          <p class="text-slate-300 text-sm mb-4" id="case-scenario-text"></p>
+          
+          <!-- ABG values -->
+          <h4 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Анализ газов крови (ABG)</h4>
+          <div class="grid grid-cols-2 gap-2 mb-4" id="abg-cards"></div>
+          
+          <!-- pH scale -->
+          <div class="mb-4">
+            <div class="flex justify-between text-xs text-slate-400 mb-1">
+              <span>7,0 Ацидоз</span>
+              <span>7,35–7,45 Норма</span>
+              <span>Алкалоз 7,8</span>
+            </div>
+            <div class="ph-scale">
+              <div class="ph-marker" id="ph-marker" style="left: 27%"></div>
+            </div>
+            <div class="text-center mt-2 text-sm font-bold" id="ph-label">pH 7,22 — Ацидоз</div>
+          </div>
+          
+          <!-- Task -->
+          <div class="glass-dark p-4">
+            <h4 class="text-sm font-semibold text-yellow-400 mb-2">❓ Задание</h4>
+            <p class="text-sm text-slate-300" id="case-task"></p>
+          </div>
+        </div>
+        
+        <!-- Right: step-by-step analysis -->
+        <div>
+          <h4 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">📋 Пошаговый анализ</h4>
+          
+          <!-- Step controls -->
+          <div class="flex gap-2 mb-4 flex-wrap" id="step-dots"></div>
+          
+          <!-- Step content -->
+          <div id="step-content" class="glass-dark p-4 min-h-32"></div>
+          
+          <!-- Navigation -->
+          <div class="flex justify-between mt-4">
+            <button class="nav-btn nav-btn-prev" onclick="prevStep()">← Назад</button>
+            <button class="nav-btn nav-btn-next" onclick="nextStep()">Далее →</button>
+          </div>
+          
+          <!-- Diagnosis (shown after all steps) -->
+          <div id="diagnosis-block" class="mt-4 glass-dark p-4 section-hidden">
+            <h4 class="text-sm font-semibold text-slate-400 mb-2">🔴 ДИАГНОЗ</h4>
+            <p class="text-white font-bold text-sm mb-2" id="diag-text"></p>
+            <h4 class="text-sm font-semibold text-slate-400 mb-2 mt-3">💊 Тактика</h4>
+            <ul class="text-sm text-slate-300 space-y-1" id="tactics-list"></ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Mechanism visualization -->
+      <div class="mt-6">
+        <h4 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">⚙️ Механизм нарушения</h4>
+        <div id="mechanism-flow" class="grid md:grid-cols-3 gap-3"></div>
+      </div>
+      
+      <!-- Anion gap (if relevant) -->
+      <div id="ag-section" class="mt-4 section-hidden">
+        <h4 class="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">🧮 Анионный промежуток</h4>
+        <div id="ag-visual" class="glass-dark p-4"></div>
+      </div>
+    </div>
+    
+    <!-- Case navigation -->
+    <div class="px-6 pb-4 flex justify-between items-center border-t border-white border-opacity-10 pt-4">
+      <button class="nav-btn nav-btn-prev" onclick="prevCase()">← Предыдущий случай</button>
+      <span class="text-slate-400 text-sm" id="case-progress">1 / 10</span>
+      <button class="nav-btn nav-btn-next" onclick="nextCase()">Следующий случай →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION: SANDBOX ===== -->
+<div id="section-sandbox" class="section-hidden">
+  <div class="glass p-6 mb-6">
+    <h2 class="text-xl font-bold text-white mb-1">🔬 Интерактивная песочница КОС</h2>
+    <p class="text-slate-400 text-sm">Изменяйте параметры и наблюдайте, как меняется диагноз в реальном времени. Задайте вопрос «что если?»</p>
+  </div>
+  
+  <div class="grid md:grid-cols-3 gap-6">
+    <!-- Sliders -->
+    <div class="glass p-5">
+      <h3 class="font-semibold text-white mb-4">🎛️ Параметры ABG</h3>
+      
+      <div class="sandbox-param">
+        <label><span class="text-slate-300">pH</span><span class="text-indigo-400 font-bold" id="sb-ph-val">7.40</span></label>
+        <input type="range" id="sb-ph" min="6.80" max="7.80" step="0.01" value="7.40" oninput="updateSandbox()">
+        <div class="flex justify-between text-xs text-slate-500 mt-1"><span>6.80</span><span>Норма: 7.35–7.45</span><span>7.80</span></div>
+      </div>
+      
+      <div class="sandbox-param">
+        <label><span class="text-slate-300">PaCO₂ (мм рт.ст.)</span><span class="text-cyan-400 font-bold" id="sb-pco2-val">40</span></label>
+        <input type="range" id="sb-pco2" min="10" max="100" step="1" value="40" oninput="updateSandbox()">
+        <div class="flex justify-between text-xs text-slate-500 mt-1"><span>10</span><span>Норма: 35–45</span><span>100</span></div>
+      </div>
+      
+      <div class="sandbox-param">
+        <label><span class="text-slate-300">HCO₃⁻ (ммоль/л)</span><span class="text-purple-400 font-bold" id="sb-hco3-val">24</span></label>
+        <input type="range" id="sb-hco3" min="5" max="50" step="1" value="24" oninput="updateSandbox()">
+        <div class="flex justify-between text-xs text-slate-500 mt-1"><span>5</span><span>Норма: 22–26</span><span>50</span></div>
+      </div>
+      
+      <div class="sandbox-param">
+        <label><span class="text-slate-300">PaO₂ (мм рт.ст.)</span><span class="text-green-400 font-bold" id="sb-pao2-val">95</span></label>
+        <input type="range" id="sb-pao2" min="30" max="150" step="1" value="95" oninput="updateSandbox()">
+        <div class="flex justify-between text-xs text-slate-500 mt-1"><span>30</span><span>Норма: 80–100</span><span>150</span></div>
+      </div>
+      
+      <div class="sandbox-param">
+        <label><span class="text-slate-300">Na⁺ (мэкв/л)</span><span class="text-yellow-400 font-bold" id="sb-na-val">140</span></label>
+        <input type="range" id="sb-na" min="120" max="160" step="1" value="140" oninput="updateSandbox()">
+      </div>
+      
+      <div class="sandbox-param">
+        <label><span class="text-slate-300">Cl⁻ (мэкв/л)</span><span class="text-orange-400 font-bold" id="sb-cl-val">102</span></label>
+        <input type="range" id="sb-cl" min="80" max="130" step="1" value="102" oninput="updateSandbox()">
+      </div>
+      
+      <!-- Preset buttons -->
+      <h4 class="text-sm font-semibold text-slate-400 mt-4 mb-2">⚡ Быстрые пресеты</h4>
+      <div class="grid grid-cols-2 gap-2">
+        <button class="tab-btn text-xs" onclick="loadPreset('resp_acid')">Респир. ацидоз</button>
+        <button class="tab-btn text-xs" onclick="loadPreset('resp_alk')">Респир. алкалоз</button>
+        <button class="tab-btn text-xs" onclick="loadPreset('meta_acid')">Метаб. ацидоз</button>
+        <button class="tab-btn text-xs" onclick="loadPreset('meta_alk')">Метаб. алкалоз</button>
+        <button class="tab-btn text-xs" onclick="loadPreset('dka')">ДКА</button>
+        <button class="tab-btn text-xs" onclick="loadPreset('mixed')">Смешанный</button>
+        <button class="tab-btn text-xs" onclick="loadPreset('normal')">Норма</button>
+        <button class="tab-btn text-xs" onclick="loadPreset('sepsis')">Сепсис</button>
+      </div>
+    </div>
+    
+    <!-- Real-time diagnosis -->
+    <div class="glass p-5">
+      <h3 class="font-semibold text-white mb-4">🧠 Автоматический анализ</h3>
+      
+      <!-- pH indicator -->
+      <div class="mb-4">
+        <div class="flex justify-between text-xs text-slate-400 mb-1"><span>7.0</span><span>7.35 | 7.45</span><span>7.8</span></div>
+        <div class="ph-scale"><div class="ph-marker" id="sb-ph-marker" style="left: 50%"></div></div>
+        <div class="text-center mt-1 text-sm font-bold" id="sb-ph-status">Норма</div>
+      </div>
+      
+      <!-- Diagnosis result -->
+      <div class="glass-dark p-4 mb-4">
+        <div class="text-xs text-slate-400 mb-1">Тип нарушения</div>
+        <div id="sb-diagnosis" class="font-bold text-lg text-white">Норма</div>
+        <div id="sb-diag-badge" class="mt-2"></div>
+      </div>
+      
+      <!-- Step analysis -->
+      <div class="space-y-2 text-sm" id="sb-analysis">
+        <div class="mech-step"><span class="text-slate-400">Шаг 1 (pH):</span><span id="sb-step1" class="ml-auto text-green-400">Норма</span></div>
+        <div class="mech-step"><span class="text-slate-400">Шаг 2 (первичное):</span><span id="sb-step2" class="ml-auto text-slate-300">—</span></div>
+        <div class="mech-step"><span class="text-slate-400">Шаг 3 (компенсация):</span><span id="sb-step3" class="ml-auto text-slate-300">—</span></div>
+        <div class="mech-step"><span class="text-slate-400">Шаг 4 (оксигенация):</span><span id="sb-step4" class="ml-auto text-slate-300">—</span></div>
+      </div>
+      
+      <!-- Compensation formula -->
+      <div class="formula-box mt-4" id="sb-formula">
+        Введите параметры для расчёта компенсации
+      </div>
+      
+      <!-- Anion gap -->
+      <div class="mt-4">
+        <div class="flex justify-between text-sm mb-1">
+          <span class="text-slate-400">Анионный промежуток</span>
+          <span class="font-bold" id="sb-ag-val">14</span>
+        </div>
+        <div class="flex gap-1 h-8">
+          <div class="ag-bar flex-1" style="background: rgba(59,130,246,0.3);" id="sb-ag-na">Na⁺</div>
+          <div class="ag-bar" style="background: rgba(239,68,68,0.3);" id="sb-ag-cl">Cl⁻</div>
+          <div class="ag-bar" style="background: rgba(139,92,246,0.3);" id="sb-ag-hco3">HCO₃⁻</div>
+          <div class="ag-bar" style="background: rgba(245,158,11,0.4);" id="sb-ag-gap">АП</div>
+        </div>
+        <div class="text-xs text-slate-400 mt-1" id="sb-ag-interp">Норма (8–12 мэкв/л)</div>
+      </div>
+    </div>
+    
+    <!-- Chart -->
+    <div class="glass p-5">
+      <h3 class="font-semibold text-white mb-4">📈 Визуализация</h3>
+      <div class="chart-wrap">
+        <canvas id="sb-radar-chart"></canvas>
+      </div>
+      
+      <!-- Davenport diagram hint -->
+      <div class="glass-dark p-3 mt-2">
+        <div class="text-xs text-slate-400 mb-1">📍 Позиция на диаграмме Дэвенпорта</div>
+        <div class="chart-wrap" style="min-height: 160px; max-height: 200px;">
+          <canvas id="sb-davenport"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION: ALGORITHM ===== -->
+<div id="section-algorithm" class="section-hidden">
+  <div class="glass p-6 mb-6">
+    <h2 class="text-xl font-bold text-white mb-1">📐 Единый алгоритм анализа КОС</h2>
+    <p class="text-slate-400 text-sm">5 шагов для любого клинического случая</p>
+  </div>
+  
+  <div class="grid md:grid-cols-2 gap-6">
+    <!-- Algorithm steps -->
+    <div class="space-y-4">
+      <div class="glass p-5">
+        <div class="flex items-start gap-4">
+          <div class="step-dot active text-lg">1</div>
+          <div>
+            <h3 class="font-bold text-white mb-1">Оцените pH</h3>
+            <div class="grid grid-cols-3 gap-2 text-sm">
+              <div class="glass-dark p-2 text-center"><div class="text-red-400 font-bold">&lt; 7,35</div><div class="text-slate-400 text-xs">Ацидоз</div></div>
+              <div class="glass-dark p-2 text-center"><div class="text-green-400 font-bold">7,35–7,45</div><div class="text-slate-400 text-xs">Норма</div></div>
+              <div class="glass-dark p-2 text-center"><div class="text-blue-400 font-bold">&gt; 7,45</div><div class="text-slate-400 text-xs">Алкалоз</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-5">
+        <div class="flex items-start gap-4">
+          <div class="step-dot active text-lg">2</div>
+          <div class="flex-1">
+            <h3 class="font-bold text-white mb-1">Определите первичное нарушение</h3>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div class="glass-dark p-2"><div class="text-cyan-400 font-bold">PaCO₂ ↑</div><div class="text-slate-400 text-xs">→ Респир. ацидоз</div></div>
+              <div class="glass-dark p-2"><div class="text-cyan-400 font-bold">PaCO₂ ↓</div><div class="text-slate-400 text-xs">→ Респир. алкалоз</div></div>
+              <div class="glass-dark p-2"><div class="text-purple-400 font-bold">HCO₃⁻ ↓</div><div class="text-slate-400 text-xs">→ Метаб. ацидоз</div></div>
+              <div class="glass-dark p-2"><div class="text-purple-400 font-bold">HCO₃⁻ ↑</div><div class="text-slate-400 text-xs">→ Метаб. алкалоз</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-5">
+        <div class="flex items-start gap-4">
+          <div class="step-dot active text-lg">3</div>
+          <div class="flex-1">
+            <h3 class="font-bold text-white mb-2">Оцените компенсацию</h3>
+            <div class="space-y-2 text-sm">
+              <div class="formula-box">РА острый: HCO₃⁻ = 24 + 0,1 × ΔPCO₂</div>
+              <div class="formula-box">РА хронич.: HCO₃⁻ = 24 + 3,5 × ΔPCO₂/10</div>
+              <div class="formula-box">РАлк острый: HCO₃⁻ = 24 − 0,2 × ΔPCO₂</div>
+              <div class="formula-box">МА: PaCO₂ = 1,5 × HCO₃⁻ + 8 (±2)</div>
+              <div class="formula-box">МАлк: PaCO₂ = 0,7 × HCO₃⁻ + 21 (±2)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-5">
+        <div class="flex items-start gap-4">
+          <div class="step-dot active text-lg">4</div>
+          <div class="flex-1">
+            <h3 class="font-bold text-white mb-2">Рассчитайте анионный промежуток</h3>
+            <div class="formula-box text-center text-base">АП = Na⁺ − (Cl⁻ + HCO₃⁻)</div>
+            <div class="grid grid-cols-2 gap-2 mt-2 text-sm">
+              <div class="glass-dark p-2 text-center"><div class="text-green-400 font-bold">8–12</div><div class="text-slate-400 text-xs">Норма</div></div>
+              <div class="glass-dark p-2 text-center"><div class="text-red-400 font-bold">&gt; 12</div><div class="text-slate-400 text-xs">↑ накопление кислот</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-5">
+        <div class="flex items-start gap-4">
+          <div class="step-dot active text-lg">5</div>
+          <div class="flex-1">
+            <h3 class="font-bold text-white mb-2">Оцените оксигенацию</h3>
+            <div class="space-y-1 text-sm">
+              <div class="mech-step"><span>PaO₂ &gt; 80</span><span class="ml-auto text-green-400">Норма</span></div>
+              <div class="mech-step"><span>PaO₂ 60–80</span><span class="ml-auto text-yellow-400">Умеренная гипоксемия</span></div>
+              <div class="mech-step"><span>PaO₂ &lt; 60</span><span class="ml-auto text-red-400">Тяжёлая гипоксемия</span></div>
+              <div class="formula-box mt-2">P/F = PaO₂ / FiO₂ (норма &gt; 400)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mnemonic + quick reference -->
+    <div class="space-y-4">
+      <div class="glass p-5">
+        <h3 class="font-bold text-white mb-3">🗝️ Мнемоника ROME</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="glass-dark p-3">
+            <div class="text-cyan-400 font-bold text-sm mb-1">Respiratory Opposite</div>
+            <div class="text-slate-300 text-xs">pH ↑ = PaCO₂ ↓</div>
+            <div class="text-slate-300 text-xs">pH ↓ = PaCO₂ ↑</div>
+            <div class="text-slate-500 text-xs mt-1">Противоположно</div>
+          </div>
+          <div class="glass-dark p-3">
+            <div class="text-purple-400 font-bold text-sm mb-1">Metabolic Equal</div>
+            <div class="text-slate-300 text-xs">pH ↑ = HCO₃⁻ ↑</div>
+            <div class="text-slate-300 text-xs">pH ↓ = HCO₃⁻ ↓</div>
+            <div class="text-slate-500 text-xs mt-1">Одинаково</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="glass p-5">
+        <h3 class="font-bold text-white mb-3">⚡ Причины высокого АП</h3>
+        <div class="space-y-1 text-sm">
+          <div class="mech-step">🩸 Лактат-ацидоз (сепсис, шок)</div>
+          <div class="mech-step">💉 ДКА (кетоны)</div>
+          <div class="mech-step">💊 Аспирин (салицилаты)</div>
+          <div class="mech-step">🧪 Уремия (ХБП)</div>
+          <div class="mech-step">☠️ Метанол, этиленгликоль</div>
+        </div>
+      </div>
+      
+      <div class="glass p-5">
+        <h3 class="font-bold text-white mb-3">📊 Нормальные значения</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between mech-step"><span>pH</span><span class="text-green-400 font-bold">7,35 – 7,45</span></div>
+          <div class="flex justify-between mech-step"><span>PaCO₂</span><span class="text-cyan-400 font-bold">35 – 45 мм рт.ст.</span></div>
+          <div class="flex justify-between mech-step"><span>HCO₃⁻</span><span class="text-purple-400 font-bold">22 – 26 ммоль/л</span></div>
+          <div class="flex justify-between mech-step"><span>PaO₂</span><span class="text-green-400 font-bold">80 – 100 мм рт.ст.</span></div>
+          <div class="flex justify-between mech-step"><span>SaO₂</span><span class="text-green-400 font-bold">&gt; 95%</span></div>
+          <div class="flex justify-between mech-step"><span>АП</span><span class="text-yellow-400 font-bold">8 – 12 мэкв/л</span></div>
+          <div class="flex justify-between mech-step"><span>Лактат</span><span class="text-green-400 font-bold">&lt; 2 ммоль/л</span></div>
+        </div>
+      </div>
+      
+      <div class="glass p-5">
+        <h3 class="font-bold text-white mb-3">🎯 Интерактивный мини тест</h3>
+        <p class="text-slate-400 text-sm mb-3">pH 7,08 | PaCO₂ 18 | HCO₃⁻ 5 | PaO₂ 95</p>
+        <div class="grid grid-cols-2 gap-2">
+          <button class="tab-btn text-xs" onclick="checkAnswer('resp_acid')">Респир. ацидоз</button>
+          <button class="tab-btn text-xs" onclick="checkAnswer('meta_acid')">Метаб. ацидоз</button>
+          <button class="tab-btn text-xs" onclick="checkAnswer('mixed')">Смешанный</button>
+          <button class="tab-btn text-xs" onclick="checkAnswer('resp_alk')">Респир. алкалоз</button>
+        </div>
+        <div id="quiz-result" class="mt-3 text-sm font-bold text-center section-hidden"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION: SUMMARY ===== -->
+<div id="section-summary" class="section-hidden">
+  <div class="glass p-6 mb-6">
+    <h2 class="text-xl font-bold text-white mb-1">📊 Итоговая таблица — все 10 случаев</h2>
+    <p class="text-slate-400 text-sm">Сравнительный анализ всех клинических случаев</p>
+  </div>
+  
+  <!-- Summary chart -->
+  <div class="glass p-5 mb-6">
+    <h3 class="font-semibold text-white mb-3">Сравнение параметров ABG по случаям</h3>
+    <div class="chart-wrap" style="min-height: 280px; max-height: 350px;">
+      <canvas id="summary-chart"></canvas>
+    </div>
+  </div>
+  
+  <!-- Table -->
+  <div class="glass p-5 overflow-x-auto">
+    <table class="w-full text-sm" style="min-width: 700px;">
+      <thead>
+        <tr class="text-slate-400 text-xs uppercase border-b border-white border-opacity-10">
+          <th class="text-left py-2 pr-3">#</th>
+          <th class="text-left py-2 pr-3">Случай</th>
+          <th class="text-center py-2 pr-3">pH</th>
+          <th class="text-center py-2 pr-3">PaCO₂</th>
+          <th class="text-center py-2 pr-3">HCO₃⁻</th>
+          <th class="text-center py-2 pr-3">АП</th>
+          <th class="text-left py-2 pr-3">Диагноз</th>
+          <th class="text-center py-2">Сложность</th>
+        </tr>
+      </thead>
+      <tbody id="summary-table-body"></tbody>
+    </table>
+  </div>
+  
+  <!-- Distribution chart -->
+  <div class="grid md:grid-cols-2 gap-6 mt-6">
+    <div class="glass p-5">
+      <h3 class="font-semibold text-white mb-3">Распределение типов нарушений</h3>
+      <div class="chart-wrap" style="min-height: 220px; max-height: 280px;">
+        <canvas id="dist-chart"></canvas>
+      </div>
+    </div>
+    <div class="glass p-5">
+      <h3 class="font-semibold text-white mb-3">🏆 Ключевые выводы</h3>
+      <div class="space-y-2 text-sm">
+        <div class="mech-step">🔴 Смешанные нарушения — самые опасные (случаи 8–10)</div>
+        <div class="mech-step">🫁 ХОБЛ может маскировать нарушения (случай 6: pH норма!)</div>
+        <div class="mech-step">🧮 Высокий АП = накопление кислот (ДКА, лактат, аспирин)</div>
+        <div class="mech-step">⚡ Компенсация никогда не бывает избыточной</div>
+        <div class="mech-step">💊 Тактика зависит от первичного нарушения, не от pH</div>
+        <div class="mech-step">🎯 P/F &lt; 200 = ОРДС, требует защитной вентиляции</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end max-w-7xl -->
+
+<!-- Footer -->
+<div class="text-center py-6 text-slate-500 text-xs border-t border-white border-opacity-5 mt-8">
+  2026. Бабков Иван Леонидович                                    Учебные материалы для врачей, интернов и студентов
+</div>
+
+<script>
+// ============================================================
+// DATA: 10 Clinical Cases
+// ============================================================
+const cases = [
+  {
+    id: 1,
+    emoji: '🚌',
+    title: 'Задыхающийся таксист',
+    subtitle: 'Респираторный ацидоз',
+    type: 'resp_acid',
+    difficulty: '★☆☆',
+    scenario: 'Мужчина 62 лет, стаж курения 40 лет. Доставлен с нарастающей одышкой. ХОБЛ в анамнезе. ЧДД 28/мин, цианоз губ. Аускультативно — сухие хрипы.',
+    abg: { ph: 7.22, pco2: 72, hco3: 28, pao2: 48, na: 140, cl: 102 },
+    task: 'Определите нарушение КОС (тип, острое/хроническое). Оцените тяжесть гипоксемии.',
+    steps: [
+      { title: 'Шаг 1: pH', content: 'pH 7,22 → <span class="text-red-400 font-bold">АЦИДОЗ</span> (< 7,35). Выраженный ацидоз, требует немедленного анализа.' },
+      { title: 'Шаг 2: Первичное нарушение', content: 'PaCO₂ 72 ↑↑ → <span class="text-cyan-400 font-bold">Респираторный ацидоз</span><br>Гиповентиляция → накопление CO₂ → ↑H₂CO₃ → ↓pH' },
+      { title: 'Шаг 3: Компенсация', content: 'HCO₃⁻ 28 ↑ — незначительное повышение<br><div class="formula-box mt-2">Ожидаемое (острый): 24 + 0,1×(72−40) = 27,2 ≈ 28 ✓</div><span class="text-green-400">→ Острый процесс! Компенсация адекватна.</span>' },
+      { title: 'Шаг 4: Оксигенация', content: 'PaO₂ 48 мм рт.ст. → <span class="text-red-400 font-bold">Тяжёлая гипоксемия</span> (< 60 мм рт.ст.)<br>Требует немедленной кислородотерапии!' },
+      { title: 'Шаг 5: Итог', content: '<span class="text-red-400 font-bold">Острый некомпенсированный респираторный ацидоз + тяжёлая гипоксемия</span><br>Обострение ХОБЛ.' }
+    ],
+    diagnosis: 'Острый некомпенсированный респираторный ацидоз + тяжёлая гипоксемия (обострение ХОБЛ)',
+    tactics: ['⚠️ O₂ не более 28% FiO₂ — риск гипоксемического драйва!', '✓ НВЛ (BiPAP) — неинвазивная вентиляция лёгких', '✓ Бронходилататоры (β₂-агонисты + ипратропий)', '✓ Системные ГКС (преднизолон)'],
+    mechanism: ['🚬 ХОБЛ → бронхообструкция → гиповентиляция', '📈 Накопление CO₂ → ↑H₂CO₃ → ↓pH', '🫁 Обострение ХОБЛ → острый РА + тяжёлая гипоксемия'],
+    ag: null,
+    diagClass: 'diag-resp-acid'
+  },
+  {
+    id: 2,
+    emoji: '😰',
+    title: 'Паника на экзамене',
+    subtitle: 'Респираторный алкалоз',
+    type: 'resp_alk',
+    difficulty: '★☆☆',
+    scenario: 'Студентка 22 лет. Во время экзамена — онемение рук, затем тетания кистей. Сознание ясное, выраженная тревога. ЧДД 32/мин. SpO₂ 99%.',
+    abg: { ph: 7.58, pco2: 22, hco3: 20, pao2: 112, na: 140, cl: 102 },
+    task: 'Определите нарушение КОС. Объясните механизм развития тетании и судорог.',
+    steps: [
+      { title: 'Шаг 1: pH', content: 'pH 7,58 → <span class="text-blue-400 font-bold">АЛКАЛОЗ</span> (> 7,45). Выраженный алкалоз.' },
+      { title: 'Шаг 2: Первичное нарушение', content: 'PaCO₂ 22 ↓ → <span class="text-cyan-400 font-bold">Респираторный алкалоз</span><br>Гипервентиляция → выдыхание CO₂ → ↓H₂CO₃ → ↑pH' },
+      { title: 'Шаг 3: Компенсация', content: 'HCO₃⁻ 20 ↓ → почки начали выделять HCO₃⁻<br><div class="formula-box mt-2">Ожидаемое: 24 − 0,2×(40−22) = 20,4 ≈ 20 ✓</div><span class="text-green-400">→ Острый процесс, компенсация адекватна.</span>' },
+      { title: 'Шаг 4: Механизм тетании', content: 'Алкалоз → Ca²⁺ активно связывается с белками<br>↓ ионизированный Ca²⁺ (несмотря на норм. общий Ca)<br><span class="text-yellow-400">↑ нейромышечная возбудимость → тетания, онемение</span>' },
+      { title: 'Шаг 5: Итог', content: '<span class="text-blue-400 font-bold">Острый некомпенсированный респираторный алкалоз</span><br>Паническая атака с гипервентиляцией.' }
+    ],
+    diagnosis: 'Острый некомпенсированный респираторный алкалоз (гипервентиляция при панической атаке)',
+    tactics: ['✓ Дыхание в пакет / в ладони — ↑CO₂ вдыхаемого воздуха', '✓ Психологическое успокоение, диафрагмальное дыхание', '✓ Исключить органическую патологию (ТЭЛА, ОКС)', '! Не давать кислород — усилит алкалоз!'],
+    mechanism: ['😰 Паника → гипервентиляция → ↓PaCO₂', '📉 Алкалоз → Ca²⁺ связывается с белками → ↓ ионизир. Ca²⁺', '⚡ ↑ нейромышечная возбудимость → тетания'],
+    ag: null,
+    diagClass: 'diag-resp-alk'
+  },
+  {
+    id: 3,
+    emoji: '💉',
+    title: 'Диабетик в коме',
+    subtitle: 'ДКА — высокий АП',
+    type: 'meta_acid',
+    difficulty: '★★☆',
+    scenario: 'Мужчина 24 лет, СД 1 типа. Дыхание Куссмауля. Запах ацетона. Глюкоза 32 ммоль/л. Na⁺ 138, Cl⁻ 98.',
+    abg: { ph: 7.08, pco2: 18, hco3: 5, pao2: 95, na: 138, cl: 98 },
+    task: 'Определите тип нарушения КОС. Рассчитайте анионный промежуток. Оцените компенсацию.',
+    steps: [
+      { title: 'Шаг 1: pH', content: 'pH 7,08 → <span class="text-red-400 font-bold">ТЯЖЁЛЫЙ АЦИДОЗ</span> (критически низкий!)<br>Жизнеугрожающее состояние.' },
+      { title: 'Шаг 2: Первичное нарушение', content: 'HCO₃⁻ 5 ↓↓ → <span class="text-purple-400 font-bold">Метаболический ацидоз</span><br>Накопление β-гидроксибутирата и ацетоацетата' },
+      { title: 'Шаг 3: Компенсация', content: 'PaCO₂ 18 ↓ → Дыхание Куссмауля (гипервентиляция)<br><div class="formula-box mt-2">Ожидаемое: 1,5×5 + 8 = 15,5 ± 2 → 18 ✓</div><span class="text-green-400">Компенсация адекватна!</span>' },
+      { title: 'Шаг 4: Анионный промежуток', content: '<div class="formula-box">АП = 138 − (98 + 5) = 35 мэкв/л</div><span class="text-red-400 font-bold">↑↑ Высокий АП → накопление кетонов!</span><br>Норма: 8–12 мэкв/л' },
+      { title: 'Шаг 5: Итог', content: '<span class="text-purple-400 font-bold">Метаболический ацидоз с высоким АП</span><br>Диабетический кетоацидоз (ДКА)' }
+    ],
+    diagnosis: 'Метаболический ацидоз с высоким АП — Диабетический кетоацидоз (ДКА)',
+    tactics: ['✓ Инсулин в/в (0,1 ед/кг/ч) + инфузия 0,9% NaCl', '✓ Коррекция электролитов (K⁺, фосфаты)', '✓ Мониторинг глюкозы каждый час', '⚠️ NaHCO₃ — только при pH < 7,2!'],
+    mechanism: ['💉 Дефицит инсулина → ↑ липолиз → кетоны', '📈 Накопление β-гидроксибутирата → ↓HCO₃⁻ → ↓pH', '🫁 Дыхание Куссмауля — компенсаторная гипервентиляция'],
+    ag: 35,
+    diagClass: 'diag-meta-acid'
+  },
+  {
+    id: 4,
+    emoji: '🤮',
+    title: 'Неукротимая рвота',
+    subtitle: 'Метаболический алкалоз',
+    type: 'meta_alk',
+    difficulty: '★★☆',
+    scenario: 'Женщина 28 лет, беременность 10 нед., рвота до 15 раз/сутки в течение недели. Слабость, судороги икроножных мышц. K⁺ 2,8, Cl⁻ 88.',
+    abg: { ph: 7.54, pco2: 48, hco3: 40, pao2: 88, na: 140, cl: 88 },
+    task: 'Определите нарушение КОС. Объясните роль K⁺ и Cl⁻ в патогенезе.',
+    steps: [
+      { title: 'Шаг 1: pH', content: 'pH 7,54 → <span class="text-blue-400 font-bold">АЛКАЛОЗ</span> (> 7,45)' },
+      { title: 'Шаг 2: Первичное нарушение', content: 'HCO₃⁻ 40 ↑↑ → <span class="text-cyan-400 font-bold">Метаболический алкалоз</span><br>Рвота → потеря HCl → дефицит Cl⁻' },
+      { title: 'Шаг 3: Компенсация', content: 'PaCO₂ 48 ↑ → компенсаторная гиповентиляция<br><div class="formula-box mt-2">Ожидаемое: 0,7×40 + 21 = 49 ± 2 ≈ 48 ✓</div><span class="text-green-400">Компенсация адекватна.</span>' },
+      { title: 'Шаг 4: Роль электролитов', content: 'K⁺ 2,8 ↓ → гипокалиемия<br>Cl⁻ 88 ↓ → гипохлоремия<br><span class="text-yellow-400">Почки реабсорбируют HCO₃⁻ вместо Cl⁻ → поддерживают алкалоз</span><br>Гипокалиемия → K⁺/H⁺ обмен → усиление алкалоза' },
+      { title: 'Шаг 5: Итог', content: '<span class="text-cyan-400 font-bold">Метаболический алкалоз</span><br>Hyperemesis gravidarum + гипокалиемия + гипохлоремия' }
+    ],
+    diagnosis: 'Метаболический алкалоз (хлор-чувствительный) + гипокалиемия. Hyperemesis gravidarum.',
+    tactics: ['✓ Инфузия 0,9% NaCl — коррекция хлор-чувствительного алкалоза', '✓ Восполнение K⁺ (KCl в/в)', '✓ Противорвотные: ондансетрон, метоклопрамид', '✓ Тиамин B1 при тяжёлой рвоте'],
+    mechanism: ['🤮 Рвота → потеря HCl → дефицит Cl⁻', '📈 Почки реабсорбируют HCO₃⁻ вместо Cl⁻ → ↑HCO₃⁻', '⚡ Гипокалиемия → K⁺/H⁺ обмен → усиление алкалоза'],
+    ag: null,
+    diagClass: 'diag-meta-alk'
+  },
+  {
+    id: 5,
+    emoji: '🫁',
+    title: 'Пожилой с пневмонией',
+    subtitle: 'Респираторный алкалоз',
+    type: 'resp_alk',
+    difficulty: '★★☆',
+    scenario: 'Мужчина 72 лет, нарастающая одышка и лихорадка 38,9°С в течение 3 дней. Правосторонняя пневмония. ЧДД 28/мин. SpO₂ 88% при дыхании воздухом.',
+    abg: { ph: 7.51, pco2: 28, hco3: 22, pao2: 52, na: 140, cl: 102 },
+    task: 'Определите нарушение КОС. Почему алкалоз при пневмонии? Оцените тяжесть гипоксемии.',
+    steps: [
+      { title: 'Шаг 1: pH', content: 'pH 7,51 → <span class="text-blue-400 font-bold">АЛКАЛОЗ</span> (> 7,45)<br>Парадокс: при пневмонии ожидаем ацидоз, но видим алкалоз!' },
+      { title: 'Шаг 2: Первичное нарушение', content: 'PaCO₂ 28 ↓ → <span class="text-cyan-400 font-bold">Респираторный алкалоз</span><br>Гипоксемия → рефлекторная гипервентиляция → ↓CO₂' },
+      { title: 'Шаг 3: Компенсация', content: 'HCO₃⁻ 22 ≈ норма<br><div class="formula-box mt-2">Ожидаемое: 24 − 0,2×(40−28) = 21,6 ≈ 22 ✓</div><span class="text-green-400">Острый процесс, метаболической компенсации ещё нет.</span>' },
+      { title: 'Шаг 4: Оксигенация', content: 'PaO₂ 52 мм рт.ст. → <span class="text-red-400 font-bold">Выраженная гипоксемия</span><br>P/F = 52/0,21 = 248 → лёгкий/средний ОРДС<br>Гипоксемия — ПРИЧИНА гипервентиляции!' },
+      { title: 'Шаг 5: Итог', content: '<span class="text-blue-400 font-bold">Острый некомпенсированный респираторный алкалоз</span><br>Вторичный по отношению к гипоксемии при пневмонии.' }
+    ],
+    diagnosis: 'Острый некомпенсированный респираторный алкалоз (вторичный к гипоксемии при пневмонии) + выраженная гипоксемия',
+    tactics: ['✓ Приоритет: оксигенотерапия (цель SpO₂ > 94%)', '✓ Антибиотики (пневмония — первопричина)', '✓ Гипервентиляция вторична — лечить причину!', '⚠️ Мониторинг P/F для оценки ОРДС'],
+    mechanism: ['🫁 Пневмония → нарушение газообмена → ↓PaO₂', '📈 Гипоксемия → стимуляция дыхательного центра → гипервентиляция', '↓ PaCO₂ → ↑pH → респираторный алкалоз'],
+    ag: null,
+    diagClass: 'diag-resp-alk'
+  },
+  {
+    id: 6,
+    emoji: '🚬',
+    title: 'Хронический ХОБЛ',
+    subtitle: 'Хронический компенсированный РА',
+    type: 'resp_acid',
+    difficulty: '★★★',
+    scenario: 'Пациент 68 лет, доставлен СМП с нарастающей одышкой, кашлем с гнойной мокротой. ЧСС 110, АД 140/90. SpO₂ 82%. Стаж курения 45 пачко-лет.',
+    abg: { ph: 7.37, pco2: 58, hco3: 33, pao2: 61, na: 140, cl: 102 },
+    task: 'Почему pH нормальный при таком PaCO₂? Рассчитайте ожидаемую компенсацию.',
+    steps: [
+      { title: 'Шаг 1: pH', content: 'pH 7,37 → <span class="text-green-400 font-bold">НОРМА!</span><br>Но анализируем дальше — нарушение может быть скрытым.' },
+      { title: 'Шаг 2: Первичное нарушение', content: 'PaCO₂ 58 ↑↑ → <span class="text-cyan-400 font-bold">Первичный респираторный процесс</span><br>Хроническая гиповентиляция при ХОБЛ' },
+      { title: 'Шаг 3: Компенсация (ключевой!)', content: 'HCO₃⁻ 33 ↑↑ → Почечная компенсация!<br><div class="formula-box mt-2">Ожидаемое (хронич.): 24 + 3,5×(58−40)/10 = 24 + 6,3 = 30–34 ✓</div><span class="text-green-400">Полная хроническая компенсация → pH нормальный!</span>' },
+      { title: 'Шаг 4: Оксигенация', content: 'PaO₂ 61 мм рт.ст. → <span class="text-yellow-400">Умеренная гипоксемия</span><br>Хроническая адаптация к гипоксемии.' },
+      { title: 'Шаг 5: Итог', content: '<span class="text-cyan-400 font-bold">Хронический компенсированный респираторный ацидоз</span><br>ХОБЛ 3 ст., хроническая гиперкапния. pH нормальный — нарушение есть, но компенсировано!' }
+    ],
+    diagnosis: 'Хронический компенсированный респираторный ацидоз (ХОБЛ 3 ст., хроническая гиперкапния)',
+    tactics: ['⚠️ O₂ ≤ 28% — риск гипоксемического драйва!', '✓ НВЛ (неинвазивная вентиляция лёгких)', '✓ Бронходилататоры (β₂-агонисты + холинолитики)', '✓ Системные кортикостероиды при обострении'],
+    mechanism: ['🚬 ХОБЛ → хроническая гиповентиляция → ↑PaCO₂', '🫘 Почки → ↑реабсорбция HCO₃⁻ → компенсация', '✅ pH нормализуется — хроническая адаптация'],
+    ag: null,
+    diagClass: 'diag-resp-acid'
+  },
+  {
+    id: 7,
+    emoji: '🩺',
+    title: 'Почечная недостаточность',
+    subtitle: 'Метаболический ацидоз (норм. АП)',
+    type: 'meta_acid',
+    difficulty: '★★☆',
+    scenario: 'Мужчина 58 лет, СД 2 типа, гипертония. Нарастающая слабость, одышка, отёки. Азотемия. СКФ 18 мл/мин. ХБП 4 стадии. K⁺ 5,8, Cl⁻ 115.',
+    abg: { ph: 7.28, pco2: 30, hco3: 13, pao2: 90, na: 140, cl: 115 },
+    task: 'Рассчитайте АП. Чем этот ацидоз отличается от ДКА? Почему АП разный при одинаковом типе нарушения?',
+    steps: [
+      { title: 'Шаг 1: pH', content: 'pH 7,28 → <span class="text-red-400 font-bold">АЦИДОЗ</span> (< 7,35)' },
+      { title: 'Шаг 2: Первичное нарушение', content: 'HCO₃⁻ 13 ↓ → <span class="text-purple-400 font-bold">Метаболический ацидоз</span><br>Потеря HCO₃⁻ (почки не реабсорбируют)' },
+      { title: 'Шаг 3: Компенсация', content: 'PaCO₂ 30 ↓ → компенсаторная гипервентиляция<br><div class="formula-box mt-2">Ожидаемое: 1,5×13 + 8 = 27,5 ± 2 → 30 ✓</div><span class="text-green-400">Компенсация адекватна.</span>' },
+      { title: 'Шаг 4: Анионный промежуток', content: '<div class="formula-box">АП = 140 − (115 + 13) = 12 мэкв/л</div><span class="text-green-400">Нормальный АП!</span> Cl⁻ 115 ↑ — гиперхлоремия<br>Отличие от ДКА: нет накопления кетонов, есть потеря HCO₃⁻' },
+      { title: 'Шаг 5: Итог', content: '<span class="text-purple-400 font-bold">Гиперхлоремический метаболический ацидоз</span><br>ХБП 4 ст. — почки не реабсорбируют HCO₃⁻, компенсаторно задерживают Cl⁻' }
+    ],
+    diagnosis: 'Гиперхлоремический метаболический ацидоз с нормальным АП (ХБП 4 ст., СКФ 18 мл/мин)',
+    tactics: ['✓ NaHCO₃ внутрь (при HCO₃⁻ < 18 ммоль/л)', '✓ Низкобелковая диета (снижение кислотной нагрузки)', '✓ Подготовка к заместительной терапии (диализ)', '⚠️ Гиперкалиемия K⁺ 5,8 — риск аритмий!'],
+    mechanism: ['🩺 ХБП → почки не реабсорбируют HCO₃⁻', '📈 Компенсаторно задерживают Cl⁻ → гиперхлоремия', '🔄 АП нормальный (в отличие от ДКА с кетонами)'],
+    ag: 12,
+    diagClass: 'diag-meta-acid'
+  },
+  {
+    id: 8,
+    emoji: '🏥',
+    title: 'Сепсис в ОРИТ',
+    subtitle: 'Смешанный ацидоз',
+    type: 'mixed',
+    difficulty: '★★★',
+    scenario: 'Женщина 52 лет, ОРИТ, септический шок после перитонита. На ИВЛ: Vt 450 мл, ЧД 14. АД 70/40 мм рт.ст. Лактат 8,4 ммоль/л. FiO₂ 0,6.',
+    abg: { ph: 6.98, pco2: 55, hco3: 13, pao2: 68, na: 140, cl: 102 },
+    task: 'Определите тип нарушения. Почему при метаболическом ацидозе PaCO₂ повышен? Рассчитайте P/F.',
+    steps: [
+      { title: 'Шаг 1: pH', content: 'pH 6,98 → <span class="text-red-400 font-bold">КРИТИЧЕСКИЙ АЦИДОЗ!</span><br>Жизнеугрожающее состояние, немедленное действие!' },
+      { title: 'Шаг 2: Первичное нарушение', content: 'HCO₃⁻ 13 ↓↓ → <span class="text-purple-400 font-bold">Метаболический ацидоз</span><br>Лактат 8,4 → лактат-ацидоз тип A (тканевая гипоперфузия)' },
+      { title: 'Шаг 3: Парадокс PaCO₂', content: '<div class="formula-box">Ожидаемое PaCO₂ = 1,5×13 + 8 = 27,5 мм рт.ст.</div>Фактический PaCO₂ 55 >> 27,5<br><span class="text-red-400 font-bold">→ Ятрогенный респираторный ацидоз!</span><br>ИВЛ настроен неадекватно (ЧД 14 — мало!)' },
+      { title: 'Шаг 4: P/F соотношение', content: '<div class="formula-box">P/F = PaO₂ / FiO₂ = 68 / 0,6 = 113</div><span class="text-red-400 font-bold">Тяжёлый ОРДС</span> (< 150)<br>Норма > 400 · Лёгкий > 200 · Тяжёлый < 150' },
+      { title: 'Шаг 5: Итог', content: '<span class="text-orange-400 font-bold">Смешанный ацидоз:</span><br>Метаболический лактат-ацидоз (сепсис) + Ятрогенный респираторный ацидоз (ИВЛ) + Тяжёлый ОРДС' }
+    ],
+    diagnosis: 'Смешанный ацидоз: метаболический лактат-ацидоз (септический шок) + ятрогенный респираторный ацидоз (параметры ИВЛ) + тяжёлый ОРДС (P/F 113)',
+    tactics: ['↑ Минутная вентиляция: ЧД до 20–22/мин → снизить PaCO₂ до 27,5', '✓ Вазопрессоры + инфузия → ликвидировать гипоперфузию → ↓лактат', '⚠️ NaHCO₃ при pH < 7,2 — временная буферизация', '✓ Антибиотики широкого спектра + санация очага'],
+    mechanism: ['🦠 Сепсис → тканевая гипоперфузия → лактат-ацидоз', '🏥 ИВЛ неадекватен → задержка CO₂ → респир. ацидоз', '⚠️ Суммация → критический pH 6,98'],
+    ag: 25,
+    diagClass: 'diag-mixed'
+  },
+  {
+    id: 9,
+    emoji: '🫀',
+    title: 'Цирроз и одышка',
+    subtitle: 'Смешанный алкалоз',
+    type: 'mixed',
+    difficulty: '★★★',
+    scenario: 'Мужчина 58 лет, цирроз печени, массивный асцит. Одышка в покое, ЧДД 26/мин. SpO₂ 94%. Принимает диуретики. Рвота. K⁺ 2,6 ммоль/л.',
+    abg: { ph: 7.61, pco2: 30, hco3: 30, pao2: 78, na: 140, cl: 90 },
+    task: 'Оцените соответствие PaCO₂ и HCO₃⁻. Почему pH 7,61 такой высокий? Объясните гипокалиемию.',
+    steps: [
+      { title: 'Шаг 1: pH', content: 'pH 7,61 → <span class="text-blue-400 font-bold">ТЯЖЁЛЫЙ АЛКАЛОЗ</span> (> 7,45)<br>Очень высокий — подозреваем смешанное нарушение!' },
+      { title: 'Шаг 2: Первичное нарушение 1', content: 'PaCO₂ 30 ↓ → <span class="text-cyan-400 font-bold">Респираторный алкалоз</span><br>Цирроз → портальная гипертензия → гипервентиляция (гепатопульмональный синдром)' },
+      { title: 'Шаг 3: Ключевой — оцениваем HCO₃⁻', content: 'При респираторном алкалозе ожидаем HCO₃⁻ ↓ как компенсацию<br><div class="formula-box">Ожидаемое: 24 − 0,2×(40−30) = 22</div>Фактический HCO₃⁻ 30 ↑ → <span class="text-red-400 font-bold">Это НЕ компенсация!</span><br>Второй первичный процесс: метаболический алкалоз' },
+      { title: 'Шаг 4: Причины метаб. алкалоза', content: 'Рвота → потеря HCl → ↑HCO₃⁻<br>Диуретики → потеря K⁺/Cl⁻ → ↑HCO₃⁻<br>K⁺ 2,6 ↓ → гипокалиемия → K⁺/H⁺ обмен → усиление алкалоза' },
+      { title: 'Шаг 5: Итог', content: '<span class="text-orange-400 font-bold">Смешанный алкалоз:</span><br>Респираторный алкалоз (цирроз) + Метаболический алкалоз (рвота + диуретики)<br>Суммация → pH 7,61!' }
+    ],
+    diagnosis: 'Смешанный алкалоз: респираторный алкалоз (цирроз, гипервентиляция) + метаболический алкалоз (рвота + диуретики + гипокалиемия)',
+    tactics: ['✓ Восполнение K⁺ (KCl в/в) — ключевой шаг', '✓ Отмена/коррекция диуретиков', '✓ Лечение рвоты (противорвотные)', '✓ Лечение основного заболевания (цирроз)'],
+    mechanism: ['🫀 Цирроз → гипервентиляция → ↓PaCO₂ → РА', '💊 Диуретики + рвота → ↓Cl⁻, ↓K⁺ → МА', '⚡ Суммация двух алкалозов → pH 7,61'],
+    ag: null,
+    diagClass: 'diag-mixed'
+  },
+  {
+    id: 10,
+    emoji: '💊',
+    title: 'Передозировка аспирина',
+    subtitle: 'Смешанное нарушение',
+    type: 'mixed',
+    difficulty: '★★★',
+    scenario: 'Девушка 17 лет, попытка суицида. Шум в ушах, гипертермия 39°С, возбуждение. ЧДД 30/мин. Na⁺ 141, Cl⁻ 102.',
+    abg: { ph: 7.46, pco2: 22, hco3: 15, pao2: 98, na: 141, cl: 102 },
+    task: 'pH почти норма — есть ли нарушение? Рассчитайте АП. Какие два нарушения скрыты?',
+    steps: [
+      { title: 'Шаг 1: pH', content: 'pH 7,46 → <span class="text-green-400">Почти норма</span> (маскировка!)<br>Но PaCO₂ 22 ↓ и HCO₃⁻ 15 ↓ — оба отклонены!' },
+      { title: 'Шаг 2: Два первичных нарушения', content: 'PaCO₂ 22 ↓ → <span class="text-cyan-400 font-bold">Респираторный алкалоз</span><br>Салицилаты → стимуляция дыхательного центра → гипервентиляция<br><br>HCO₃⁻ 15 ↓ → <span class="text-purple-400 font-bold">Метаболический ацидоз</span><br>Накопление салицилатов → нарушение митохондрий → лактат + салицилат' },
+      { title: 'Шаг 3: Анионный промежуток', content: '<div class="formula-box">АП = 141 − (102 + 15) = 24 мэкв/л</div><span class="text-red-400 font-bold">↑↑ Высокий АП → накопление органических кислот!</span><br>Подтверждает метаболический ацидоз' },
+      { title: 'Шаг 4: Почему pH "нормальный"?', content: 'Респираторный алкалоз (↑pH) + Метаболический ацидоз (↓pH)<br><span class="text-yellow-400 font-bold">Взаимная нейтрализация → pH ≈ норма</span><br>Но оба нарушения активны и опасны!' },
+      { title: 'Шаг 5: Итог', content: '<span class="text-orange-400 font-bold">Смешанное нарушение КОС:</span><br>Респираторный алкалоз + Метаболический ацидоз с высоким АП<br>Отравление аспирином (салицилатная интоксикация)' }
+    ],
+    diagnosis: 'Смешанное нарушение: респираторный алкалоз + метаболический ацидоз с высоким АП (отравление аспирином)',
+    tactics: ['✓ Ощелачивание мочи (NaHCO₃ в/в) → ускорение выведения', '✓ Гемодиализ при тяжёлой интоксикации', '⚠️ Не ингибировать дыхание без необходимости — резкий ↑pH!', '✓ Мониторинг уровня салицилатов в крови'],
+    mechanism: ['💊 Аспирин → стимуляция дых. центра → гипервентиляция → РА', '⚗️ Нарушение митохондрий → лактат + салицилат → МА', '🎭 Взаимная нейтрализация → pH "нормальный" — ловушка!'],
+    ag: 24,
+    diagClass: 'diag-mixed'
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let currentCase = 0;
+let currentStep = 0;
+let sbRadarChart = null;
+let sbDavenportChart = null;
+let summaryChart = null;
+let distChart = null;
+
+// ============================================================
+// SECTION NAVIGATION
+// ============================================================
+function showSection(name) {
+  try {
+    ['cases', 'sandbox', 'algorithm', 'summary'].forEach(s => {
+      const el = document.getElementById('section-' + s);
+      if (el) el.classList.toggle('section-hidden', s !== name);
+    });
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+      const sections = ['cases', 'sandbox', 'algorithm', 'summary'];
+      btn.classList.toggle('active', btn.getAttribute('onclick') === "showSection('" + sections[i] + "')");
+    });
+    // Re-init charts when switching to sandbox or summary
+    if (name === 'sandbox') {
+      setTimeout(() => { initSandboxCharts(); updateSandbox(); }, 150);
+    }
+    if (name === 'summary') {
+      setTimeout(() => { initSummaryCharts(); }, 150);
+    }
+  } catch(e) { console.error('showSection error:', e); }
+}
+
+// ============================================================
+// CASE GRID
+// ============================================================
+function buildCaseGrid() {
+  try {
+    const grid = document.getElementById('case-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    cases.forEach((c, i) => {
+      const typeColors = {
+        resp_acid: 'rgba(239,68,68,0.2)',
+        resp_alk: 'rgba(59,130,246,0.2)',
+        meta_acid: 'rgba(139,92,246,0.2)',
+        meta_alk: 'rgba(6,182,212,0.2)',
+        mixed: 'rgba(249,115,22,0.2)'
+      };
+      const div = document.createElement('div');
+      div.className = 'case-card glass p-3 text-center' + (i === 0 ? ' selected' : '');
+      div.style.background = typeColors[c.type] || 'rgba(255,255,255,0.05)';
+      div.innerHTML = '<div class="text-2xl mb-1">' + c.emoji + '</div>' +
+        '<div class="text-xs font-bold text-white">' + c.id + '. ' + c.title + '</div>' +
+        '<div class="text-xs text-slate-400 mt-1">' + c.difficulty + '</div>';
+      div.onclick = () => loadCase(i);
+      grid.appendChild(div);
+    });
+  } catch(e) { console.error('buildCaseGrid error:', e); }
+}
+
+// ============================================================
+// LOAD CASE
+// ============================================================
+function loadCase(idx) {
+  try {
+    if (idx < 0 || idx >= cases.length) return;
+    currentCase = idx;
+    currentStep = 0;
+    const c = cases[idx];
+    
+    // Update grid selection
+    document.querySelectorAll('.case-card').forEach((el, i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+    
+    // Update header badges
+    const numBadge = document.getElementById('case-num-badge');
+    if (numBadge) numBadge.textContent = 'Случай ' + c.id;
+    
+    const typeBadge = document.getElementById('case-type-badge');
+    if (typeBadge) {
+      typeBadge.textContent = c.subtitle;
+      typeBadge.className = 'diag-badge ' + c.diagClass + ' text-xs';
+    }
+    
+    const diffEl = document.getElementById('case-difficulty');
+    if (diffEl) diffEl.textContent = c.difficulty;
+    
+    const titleEl = document.getElementById('case-title');
+    if (titleEl) titleEl.textContent = '\u00AB' + c.title + '\u00BB';
+    
+    const scenarioEl = document.getElementById('case-scenario-text');
+    if (scenarioEl) scenarioEl.textContent = c.scenario;
+    
+    const taskEl = document.getElementById('case-task');
+    if (taskEl) taskEl.textContent = c.task;
+    
+    // ABG cards
+    buildABGCards(c);
+    
+    // pH scale
+    updatePHScale(c.abg.ph);
+    
+    // Steps
+    buildStepDots(c);
+    renderStep(c, 0);
+    
+    // Mechanism
+    buildMechanism(c);
+    
+    // AG section
+    buildAGSection(c);
+    
+    // Progress
+    const prog = document.getElementById('case-progress');
+    if (prog) prog.textContent = c.id + ' / ' + cases.length;
+    
+    // Hide diagnosis initially
+    const diagBlock = document.getElementById('diagnosis-block');
+    if (diagBlock) diagBlock.classList.add('section-hidden');
+    
+  } catch(e) { console.error('loadCase error:', e); }
+}
+
+function buildABGCards(c) {
+  try {
+    const container = document.getElementById('abg-cards');
+    if (!container) return;
+    
+    const params = [
+      { label: 'pH', value: c.abg.ph.toFixed(2), normal: [7.35, 7.45], unit: '', decimals: 2 },
+      { label: 'PaCO₂', value: c.abg.pco2, normal: [35, 45], unit: 'мм рт.ст.' },
+      { label: 'HCO₃⁻', value: c.abg.hco3, normal: [22, 26], unit: 'ммоль/л' },
+      { label: 'PaO₂', value: c.abg.pao2, normal: [80, 100], unit: 'мм рт.ст.' }
+    ];
+    
+    container.innerHTML = '';
+    params.forEach(p => {
+      const val = parseFloat(p.value);
+      let cls = 'normal';
+      if (p.label === 'pH') {
+        if (val < 7.35) cls = 'acidosis';
+        else if (val > 7.45) cls = 'alkalosis';
+        if (val < 7.1 || val > 7.6) cls = 'critical';
+      } else if (p.label === 'PaCO₂') {
+        if (val > 45) cls = 'elevated';
+        else if (val < 35) cls = 'alkalosis';
+        if (val > 70) cls = 'critical';
+      } else if (p.label === 'HCO₃⁻') {
+        if (val < 22) cls = 'acidosis';
+        else if (val > 26) cls = 'elevated';
+        if (val < 10) cls = 'critical';
+      } else if (p.label === 'PaO₂') {
+        if (val < 60) cls = 'critical';
+        else if (val < 80) cls = 'acidosis';
+      }
+      
+      const arrow = getArrow(val, p.normal[0], p.normal[1]);
+      const div = document.createElement('div');
+      div.className = 'param-card ' + cls;
+      div.innerHTML = '<div class="text-xs text-slate-400 mb-1">' + p.label + '</div>' +
+        '<div class="text-xl font-bold text-white">' + p.value + ' ' + arrow + '</div>' +
+        '<div class="text-xs text-slate-400">' + p.unit + '</div>';
+      container.appendChild(div);
+    });
+  } catch(e) { console.error('buildABGCards error:', e); }
+}
+
+function getArrow(val, low, high) {
+  if (val < low) return '<span class="text-red-400">↓</span>';
+  if (val > high) return '<span class="text-yellow-400">↑</span>';
+  return '<span class="text-green-400">✓</span>';
+}
+
+function updatePHScale(ph) {
+  try {
+    const marker = document.getElementById('ph-marker');
+    const label = document.getElementById('ph-label');
+    if (!marker || !label) return;
+    
+    // Map pH 7.0–7.8 to 0–100%
+    const pct = Math.max(0, Math.min(100, ((ph - 7.0) / 0.8) * 100));
+    marker.style.left = pct + '%';
+    
+    let status = '';
+    if (ph < 7.35) status = 'pH ' + ph.toFixed(2) + ' — Ацидоз';
+    else if (ph > 7.45) status = 'pH ' + ph.toFixed(2) + ' — Алкалоз';
+    else status = 'pH ' + ph.toFixed(2) + ' — Норма';
+    label.textContent = status;
+  } catch(e) { console.error('updatePHScale error:', e); }
+}
+
+function buildStepDots(c) {
+  try {
+    const container = document.getElementById('step-dots');
+    if (!container) return;
+    container.innerHTML = '';
+    c.steps.forEach((s, i) => {
+      const dot = document.createElement('div');
+      dot.className = 'step-dot ' + (i === 0 ? 'active' : 'pending');
+      dot.textContent = i + 1;
+      dot.onclick = () => { currentStep = i; renderStep(c, i); updateStepDots(c); };
+      container.appendChild(dot);
+    });
+  } catch(e) { console.error('buildStepDots error:', e); }
+}
+
+function updateStepDots(c) {
+  try {
+    const dots = document.querySelectorAll('.step-dot');
+    dots.forEach((dot, i) => {
+      dot.className = 'step-dot ' + (i < currentStep ? 'done' : i === currentStep ? 'active' : 'pending');
+    });
+  } catch(e) { console.error('updateStepDots error:', e); }
+}
+
+function renderStep(c, stepIdx) {
+  try {
+    const content = document.getElementById('step-content');
+    if (!content || !Array.isArray(c.steps) || stepIdx >= c.steps.length) return;
+    
+    const step = c.steps[stepIdx];
+    content.innerHTML = '<h4 class="font-bold text-white mb-2">' + step.title + '</h4>' +
+      '<div class="text-sm text-slate-300 leading-relaxed">' + step.content + '</div>';
+    
+    // Show diagnosis after last step
+    const diagBlock = document.getElementById('diagnosis-block');
+    if (diagBlock) {
+      if (stepIdx === c.steps.length - 1) {
+        diagBlock.classList.remove('section-hidden');
+        const diagText = document.getElementById('diag-text');
+        if (diagText) diagText.textContent = c.diagnosis;
+        const tacticsList = document.getElementById('tactics-list');
+        if (tacticsList && Array.isArray(c.tactics)) {
+          tacticsList.innerHTML = c.tactics.map(t => '<li>' + t + '</li>').join('');
+        }
+      } else {
+        diagBlock.classList.add('section-hidden');
+      }
+    }
+  } catch(e) { console.error('renderStep error:', e); }
+}
+
+function nextStep() {
+  try {
+    const c = cases[currentCase];
+    if (currentStep < c.steps.length - 1) {
+      currentStep++;
+      renderStep(c, currentStep);
+      updateStepDots(c);
+    }
+  } catch(e) { console.error('nextStep error:', e); }
+}
+
+function prevStep() {
+  try {
+    const c = cases[currentCase];
+    if (currentStep > 0) {
+      currentStep--;
+      renderStep(c, currentStep);
+      updateStepDots(c);
+    }
+  } catch(e) { console.error('prevStep error:', e); }
+}
+
+function nextCase() {
+  if (currentCase < cases.length - 1) loadCase(currentCase + 1);
+}
+
+function prevCase() {
+  if (currentCase > 0) loadCase(currentCase - 1);
+}
+
+function buildMechanism(c) {
+  try {
+    const container = document.getElementById('mechanism-flow');
+    if (!container || !Array.isArray(c.mechanism)) return;
+    container.innerHTML = '';
+    c.mechanism.forEach((step, i) => {
+      const div = document.createElement('div');
+      div.className = 'glass-dark p-3 text-sm text-slate-300 text-center';
+      div.innerHTML = step;
+      if (i < c.mechanism.length - 1) {
+        div.innerHTML += '<div class="mech-arrow mt-2">↓</div>';
+      }
+      container.appendChild(div);
+    });
+  } catch(e) { console.error('buildMechanism error:', e); }
+}
+
+function buildAGSection(c) {
+  try {
+    const section = document.getElementById('ag-section');
+    const visual = document.getElementById('ag-visual');
+    if (!section || !visual) return;
+    
+    if (c.ag !== null && c.ag !== undefined) {
+      section.classList.remove('section-hidden');
+      const ag = c.ag;
+      const isHigh = ag > 12;
+      visual.innerHTML = '<div class="flex items-center gap-4 flex-wrap">' +
+        '<div class="formula-box flex-1">АП = Na⁺ − (Cl⁻ + HCO₃⁻) = ' + c.abg.na + ' − (' + c.abg.cl + ' + ' + c.abg.hco3 + ') = <span class="font-bold ' + (isHigh ? 'text-red-400' : 'text-green-400') + '">' + ag + ' мэкв/л</span></div>' +
+        '<div class="text-sm ' + (isHigh ? 'text-red-400' : 'text-green-400') + ' font-bold">' + (isHigh ? '↑↑ Высокий АП — накопление кислот!' : '✓ Нормальный АП (8–12)') + '</div>' +
+        '</div>';
+    } else {
+      section.classList.add('section-hidden');
+    }
+  } catch(e) { console.error('buildAGSection error:', e); }
+}
+
+// ============================================================
+// SANDBOX
+// ============================================================
+function getSandboxValues() {
+  try {
+    return {
+      ph: parseFloat(document.getElementById('sb-ph').value) || 7.40,
+      pco2: parseFloat(document.getElementById('sb-pco2').value) || 40,
+      hco3: parseFloat(document.getElementById('sb-hco3').value) || 24,
+      pao2: parseFloat(document.getElementById('sb-pao2').value) || 95,
+      na: parseFloat(document.getElementById('sb-na').value) || 140,
+      cl: parseFloat(document.getElementById('sb-cl').value) || 102
+    };
+  } catch(e) { return { ph: 7.40, pco2: 40, hco3: 24, pao2: 95, na: 140, cl: 102 }; }
+}
+
+function updateSandbox() {
+  try {
+    const v = getSandboxValues();
+    
+    // Update display values
+    const ids = ['ph', 'pco2', 'hco3', 'pao2', 'na', 'cl'];
+    ids.forEach(id => {
+      const el = document.getElementById('sb-' + id + '-val');
+      if (el) el.textContent = parseFloat(document.getElementById('sb-' + id).value).toFixed(id === 'ph' ? 2 : 0);
+    });
+    
+    // pH scale
+    const marker = document.getElementById('sb-ph-marker');
+    if (marker) {
+      const pct = Math.max(0, Math.min(100, ((v.ph - 7.0) / 0.8) * 100));
+      marker.style.left = pct + '%';
+    }
+    
+    // Diagnosis logic
+    let diagnosis = 'Норма';
+    let diagClass = '';
+    let step1 = '', step2 = '', step3 = '', step4 = '', formula = '';
+    
+    const phAcid = v.ph < 7.35;
+    const phAlk = v.ph > 7.45;
+    const co2High = v.pco2 > 45;
+    const co2Low = v.pco2 < 35;
+    const hco3Low = v.hco3 < 22;
+    const hco3High = v.hco3 > 26;
+    
+    // Step 1
+    if (phAcid) step1 = '<span class="text-red-400">Ацидоз (< 7,35)</span>';
+    else if (phAlk) step1 = '<span class="text-blue-400">Алкалоз (> 7,45)</span>';
+    else step1 = '<span class="text-green-400">Норма (7,35–7,45)</span>';
+    
+    // Determine type
+    let type = 'normal';
+    if (phAcid && co2High && !hco3Low) { type = 'resp_acid'; }
+    else if (phAcid && hco3Low && !co2High) { type = 'meta_acid'; }
+    else if (phAlk && co2Low && !hco3High) { type = 'resp_alk'; }
+    else if (phAlk && hco3High && !co2Low) { type = 'meta_alk'; }
+    else if ((phAcid || phAlk) && co2High && hco3Low) { type = 'mixed_acid'; }
+    else if ((phAcid || phAlk) && co2Low && hco3High) { type = 'mixed_alk'; }
+    else if (!phAcid && !phAlk && (co2High || co2Low || hco3Low || hco3High)) { type = 'compensated'; }
+    
+    const typeLabels = {
+      normal: 'Норма',
+      resp_acid: 'Респираторный ацидоз',
+      resp_alk: 'Респираторный алкалоз',
+      meta_acid: 'Метаболический ацидоз',
+      meta_alk: 'Метаболический алкалоз',
+      mixed_acid: 'Смешанный ацидоз',
+      mixed_alk: 'Смешанный алкалоз',
+      compensated: 'Компенсированное нарушение'
+    };
+    const typeBadgeClasses = {
+      normal: 'diag-badge diag-resp-alk',
+      resp_acid: 'diag-badge diag-resp-acid',
+      resp_alk: 'diag-badge diag-resp-alk',
+      meta_acid: 'diag-badge diag-meta-acid',
+      meta_alk: 'diag-badge diag-meta-alk',
+      mixed_acid: 'diag-badge diag-mixed',
+      mixed_alk: 'diag-badge diag-mixed',
+      compensated: 'diag-badge diag-meta-alk'
+    };
+    
+    diagnosis = typeLabels[type] || 'Норма';
+    
+    // Step 2
+    if (co2High) step2 = '<span class="text-cyan-400">PaCO₂ ↑ → Респираторный ацидоз</span>';
+    else if (co2Low) step2 = '<span class="text-cyan-400">PaCO₂ ↓ → Респираторный алкалоз</span>';
+    else if (hco3Low) step2 = '<span class="text-purple-400">HCO₃⁻ ↓ → Метаболический ацидоз</span>';
+    else if (hco3High) step2 = '<span class="text-purple-400">HCO₃⁻ ↑ → Метаболический алкалоз</span>';
+    else step2 = '<span class="text-green-400">Норма</span>';
+    
+    // Step 3 + formula
+    if (type === 'resp_acid') {
+      const expHco3 = 24 + 0.1 * (v.pco2 - 40);
+      const diff = Math.abs(v.hco3 - expHco3);
+      formula = 'Ожид. HCO₃⁻ (острый) = 24 + 0,1×' + (v.pco2 - 40).toFixed(0) + ' = ' + expHco3.toFixed(1);
+      step3 = diff < 3 ? '<span class="text-green-400">Компенсация адекватна (острый)</span>' : '<span class="text-yellow-400">Проверьте хроническую компенсацию</span>';
+    } else if (type === 'resp_alk') {
+      const expHco3 = 24 - 0.2 * (40 - v.pco2);
+      formula = 'Ожид. HCO₃⁻ (острый) = 24 − 0,2×' + (40 - v.pco2).toFixed(0) + ' = ' + expHco3.toFixed(1);
+      step3 = Math.abs(v.hco3 - expHco3) < 3 ? '<span class="text-green-400">Компенсация адекватна</span>' : '<span class="text-yellow-400">Неполная компенсация</span>';
+    } else if (type === 'meta_acid') {
+      const expPco2 = 1.5 * v.hco3 + 8;
+      formula = 'Ожид. PaCO₂ = 1,5×' + v.hco3 + ' + 8 = ' + expPco2.toFixed(1) + ' мм рт.ст.';
+      step3 = Math.abs(v.pco2 - expPco2) < 2 ? '<span class="text-green-400">Компенсация адекватна</span>' : '<span class="text-red-400">Неадекватная компенсация!</span>';
+    } else if (type === 'meta_alk') {
+      const expPco2 = 0.7 * v.hco3 + 21;
+      formula = 'Ожид. PaCO₂ = 0,7×' + v.hco3 + ' + 21 = ' + expPco2.toFixed(1) + ' мм рт.ст.';
+      step3 = Math.abs(v.pco2 - expPco2) < 2 ? '<span class="text-green-400">Компенсация адекватна</span>' : '<span class="text-yellow-400">Неполная компенсация</span>';
+    } else {
+      formula = 'Параметры в норме — компенсация не требуется';
+      step3 = '<span class="text-green-400">Норма</span>';
+    }
+    
+    // Step 4 oxygenation
+    if (v.pao2 < 60) step4 = '<span class="text-red-400">PaO₂ ' + v.pao2 + ' — Тяжёлая гипоксемия!</span>';
+    else if (v.pao2 < 80) step4 = '<span class="text-yellow-400">PaO₂ ' + v.pao2 + ' — Умеренная гипоксемия</span>';
+    else step4 = '<span class="text-green-400">PaO₂ ' + v.pao2 + ' — Норма</span>';
+    
+    // Update UI
+    const diagEl = document.getElementById('sb-diagnosis');
+    if (diagEl) diagEl.textContent = diagnosis;
+    
+    const diagBadge = document.getElementById('sb-diag-badge');
+    if (diagBadge) diagBadge.innerHTML = '<span class="' + (typeBadgeClasses[type] || 'diag-badge') + '">' + diagnosis + '</span>';
+    
+    const phStatus = document.getElementById('sb-ph-status');
+    if (phStatus) phStatus.innerHTML = step1;
+    
+    const s1 = document.getElementById('sb-step1'); if (s1) s1.innerHTML = step1;
+    const s2 = document.getElementById('sb-step2'); if (s2) s2.innerHTML = step2;
+    const s3 = document.getElementById('sb-step3'); if (s3) s3.innerHTML = step3;
+    const s4 = document.getElementById('sb-step4'); if (s4) s4.innerHTML = step4;
+    
+    const formulaEl = document.getElementById('sb-formula');
+    if (formulaEl) formulaEl.textContent = formula;
+    
+    // Anion gap
+    const ag = v.na - (v.cl + v.hco3);
+    const agEl = document.getElementById('sb-ag-val');
+    if (agEl) agEl.textContent = ag.toFixed(0) + ' мэкв/л';
+    
+    const agInterp = document.getElementById('sb-ag-interp');
+    if (agInterp) {
+      if (ag > 12) agInterp.innerHTML = '<span class="text-red-400">↑ Высокий АП — накопление кислот (ДКА, лактат, аспирин)</span>';
+      else agInterp.innerHTML = '<span class="text-green-400">Норма (8–12 мэкв/л)</span>';
+    }
+    
+    // Update charts
+    updateSandboxCharts(v);
+    
+  } catch(e) { console.error('updateSandbox error:', e); }
+}
+
+function loadPreset(name) {
+  try {
+    const presets = {
+      normal: { ph: 7.40, pco2: 40, hco3: 24, pao2: 95, na: 140, cl: 102 },
+      resp_acid: { ph: 7.22, pco2: 72, hco3: 28, pao2: 48, na: 140, cl: 102 },
+      resp_alk: { ph: 7.58, pco2: 22, hco3: 20, pao2: 112, na: 140, cl: 102 },
+      meta_acid: { ph: 7.28, pco2: 30, hco3: 13, pao2: 90, na: 140, cl: 115 },
+      meta_alk: { ph: 7.54, pco2: 48, hco3: 40, pao2: 88, na: 140, cl: 88 },
+      dka: { ph: 7.08, pco2: 18, hco3: 5, pao2: 95, na: 138, cl: 98 },
+      mixed: { ph: 6.98, pco2: 55, hco3: 13, pao2: 68, na: 140, cl: 102 },
+      sepsis: { ph: 7.10, pco2: 28, hco3: 8, pao2: 55, na: 140, cl: 105 }
+    };
+    const p = presets[name];
+    if (!p) return;
+    
+    document.getElementById('sb-ph').value = p.ph;
+    document.getElementById('sb-pco2').value = p.pco2;
+    document.getElementById('sb-hco3').value = p.hco3;
+    document.getElementById('sb-pao2').value = p.pao2;
+    document.getElementById('sb-na').value = p.na;
+    document.getElementById('sb-cl').value = p.cl;
+    updateSandbox();
+  } catch(e) { console.error('loadPreset error:', e); }
+}
+
+function initSandboxCharts() {
+  try {
+    // Radar chart
+    const radarCtx = document.getElementById('sb-radar-chart');
+    if (radarCtx) {
+      if (sbRadarChart) { sbRadarChart.destroy(); sbRadarChart = null; }
+      sbRadarChart = new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+          labels: ['pH', 'PaCO₂', 'HCO₃⁻', 'PaO₂'],
+          datasets: [{
+            label: 'Пациент',
+            data: [50, 50, 50, 50],
+            backgroundColor: 'rgba(99,102,241,0.2)',
+            borderColor: '#6366f1',
+            borderWidth: 2,
+            pointBackgroundColor: '#6366f1'
+          }, {
+            label: 'Норма',
+            data: [50, 50, 50, 50],
+            backgroundColor: 'rgba(34,197,94,0.1)',
+            borderColor: 'rgba(34,197,94,0.5)',
+            borderWidth: 1,
+            borderDash: [5, 5],
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0, max: 100,
+              ticks: { display: false },
+              grid: { color: 'rgba(255,255,255,0.1)' },
+              pointLabels: { color: '#94a3b8', font: { size: 11 } }
+            }
+          },
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } }
+        }
+      });
+    }
+    
+    // Davenport diagram (simplified scatter)
+    const davCtx = document.getElementById('sb-davenport');
+    if (davCtx) {
+      if (sbDavenportChart) { sbDavenportChart.destroy(); sbDavenportChart = null; }
+      sbDavenportChart = new Chart(davCtx, {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: 'Пациент',
+            data: [{ x: 7.40, y: 24 }],
+            backgroundColor: '#6366f1',
+            pointRadius: 8,
+            pointHoverRadius: 10
+          }, {
+            label: 'Норма',
+            data: [{ x: 7.40, y: 24 }],
+            backgroundColor: 'rgba(34,197,94,0.5)',
+            pointRadius: 6,
+            pointStyle: 'star'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              min: 7.0, max: 7.8,
+              title: { display: true, text: 'pH', color: '#94a3b8' },
+              ticks: { color: '#64748b', font: { size: 10 } },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            },
+            y: {
+              min: 0, max: 55,
+              title: { display: true, text: 'HCO₃⁻', color: '#94a3b8' },
+              ticks: { color: '#64748b', font: { size: 10 } },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            }
+          },
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } }
+        }
+      });
+    }
+  } catch(e) { console.error('initSandboxCharts error:', e); }
+}
+
+function updateSandboxCharts(v) {
+  try {
+    if (!sbRadarChart || !sbDavenportChart) return;
+    
+    // Normalize values to 0-100 scale for radar
+    const phNorm = ((v.ph - 7.0) / 0.8) * 100;
+    const pco2Norm = Math.min(100, (v.pco2 / 100) * 100);
+    const hco3Norm = Math.min(100, (v.hco3 / 50) * 100);
+    const pao2Norm = Math.min(100, (v.pao2 / 150) * 100);
+    
+    sbRadarChart.data.datasets[0].data = [phNorm, pco2Norm, hco3Norm, pao2Norm];
+    // Normal reference
+    sbRadarChart.data.datasets[1].data = [
+      ((7.40 - 7.0) / 0.8) * 100,
+      (40 / 100) * 100,
+      (24 / 50) * 100,
+      (95 / 150) * 100
+    ];
+    sbRadarChart.update('none');
+    
+    // Davenport
+    sbDavenportChart.data.datasets[0].data = [{ x: v.ph, y: v.hco3 }];
+    sbDavenportChart.update('none');
+  } catch(e) { console.error('updateSandboxCharts error:', e); }
+}
+
+// ============================================================
+// SUMMARY CHARTS
+// ============================================================
+function initSummaryCharts() {
+  try {
+    // Build summary table
+    buildSummaryTable();
+    
+    // Summary bar chart
+    const sumCtx = document.getElementById('summary-chart');
+    if (sumCtx) {
+      if (summaryChart) { summaryChart.destroy(); summaryChart = null; }
+      
+      const labels = cases.map(c => c.id + '. ' + c.title.substring(0, 12));
+      const phData = cases.map(c => c.abg.ph);
+      const pco2Data = cases.map(c => c.abg.pco2);
+      const hco3Data = cases.map(c => c.abg.hco3);
+      
+      summaryChart = new Chart(sumCtx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'pH × 10',
+              data: phData.map(v => v * 10),
+              backgroundColor: 'rgba(99,102,241,0.6)',
+              borderColor: '#6366f1',
+              borderWidth: 1
+            },
+            {
+              label: 'PaCO₂',
+              data: pco2Data,
+              backgroundColor: 'rgba(6,182,212,0.6)',
+              borderColor: '#06b6d4',
+              borderWidth: 1
+            },
+            {
+              label: 'HCO₃⁻',
+              data: hco3Data,
+              backgroundColor: 'rgba(139,92,246,0.6)',
+              borderColor: '#8b5cf6',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          },
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  if (ctx.dataset.label === 'pH × 10') return 'pH: ' + (ctx.raw / 10).toFixed(2);
+                  return ctx.dataset.label + ': ' + ctx.raw;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Distribution doughnut
+    const distCtx = document.getElementById('dist-chart');
+    if (distCtx) {
+      if (distChart) { distChart.destroy(); distChart = null; }
+      
+      const typeCounts = { resp_acid: 0, resp_alk: 0, meta_acid: 0, meta_alk: 0, mixed: 0 };
+      cases.forEach(c => { if (typeCounts[c.type] !== undefined) typeCounts[c.type]++; });
+      
+      distChart = new Chart(distCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Респир. ацидоз', 'Респир. алкалоз', 'Метаб. ацидоз', 'Метаб. алкалоз', 'Смешанное'],
+          datasets: [{
+            data: [typeCounts.resp_acid, typeCounts.resp_alk, typeCounts.meta_acid, typeCounts.meta_alk, typeCounts.mixed],
+            backgroundColor: [
+              'rgba(239,68,68,0.7)',
+              'rgba(59,130,246,0.7)',
+              'rgba(139,92,246,0.7)',
+              'rgba(6,182,212,0.7)',
+              'rgba(249,115,22,0.7)'
+            ],
+            borderColor: 'rgba(15,23,42,0.8)',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 }, padding: 10 } }
+          }
+        }
+      });
+    }
+  } catch(e) { console.error('initSummaryCharts error:', e); }
+}
+
+function buildSummaryTable() {
+  try {
+    const tbody = document.getElementById('summary-table-body');
+    if (!tbody) return;
+    
+    const typeColors = {
+      resp_acid: 'text-red-400',
+      resp_alk: 'text-blue-400',
+      meta_acid: 'text-purple-400',
+      meta_alk: 'text-cyan-400',
+      mixed: 'text-orange-400'
+    };
+    
+    tbody.innerHTML = '';
+    cases.forEach(c => {
+      const ag = c.ag !== null && c.ag !== undefined ? c.ag : (c.abg.na - (c.abg.cl + c.abg.hco3));
+      const phColor = c.abg.ph < 7.35 ? 'text-red-400' : c.abg.ph > 7.45 ? 'text-blue-400' : 'text-green-400';
+      const pco2Color = c.abg.pco2 > 45 ? 'text-yellow-400' : c.abg.pco2 < 35 ? 'text-blue-400' : 'text-green-400';
+      const hco3Color = c.abg.hco3 < 22 ? 'text-red-400' : c.abg.hco3 > 26 ? 'text-yellow-400' : 'text-green-400';
+      const agColor = ag > 12 ? 'text-red-400' : 'text-green-400';
+      
+      const tr = document.createElement('tr');
+      tr.className = 'summary-row border-b border-white border-opacity-5';
+      tr.innerHTML = '<td class="py-2 pr-3 text-slate-400">' + c.emoji + '</td>' +
+        '<td class="py-2 pr-3 text-white text-xs">' + c.title + '</td>' +
+        '<td class="py-2 pr-3 text-center font-bold ' + phColor + '">' + c.abg.ph.toFixed(2) + '</td>' +
+        '<td class="py-2 pr-3 text-center ' + pco2Color + '">' + c.abg.pco2 + '</td>' +
+        '<td class="py-2 pr-3 text-center ' + hco3Color + '">' + c.abg.hco3 + '</td>' +
+        '<td class="py-2 pr-3 text-center ' + agColor + '">' + ag + '</td>' +
+        '<td class="py-2 pr-3 text-xs ' + (typeColors[c.type] || 'text-slate-300') + '">' + c.subtitle + '</td>' +
+        '<td class="py-2 text-center text-yellow-400 text-xs">' + c.difficulty + '</td>';
+      tbody.appendChild(tr);
+    });
+  } catch(e) { console.error('buildSummaryTable error:', e); }
+}
+
+// ============================================================
+// QUIZ
+// ============================================================
+function checkAnswer(answer) {
+  try {
+    const result = document.getElementById('quiz-result');
+    if (!result) return;
+    result.classList.remove('section-hidden');
+    if (answer === 'meta_acid') {
+      result.innerHTML = '<span class="text-green-400">✓ Правильно! Метаболический ацидоз с высоким АП (ДКА). HCO₃⁻ 5 ↓↓, PaCO₂ 18 — компенсаторная гипервентиляция.</span>';
+    } else {
+      result.innerHTML = '<span class="text-red-400">✗ Неверно. Подсказка: HCO₃⁻ 5 ↓↓ — первичное нарушение. PaCO₂ 18 ↓ — компенсация. Это метаболический ацидоз!</span>';
+    }
+  } catch(e) { console.error('checkAnswer error:', e); }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    buildCaseGrid();
+    loadCase(0);
+    console.log('КОС Симулятор инициализирован успешно');
+  } catch(e) { console.error('Init error:', e); }
+});
+</script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>

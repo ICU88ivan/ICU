@@ -1,0 +1,1834 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RUSH Exam — Интерактивная симуляция</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --cardiogenic: #ef4444;
+    --hypovolemic: #22c55e;
+    --obstructive: #a855f7;
+    --distributive: #3b82f6;
+  }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+  .glass { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+  .tab-btn { transition: all 0.3s; }
+  .tab-btn.active { background: #3b82f6; color: white; }
+  .tab-btn:not(.active) { background: rgba(255,255,255,0.05); color: #94a3b8; }
+  .tab-btn:not(.active):hover { background: rgba(255,255,255,0.1); color: #e2e8f0; }
+  .shock-card { border: 2px solid transparent; transition: all 0.3s; cursor: pointer; }
+  .shock-card:hover { transform: translateY(-2px); }
+  .shock-card.selected { box-shadow: 0 0 20px currentColor; }
+  .slider-container input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; outline: none; }
+  .slider-container input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #3b82f6; cursor: pointer; }
+  .echo-canvas { border-radius: 8px; background: #000; }
+  .pulse-dot { animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+  .finding-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .finding-normal { background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .finding-abnormal { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .finding-warning { background: rgba(234,179,8,0.2); color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
+  .waveform-canvas { width: 100%; height: 80px; }
+  .progress-bar { transition: width 0.5s ease; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-content { max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .chart-container { position: relative; min-height: 250px; max-height: 350px; margin-bottom: 1rem; }
+  .ivc-visual { width: 100%; height: 60px; position: relative; }
+  .lung-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .section-header { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: #64748b; font-weight: 700; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- HEADER -->
+<div class="glass sticky top-0 z-50 px-4 py-3">
+  <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-lg font-bold">🔬</div>
+      <div>
+        <div class="font-bold text-lg leading-tight">RUSH Exam · Интерактивная симуляция</div>
+        <div class="text-xs text-slate-400">Rapid Ultrasound in Shock & Hypotension · Алгоритм HI-MAP</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 text-xs">
+      <span class="glass px-3 py-1 rounded-full text-blue-300">⏱ Продвинутый уровень</span>
+      <span class="glass px-3 py-1 rounded-full text-green-300">Бабков И.Л. · 2026</span>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+
+<!-- HOOK QUESTION -->
+<div class="glass rounded-2xl p-6 mb-6 border-l-4 border-blue-500">
+  <div class="text-2xl font-bold text-blue-300 mb-2">❓ Ключевой вопрос</div>
+  <div class="text-lg text-slate-200">Пациент: АД 70/40, ЧСС 128, SpO₂ 91%. Перед вами — УЗИ-аппарат. <strong class="text-yellow-300">Какой тип шока? Каков план действий?</strong></div>
+  <div class="text-sm text-slate-400 mt-2">Пройдите симуляцию и установите диагноз менее чем за 5 минут — как требует протокол RUSH.</div>
+</div>
+
+<!-- MAIN TABS -->
+<div class="flex flex-wrap gap-2 mb-6">
+  <button class="tab-btn active px-4 py-2 rounded-xl font-semibold text-sm" onclick="switchTab('simulator')">🫀 Симулятор</button>
+  <button class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm" onclick="switchTab('algorithm')">📋 Алгоритм HI-MAP</button>
+  <button class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm" onclick="switchTab('cases')">🏥 Клинические кейсы</button>
+  <button class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm" onclick="switchTab('evidence')">📊 Доказательная база</button>
+  <button class="tab-btn px-4 py-2 rounded-xl font-semibold text-sm" onclick="switchTab('physics')">🔧 Основы УЗИ</button>
+</div>
+
+<!-- ===== TAB: SIMULATOR ===== -->
+<div id="tab-simulator" class="tab-content">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- LEFT: CONTROLS -->
+    <div class="lg:col-span-1 space-y-4">
+      <div class="glass rounded-2xl p-4">
+        <div class="section-header mb-3">Выбор сценария шока</div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="shock-card glass rounded-xl p-3 border-red-500 text-center" onclick="selectShock('cardiogenic')" id="card-cardiogenic">
+            <div class="text-2xl mb-1">🔴</div>
+            <div class="text-xs font-bold text-red-400">Кардиогенный</div>
+          </div>
+          <div class="shock-card glass rounded-xl p-3 border-green-500 text-center" onclick="selectShock('hypovolemic')" id="card-hypovolemic">
+            <div class="text-2xl mb-1">🟢</div>
+            <div class="text-xs font-bold text-green-400">Гиповолемический</div>
+          </div>
+          <div class="shock-card glass rounded-xl p-3 border-purple-500 text-center" onclick="selectShock('obstructive')" id="card-obstructive">
+            <div class="text-2xl mb-1">🟣</div>
+            <div class="text-xs font-bold text-purple-400">Обструктивный</div>
+          </div>
+          <div class="shock-card glass rounded-xl p-3 border-blue-500 text-center" onclick="selectShock('distributive')" id="card-distributive">
+            <div class="text-2xl mb-1">🔵</div>
+            <div class="text-xs font-bold text-blue-400">Дистрибутивный</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATIENT VITALS -->
+      <div class="glass rounded-2xl p-4">
+        <div class="section-header mb-3">Витальные параметры</div>
+        <div class="space-y-3">
+          <div class="slider-container">
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">АД систолическое</span>
+              <span class="font-bold text-white" id="bp-val">80</span>
+              <span class="text-slate-500">мм рт.ст.</span>
+            </div>
+            <input type="range" min="40" max="120" value="80" id="slider-bp" oninput="updateVitals()">
+          </div>
+          <div class="slider-container">
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">ЧСС</span>
+              <span class="font-bold text-white" id="hr-val">120</span>
+              <span class="text-slate-500">уд/мин</span>
+            </div>
+            <input type="range" min="40" max="180" value="120" id="slider-hr" oninput="updateVitals()">
+          </div>
+          <div class="slider-container">
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">SpO₂</span>
+              <span class="font-bold text-white" id="spo2-val">92</span>
+              <span class="text-slate-500">%</span>
+            </div>
+            <input type="range" min="70" max="100" value="92" id="slider-spo2" oninput="updateVitals()">
+          </div>
+        </div>
+      </div>
+
+      <!-- HI-MAP PARAMETERS -->
+      <div class="glass rounded-2xl p-4">
+        <div class="section-header mb-3">Параметры RUSH</div>
+        <div class="space-y-3">
+          <div class="slider-container">
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">ФВ (фракция выброса)</span>
+              <span class="font-bold text-white" id="ef-val">30</span>
+              <span class="text-slate-500">%</span>
+            </div>
+            <input type="range" min="10" max="80" value="30" id="slider-ef" oninput="updateRUSH()">
+          </div>
+          <div class="slider-container">
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">НПВ (диаметр)</span>
+              <span class="font-bold text-white" id="ivc-val">2.8</span>
+              <span class="text-slate-500">см</span>
+            </div>
+            <input type="range" min="5" max="35" value="28" id="slider-ivc" oninput="updateRUSH()">
+          </div>
+          <div class="slider-container">
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">Коллапс НПВ</span>
+              <span class="font-bold text-white" id="ivc-collapse-val">10</span>
+              <span class="text-slate-500">%</span>
+            </div>
+            <input type="range" min="0" max="100" value="10" id="slider-ivc-collapse" oninput="updateRUSH()">
+          </div>
+          <div class="slider-container">
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">Аорта (диаметр)</span>
+              <span class="font-bold text-white" id="aorta-val">2.1</span>
+              <span class="text-slate-500">см</span>
+            </div>
+            <input type="range" min="10" max="80" value="21" id="slider-aorta" oninput="updateRUSH()">
+          </div>
+        </div>
+        <!-- Toggle switches -->
+        <div class="mt-3 space-y-2">
+          <label class="flex items-center justify-between cursor-pointer">
+            <span class="text-xs text-slate-300">Свободная жидкость (FAST)</span>
+            <div class="relative">
+              <input type="checkbox" id="toggle-fluid" class="sr-only" onchange="updateRUSH()">
+              <div class="toggle-bg w-10 h-5 bg-slate-600 rounded-full transition-colors" id="toggle-fluid-bg"></div>
+              <div class="toggle-dot absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform" id="toggle-fluid-dot"></div>
+            </div>
+          </label>
+          <label class="flex items-center justify-between cursor-pointer">
+            <span class="text-xs text-slate-300">В-линии (≥3/поле)</span>
+            <div class="relative">
+              <input type="checkbox" id="toggle-blines" class="sr-only" onchange="updateRUSH()">
+              <div class="toggle-bg w-10 h-5 bg-slate-600 rounded-full transition-colors" id="toggle-blines-bg"></div>
+              <div class="toggle-dot absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform" id="toggle-blines-dot"></div>
+            </div>
+          </label>
+          <label class="flex items-center justify-between cursor-pointer">
+            <span class="text-xs text-slate-300">Lung Sliding отсутствует</span>
+            <div class="relative">
+              <input type="checkbox" id="toggle-ptx" class="sr-only" onchange="updateRUSH()">
+              <div class="toggle-bg w-10 h-5 bg-slate-600 rounded-full transition-colors" id="toggle-ptx-bg"></div>
+              <div class="toggle-dot absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform" id="toggle-ptx-dot"></div>
+            </div>
+          </label>
+          <label class="flex items-center justify-between cursor-pointer">
+            <span class="text-xs text-slate-300">Перикардиальный выпот</span>
+            <div class="relative">
+              <input type="checkbox" id="toggle-tamponade" class="sr-only" onchange="updateRUSH()">
+              <div class="toggle-bg w-10 h-5 bg-slate-600 rounded-full transition-colors" id="toggle-tamponade-bg"></div>
+              <div class="toggle-dot absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform" id="toggle-tamponade-dot"></div>
+            </div>
+          </label>
+          <label class="flex items-center justify-between cursor-pointer">
+            <span class="text-xs text-slate-300">ПЖ дилатирован (McConnell)</span>
+            <div class="relative">
+              <input type="checkbox" id="toggle-rv" class="sr-only" onchange="updateRUSH()">
+              <div class="toggle-bg w-10 h-5 bg-slate-600 rounded-full transition-colors" id="toggle-rv-bg"></div>
+              <div class="toggle-dot absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform" id="toggle-rv-dot"></div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: ECHO VISUALIZATION -->
+    <div class="lg:col-span-1 space-y-4">
+      <div class="glass rounded-2xl p-4">
+        <div class="section-header mb-3">Эхокардиограмма (симуляция)</div>
+        <canvas id="echoCanvas" class="echo-canvas w-full" height="220"></canvas>
+        <div class="mt-2 flex flex-wrap gap-1" id="echo-badges"></div>
+      </div>
+
+      <!-- IVC VISUALIZATION -->
+      <div class="glass rounded-2xl p-4">
+        <div class="section-header mb-2">НПВ — коллапсируемость (М-режим)</div>
+        <canvas id="ivcCanvas" class="w-full" height="80"></canvas>
+        <div class="mt-2 text-xs text-center" id="ivc-interpretation"></div>
+      </div>
+
+      <!-- LUNG VISUALIZATION -->
+      <div class="glass rounded-2xl p-4">
+        <div class="section-header mb-2">Лёгкие — A/B линии</div>
+        <div class="lung-grid" id="lung-display">
+          <div class="glass rounded-lg p-2 text-center" id="lung-ll">
+            <div class="text-xs text-slate-400 mb-1">Лев. верхняя</div>
+            <canvas id="lungCanvas-0" height="60"></canvas>
+          </div>
+          <div class="glass rounded-lg p-2 text-center" id="lung-lr">
+            <div class="text-xs text-slate-400 mb-1">Лев. нижняя</div>
+            <canvas id="lungCanvas-1" height="60"></canvas>
+          </div>
+          <div class="glass rounded-lg p-2 text-center" id="lung-rl">
+            <div class="text-xs text-slate-400 mb-1">Пра. верхняя</div>
+            <canvas id="lungCanvas-2" height="60"></canvas>
+          </div>
+          <div class="glass rounded-lg p-2 text-center" id="lung-rr">
+            <div class="text-xs text-slate-400 mb-1">Пра. нижняя</div>
+            <canvas id="lungCanvas-3" height="60"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: DIAGNOSIS -->
+    <div class="lg:col-span-1 space-y-4">
+      <!-- DIAGNOSIS RESULT -->
+      <div class="glass rounded-2xl p-4" id="diagnosis-panel">
+        <div class="section-header mb-3">Диагностический результат</div>
+        <div id="diagnosis-result" class="text-center py-4 text-slate-400 text-sm">Настройте параметры для получения диагноза</div>
+      </div>
+
+      <!-- HI-MAP TABLE -->
+      <div class="glass rounded-2xl p-4">
+        <div class="section-header mb-3">Интерпретация HI-MAP</div>
+        <div class="space-y-2" id="himap-results">
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-800">
+            <span class="w-8 h-8 rounded-lg bg-blue-900 flex items-center justify-center text-sm font-bold text-blue-300">H</span>
+            <div class="flex-1">
+              <div class="text-xs text-slate-400">Сердце (Heart)</div>
+              <div class="text-xs font-semibold" id="h-result">—</div>
+            </div>
+            <div id="h-badge"></div>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-800">
+            <span class="w-8 h-8 rounded-lg bg-blue-900 flex items-center justify-center text-sm font-bold text-blue-300">I</span>
+            <div class="flex-1">
+              <div class="text-xs text-slate-400">НПВ (IVC)</div>
+              <div class="text-xs font-semibold" id="i-result">—</div>
+            </div>
+            <div id="i-badge"></div>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-800">
+            <span class="w-8 h-8 rounded-lg bg-blue-900 flex items-center justify-center text-sm font-bold text-blue-300">M</span>
+            <div class="flex-1">
+              <div class="text-xs text-slate-400">Morrison/FAST</div>
+              <div class="text-xs font-semibold" id="m-result">—</div>
+            </div>
+            <div id="m-badge"></div>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-800">
+            <span class="w-8 h-8 rounded-lg bg-blue-900 flex items-center justify-center text-sm font-bold text-blue-300">A</span>
+            <div class="flex-1">
+              <div class="text-xs text-slate-400">Аорта</div>
+              <div class="text-xs font-semibold" id="a-result">—</div>
+            </div>
+            <div id="a-badge"></div>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg bg-slate-800">
+            <span class="w-8 h-8 rounded-lg bg-blue-900 flex items-center justify-center text-sm font-bold text-blue-300">P</span>
+            <div class="flex-1">
+              <div class="text-xs text-slate-400">Лёгкие (Pulmonary)</div>
+              <div class="text-xs font-semibold" id="p-result">—</div>
+            </div>
+            <div id="p-badge"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CO CALCULATION -->
+      <div class="glass rounded-2xl p-4">
+        <div class="section-header mb-3">Расчёт МОК (Cardiac Output)</div>
+        <div class="grid grid-cols-2 gap-2 text-center">
+          <div class="bg-slate-800 rounded-xl p-3">
+            <div class="text-2xl font-bold text-blue-300" id="co-value">—</div>
+            <div class="text-xs text-slate-400">МОК (л/мин)</div>
+          </div>
+          <div class="bg-slate-800 rounded-xl p-3">
+            <div class="text-2xl font-bold text-green-300" id="sv-value">—</div>
+            <div class="text-xs text-slate-400">УО (мл)</div>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-slate-500 text-center">МОК = УО × ЧСС · Норма: 4–8 л/мин</div>
+        <div class="mt-2 glass rounded-lg p-2 text-xs text-center" id="co-interpretation"></div>
+      </div>
+
+      <!-- TREATMENT -->
+      <div class="glass rounded-2xl p-4" id="treatment-panel">
+        <div class="section-header mb-2">Рекомендуемые действия</div>
+        <div id="treatment-text" class="text-xs text-slate-400">Выберите тип шока для рекомендаций</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROBABILITY CHART -->
+  <div class="glass rounded-2xl p-6 mt-6">
+    <div class="section-header mb-3">Вероятность типа шока (%) — на основе введённых данных</div>
+    <div class="chart-container">
+      <canvas id="probabilityChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: ALGORITHM ===== -->
+<div id="tab-algorithm" class="tab-content hidden">
+  <div class="glass rounded-2xl p-6 mb-6">
+    <h2 class="text-xl font-bold text-blue-300 mb-1">Алгоритм HI-MAP · RUSH Protocol</h2>
+    <p class="text-sm text-slate-400">Weingart et al., EMCrit, 2006 · «Low MAP → Find it → HI MAP»</p>
+  </div>
+
+  <!-- 4 SHOCK TYPES -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="glass rounded-2xl p-4 border-t-4 border-red-500">
+      <div class="text-lg font-bold text-red-400 mb-2">🔴 Кардиогенный</div>
+      <div class="space-y-1 text-xs">
+        <div class="flex gap-2"><span class="text-slate-400">ФВ:</span><span class="text-red-300 font-bold">↓ снижена</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">МОК:</span><span class="text-red-300">↓ низкий</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">НПВ:</span><span class="text-red-300">↑ расширена</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">B-линии:</span><span class="text-red-300">+++ (отёк)</span></div>
+        <div class="mt-2 pt-2 border-t border-slate-700 text-slate-300">ИМ, ДКМП, миокардит, тяжёлый клапанный порок</div>
+        <div class="mt-1 text-yellow-300 font-semibold">Rx: инотропы, диуретики</div>
+      </div>
+    </div>
+    <div class="glass rounded-2xl p-4 border-t-4 border-green-500">
+      <div class="text-lg font-bold text-green-400 mb-2">🟢 Гиповолемический</div>
+      <div class="space-y-1 text-xs">
+        <div class="flex gap-2"><span class="text-slate-400">ФВ:</span><span class="text-green-300 font-bold">↑ гипердинамич.</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">МОК:</span><span class="text-green-300">↓ низкий</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">НПВ:</span><span class="text-green-300">↓ малая, коллапс</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">FAST:</span><span class="text-green-300">± жидкость</span></div>
+        <div class="mt-2 pt-2 border-t border-slate-700 text-slate-300">Кровотечение, дегидратация, ожоги, ААА разрыв</div>
+        <div class="mt-1 text-yellow-300 font-semibold">Rx: массивная инфузия, хирургия</div>
+      </div>
+    </div>
+    <div class="glass rounded-2xl p-4 border-t-4 border-purple-500">
+      <div class="text-lg font-bold text-purple-400 mb-2">🟣 Обструктивный</div>
+      <div class="space-y-1 text-xs">
+        <div class="flex gap-2"><span class="text-slate-400">ФВ:</span><span class="text-purple-300 font-bold">N/↓ норм/снижена</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">МОК:</span><span class="text-purple-300">↓ низкий</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">НПВ:</span><span class="text-purple-300">↑ расширена</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">Особое:</span><span class="text-purple-300">ПЖ, PTX, выпот</span></div>
+        <div class="mt-2 pt-2 border-t border-slate-700 text-slate-300">ТЭЛА, тампонада, напряжённый пневмоторакс</div>
+        <div class="mt-1 text-yellow-300 font-semibold">Rx: тромболизис/дренаж/пункция</div>
+      </div>
+    </div>
+    <div class="glass rounded-2xl p-4 border-t-4 border-blue-500">
+      <div class="text-lg font-bold text-blue-400 mb-2">🔵 Дистрибутивный</div>
+      <div class="space-y-1 text-xs">
+        <div class="flex gap-2"><span class="text-slate-400">ФВ:</span><span class="text-blue-300 font-bold">↑ гипердинамич.</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">МОК:</span><span class="text-blue-300">↑ высокий</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">НПВ:</span><span class="text-blue-300">↓ малая, коллапс</span></div>
+        <div class="flex gap-2"><span class="text-slate-400">Лёгкие:</span><span class="text-blue-300">чистые (A-линии)</span></div>
+        <div class="mt-2 pt-2 border-t border-slate-700 text-slate-300">Сепсис, анафилаксия, нейрогенный шок</div>
+        <div class="mt-1 text-yellow-300 font-semibold">Rx: вазопрессоры, антибиотики</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIFFERENTIAL TABLE -->
+  <div class="glass rounded-2xl p-6 mb-6 overflow-x-auto">
+    <h3 class="text-lg font-bold text-white mb-4">Дифференциальная таблица HI-MAP</h3>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-xs text-slate-400 border-b border-slate-700">
+          <th class="text-left py-2 pr-4">Параметр</th>
+          <th class="text-center py-2 px-2 text-red-400">🔴 Кардиогенный</th>
+          <th class="text-center py-2 px-2 text-green-400">🟢 Гиповолем.</th>
+          <th class="text-center py-2 px-2 text-purple-400">🟣 Обструктив.</th>
+          <th class="text-center py-2 px-2 text-blue-400">🔵 Дистрибутив.</th>
+        </tr>
+      </thead>
+      <tbody class="text-xs">
+        <tr class="border-b border-slate-800 hover:bg-slate-800">
+          <td class="py-2 pr-4 text-slate-300 font-semibold">H · ФВ</td>
+          <td class="text-center py-2 px-2 text-red-300">↓ снижена</td>
+          <td class="text-center py-2 px-2 text-green-300">↑ гипердин.</td>
+          <td class="text-center py-2 px-2 text-purple-300">N / ↓</td>
+          <td class="text-center py-2 px-2 text-blue-300">↑ гипердин.</td>
+        </tr>
+        <tr class="border-b border-slate-800 hover:bg-slate-800">
+          <td class="py-2 pr-4 text-slate-300 font-semibold">I · НПВ</td>
+          <td class="text-center py-2 px-2 text-red-300">↑ расширена, нет коллапса</td>
+          <td class="text-center py-2 px-2 text-green-300">↓ малая, коллапс &gt;50%</td>
+          <td class="text-center py-2 px-2 text-purple-300">↑ расширена, нет коллапса</td>
+          <td class="text-center py-2 px-2 text-blue-300">↓ малая, коллапс &gt;50%</td>
+        </tr>
+        <tr class="border-b border-slate-800 hover:bg-slate-800">
+          <td class="py-2 pr-4 text-slate-300 font-semibold">M · FAST</td>
+          <td class="text-center py-2 px-2 text-slate-400">—</td>
+          <td class="text-center py-2 px-2 text-yellow-300">++ гемоперитонеум</td>
+          <td class="text-center py-2 px-2 text-slate-400">—</td>
+          <td class="text-center py-2 px-2 text-slate-400">—</td>
+        </tr>
+        <tr class="border-b border-slate-800 hover:bg-slate-800">
+          <td class="py-2 pr-4 text-slate-300 font-semibold">A · Аорта</td>
+          <td class="text-center py-2 px-2 text-slate-400">N</td>
+          <td class="text-center py-2 px-2 text-red-300">ААА ≥4 см!</td>
+          <td class="text-center py-2 px-2 text-slate-400">N</td>
+          <td class="text-center py-2 px-2 text-slate-400">N</td>
+        </tr>
+        <tr class="border-b border-slate-800 hover:bg-slate-800">
+          <td class="py-2 pr-4 text-slate-300 font-semibold">P · Лёгкие</td>
+          <td class="text-center py-2 px-2 text-red-300">B-линии (отёк)</td>
+          <td class="text-center py-2 px-2 text-green-300">A-линии</td>
+          <td class="text-center py-2 px-2 text-purple-300">PTX / выпот</td>
+          <td class="text-center py-2 px-2 text-blue-300">A-линии</td>
+        </tr>
+        <tr class="hover:bg-slate-800">
+          <td class="py-2 pr-4 text-slate-300 font-semibold">МОК</td>
+          <td class="text-center py-2 px-2 text-red-300">↓ низкий</td>
+          <td class="text-center py-2 px-2 text-green-300">↓ низкий</td>
+          <td class="text-center py-2 px-2 text-purple-300">↓ низкий</td>
+          <td class="text-center py-2 px-2 text-blue-300">↑ высокий</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FLOWCHART -->
+  <div class="glass rounded-2xl p-6">
+    <h3 class="text-lg font-bold text-white mb-4">Блок-схема алгоритма RUSH</h3>
+    <div class="flex flex-col items-center gap-2 text-sm">
+      <div class="bg-red-900 border border-red-500 rounded-xl px-6 py-3 text-center">
+        <div class="font-bold text-red-200">⚠️ НИЗКОЕ АД / ШОК</div>
+        <div class="text-xs text-red-400">АД &lt;90 мм рт.ст. · Нарушение перфузии</div>
+      </div>
+      <div class="text-slate-500 text-lg">↓</div>
+      <div class="bg-blue-900 border border-blue-500 rounded-xl px-6 py-3 text-center">
+        <div class="font-bold text-blue-200">🫀 H — Оценка сердца</div>
+        <div class="text-xs text-blue-400">ФВ, выпот, ПЖ дилатация</div>
+      </div>
+      <div class="text-slate-500 text-lg">↓</div>
+      <div class="bg-blue-900 border border-blue-500 rounded-xl px-6 py-3 text-center">
+        <div class="font-bold text-blue-200">🩺 I — Оценка НПВ</div>
+        <div class="text-xs text-blue-400">Диаметр + коллапсируемость</div>
+      </div>
+      <div class="text-slate-500 text-lg">↓</div>
+      <div class="grid grid-cols-3 gap-3 w-full max-w-lg">
+        <div class="bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-center">
+          <div class="font-semibold text-slate-200 text-xs">M · Morrison/FAST</div>
+          <div class="text-xs text-slate-400">Жидкость в полостях</div>
+        </div>
+        <div class="bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-center">
+          <div class="font-semibold text-slate-200 text-xs">A · Аорта</div>
+          <div class="text-xs text-slate-400">ААА / диссекция</div>
+        </div>
+        <div class="bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-center">
+          <div class="font-semibold text-slate-200 text-xs">P · Лёгкие</div>
+          <div class="text-xs text-slate-400">PTX / B-линии</div>
+        </div>
+      </div>
+      <div class="text-slate-500 text-lg">↓</div>
+      <div class="bg-green-900 border border-green-500 rounded-xl px-6 py-3 text-center">
+        <div class="font-bold text-green-200">✅ ДИАГНОЗ + ЛЕЧЕНИЕ</div>
+        <div class="text-xs text-green-400">Цель: &lt;5 минут</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: CASES ===== -->
+<div id="tab-cases" class="tab-content hidden">
+  <div class="glass rounded-2xl p-4 mb-6">
+    <h2 class="text-xl font-bold text-blue-300">🏥 Клинические кейсы · RUSH Exam</h2>
+    <p class="text-sm text-slate-400 mt-1">Интерактивные симуляции реальных клинических ситуаций</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <button class="glass rounded-2xl p-4 text-left hover:bg-slate-700 transition" onclick="loadCase(0)">
+      <div class="text-purple-400 font-bold mb-1">Кейс #1 · Тампонада сердца</div>
+      <div class="text-xs text-slate-400">Мужчина, 58 лет. Рак лёгкого IV стадии. Нарастающая одышка, АД 80/55.</div>
+      <div class="mt-2 text-xs text-purple-300">▶ Открыть кейс</div>
+    </button>
+    <button class="glass rounded-2xl p-4 text-left hover:bg-slate-700 transition" onclick="loadCase(1)">
+      <div class="text-red-400 font-bold mb-1">Кейс #2 · Разрыв ААА</div>
+      <div class="text-xs text-slate-400">Мужчина, 72 лет. АГ, курит 40 лет. АД 70/40, пульсирующее образование.</div>
+      <div class="mt-2 text-xs text-red-300">▶ Открыть кейс</div>
+    </button>
+    <button class="glass rounded-2xl p-4 text-left hover:bg-slate-700 transition" onclick="loadCase(2)">
+      <div class="text-blue-400 font-bold mb-1">Кейс #3 · Массивная ТЭЛА · СЛР</div>
+      <div class="text-xs text-slate-400">Женщина, 45 лет. Перелом бедра 10 дн. назад. Остановка кровообращения.</div>
+      <div class="mt-2 text-xs text-blue-300">▶ Открыть кейс</div>
+    </button>
+    <button class="glass rounded-2xl p-4 text-left hover:bg-slate-700 transition" onclick="loadCase(3)">
+      <div class="text-green-400 font-bold mb-1">Кейс #4 · Септический шок · Мониторинг</div>
+      <div class="text-xs text-slate-400">Женщина, 67 лет. СКВ, ХБП. t°39.5, АД 82/50, ЧСС 124.</div>
+      <div class="mt-2 text-xs text-green-300">▶ Открыть кейс</div>
+    </button>
+  </div>
+
+  <div id="case-display" class="hidden"></div>
+</div>
+
+<!-- ===== TAB: EVIDENCE ===== -->
+<div id="tab-evidence" class="tab-content hidden">
+  <div class="glass rounded-2xl p-6 mb-6">
+    <h2 class="text-xl font-bold text-blue-300 mb-4">📊 Доказательная база RUSH</h2>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-blue-900 rounded-xl p-4 text-center">
+        <div class="text-3xl font-bold text-blue-200">87%</div>
+        <div class="text-xs text-blue-400 mt-1">Чувствительность</div>
+        <div class="text-xs text-slate-500">Keikha 2018</div>
+      </div>
+      <div class="bg-green-900 rounded-xl p-4 text-center">
+        <div class="text-3xl font-bold text-green-200">88%</div>
+        <div class="text-xs text-green-400 mt-1">Специфичность</div>
+        <div class="text-xs text-slate-500">Keikha 2018</div>
+      </div>
+      <div class="bg-purple-900 rounded-xl p-4 text-center">
+        <div class="text-3xl font-bold text-purple-200">93%</div>
+        <div class="text-xs text-purple-400 mt-1">Точность</div>
+        <div class="text-xs text-slate-500">Seif 2012</div>
+      </div>
+      <div class="bg-orange-900 rounded-xl p-4 text-center">
+        <div class="text-3xl font-bold text-orange-200">4.3 мин</div>
+        <div class="text-xs text-orange-400 mt-1">Среднее время</div>
+        <div class="text-xs text-slate-500">Bagheri 2015</div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="evidenceChart"></canvas>
+    </div>
+  </div>
+
+  <div class="space-y-4">
+    <div class="glass rounded-2xl p-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="bg-blue-700 rounded-lg px-3 py-1 text-sm font-bold text-white">2006</div>
+        <div class="font-bold text-white">Weingart et al. · EMCrit</div>
+      </div>
+      <div class="text-sm text-slate-300">Первое описание протокола RUSH. Система «Pump-Tank-Pipes» и «HI-MAP» для недифференцированного шока.</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="bg-green-700 rounded-lg px-3 py-1 text-sm font-bold text-white">2012</div>
+        <div class="font-bold text-white">Seif et al. · Crit Care Res Pract</div>
+      </div>
+      <div class="text-sm text-slate-300">n=126 пациентов с шоком. Диагностическая точность 93%. Систематизированы показания к протоколу.</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="bg-purple-700 rounded-lg px-3 py-1 text-sm font-bold text-white">2015</div>
+        <div class="font-bold text-white">Bagheri-Hariri et al. · Emerg Radiol</div>
+      </div>
+      <div class="text-sm text-slate-300">Проспективное исследование. RUSH верно определил тип шока в 92% случаев. Среднее время: 4.3 минуты.</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="bg-red-700 rounded-lg px-3 py-1 text-sm font-bold text-white">2018</div>
+        <div class="font-bold text-white">Keikha et al. · Bull Emerg Trauma</div>
+      </div>
+      <div class="text-sm text-slate-300">Систематический обзор и мета-анализ. 12 исследований, n=1280. Чувствительность 87%, специфичность 88%. RUSH превосходит клиническую оценку без УЗИ.</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="bg-yellow-700 rounded-lg px-3 py-1 text-sm font-bold text-white">2019</div>
+        <div class="font-bold text-white">ESC Guidelines 2019</div>
+      </div>
+      <div class="text-sm text-slate-300">POCUS при остановке сердца (ЭМД) — Класс I, Уровень С. Включён как обязательный компонент в стандарт компетенций экстренной медицины.</div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="bg-cyan-700 rounded-lg px-3 py-1 text-sm font-bold text-white">2021</div>
+        <div class="font-bold text-white">Surviving Sepsis Campaign 2021/2026</div>
+      </div>
+      <div class="text-sm text-slate-300">УЗИ для оценки преднагрузки и ФВ рекомендовано. Ранний POCUS-протокол при шоке улучшает функцию почек (СКФ↑ на 15%), снижает необходимость ЗПТ на 22%.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: PHYSICS ===== -->
+<div id="tab-physics" class="tab-content hidden">
+  <div class="glass rounded-2xl p-6 mb-6">
+    <h2 class="text-xl font-bold text-blue-300 mb-4">🔧 Основы УЗИ · Датчики и режимы для RUSH</h2>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="glass rounded-2xl p-5">
+      <h3 class="font-bold text-white mb-3">Эхогенность тканей</h3>
+      <div class="space-y-2">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded bg-black border border-slate-600 flex-shrink-0"></div>
+          <div><div class="text-sm font-semibold text-blue-200">Анэхогенный (чёрный)</div><div class="text-xs text-slate-400">Жидкость: кровь, желчь, моча, выпот</div></div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded bg-gray-600 flex-shrink-0"></div>
+          <div><div class="text-sm font-semibold text-slate-200">Гипоэхогенный (серый)</div><div class="text-xs text-slate-400">Мягкие ткани, мышцы, паренхима</div></div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded bg-gray-400 flex-shrink-0"></div>
+          <div><div class="text-sm font-semibold text-slate-200">Изоэхогенный</div><div class="text-xs text-slate-400">Стандартная паренхима (печень = эталон)</div></div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded bg-white flex-shrink-0"></div>
+          <div><div class="text-sm font-semibold text-white">Гиперэхогенный (белый)</div><div class="text-xs text-slate-400">Кость, камень, кальцинаты, газ</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass rounded-2xl p-5">
+      <h3 class="font-bold text-white mb-3">Датчики для RUSH</h3>
+      <div class="space-y-3">
+        <div class="bg-slate-800 rounded-xl p-3">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+            <div class="font-semibold text-yellow-300 text-sm">★ Фазированный (1–5 МГц)</div>
+          </div>
+          <div class="text-xs text-slate-400">Основной для RUSH. Сердце, НПВ, аорта. Малый footprint — проходит между рёбрами.</div>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-3">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-3 h-3 rounded-full bg-blue-400"></div>
+            <div class="font-semibold text-blue-300 text-sm">Конвексный (2–5 МГц)</div>
+          </div>
+          <div class="text-xs text-slate-400">При ожирении. FAST, аорта, НПВ у больших пациентов.</div>
+        </div>
+        <div class="bg-slate-800 rounded-xl p-3">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+            <div class="font-semibold text-green-300 text-sm">Линейный (5–15 МГц)</div>
+          </div>
+          <div class="text-xs text-slate-400">DVT вен, плевра. Высокое разрешение поверхностных структур.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass rounded-2xl p-5 mb-6">
+    <h3 class="font-bold text-white mb-3">Ключевые артефакты RUSH</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-slate-800 rounded-xl p-3">
+        <div class="font-semibold text-blue-300 text-sm mb-1">A-линии</div>
+        <div class="text-xs text-slate-400">Горизонтальные реверберации плевры. НОРМА — нет жидкости между листками плевры.</div>
+        <canvas id="alineCanvas" class="w-full mt-2 rounded" height="80"></canvas>
+      </div>
+      <div class="bg-slate-800 rounded-xl p-3">
+        <div class="font-semibold text-yellow-300 text-sm mb-1">B-линии («хвосты комет»)</div>
+        <div class="text-xs text-slate-400">Вертикальные, не затухают до края экрана. ≥3/поле = интерстициальный отёк.</div>
+        <canvas id="blineCanvas" class="w-full mt-2 rounded" height="80"></canvas>
+      </div>
+      <div class="bg-slate-800 rounded-xl p-3">
+        <div class="font-semibold text-red-300 text-sm mb-1">Barcode Sign (М-режим)</div>
+        <div class="text-xs text-slate-400">Только горизонтальные линии — нет движения лёгкого = пневмоторакс.</div>
+        <canvas id="barcodeCanvas" class="w-full mt-2 rounded" height="80"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass rounded-2xl p-5">
+    <h3 class="font-bold text-white mb-3">Доступы RUSH · Позиционирование</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="bg-slate-800 rounded-xl p-3">
+        <div class="font-semibold text-white text-xs mb-1">PLAX</div>
+        <div class="text-xs text-slate-400 mb-1">Парастернальная длинная ось. Датчик: 3–4 МПр слева, индикатор к правому плечу.</div>
+        <div class="text-xs text-green-300">ФВ, МК, АК, перикард, EPSS</div>
+      </div>
+      <div class="bg-slate-800 rounded-xl p-3">
+        <div class="font-semibold text-white text-xs mb-1">PSAX</div>
+        <div class="text-xs text-slate-400 mb-1">Парастернальная поперечная ось. Поворот 90°.</div>
+        <div class="text-xs text-green-300">D-Sign, ПЖ, зоны акинезии</div>
+      </div>
+      <div class="bg-slate-800 rounded-xl p-3">
+        <div class="font-semibold text-white text-xs mb-1">A4C</div>
+        <div class="text-xs text-slate-400 mb-1">Апикальный 4-камерный. Верхушка сердца.</div>
+        <div class="text-xs text-green-300">McConnell, все 4 камеры, МОК/VTI</div>
+      </div>
+      <div class="bg-slate-800 rounded-xl p-3">
+        <div class="font-semibold text-white text-xs mb-1">Субкостальный</div>
+        <div class="text-xs text-slate-400 mb-1">Приоритет в реанимации. Под мечевидным отростком.</div>
+        <div class="text-xs text-green-300">СЛР, перикард, НПВ</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end max-w-7xl -->
+
+<!-- CASE MODAL -->
+<div id="case-modal" class="modal-overlay hidden" onclick="closeCaseModal(event)">
+  <div class="modal-content glass rounded-2xl p-6" onclick="event.stopPropagation()">
+    <div id="modal-content-inner"></div>
+    <button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl text-sm font-semibold" onclick="closeCaseModal()">✕ Закрыть</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE & DATA
+// ============================================================
+var currentShock = null;
+var probabilityChart = null;
+var evidenceChart = null;
+var echoAnimFrame = null;
+var ivcAnimFrame = null;
+var echoTime = 0;
+
+// Shock type definitions
+var SHOCK_DATA = {
+  cardiogenic: {
+    name: 'Кардиогенный шок',
+    emoji: '🔴',
+    color: '#ef4444',
+    ef: 20,
+    ivc: 28,
+    ivcCollapse: 10,
+    aorta: 21,
+    fluid: false,
+    blines: true,
+    ptx: false,
+    tamponade: false,
+    rv: false,
+    bp: 70,
+    hr: 110,
+    spo2: 88,
+    sv: 30,
+    treatment: '💊 Инотропная поддержка (добутамин)<br>💧 Диуретики (фуросемид) при перегрузке<br>🫀 Консультация кардиолога<br>⚡ Рассмотреть ИАБК / ЭКМО<br>❌ Избегать агрессивной инфузии'
+  },
+  hypovolemic: {
+    name: 'Гиповолемический шок',
+    emoji: '🟢',
+    color: '#22c55e',
+    ef: 72,
+    ivc: 10,
+    ivcCollapse: 90,
+    aorta: 21,
+    fluid: true,
+    blines: false,
+    ptx: false,
+    tamponade: false,
+    rv: false,
+    bp: 70,
+    hr: 130,
+    spo2: 93,
+    sv: 40,
+    treatment: '🩸 Массивная инфузионная терапия<br>🔴 Компоненты крови при геморрагии<br>⚕️ Хирургический гемостаз<br>🏥 КТ при стабилизации<br>💉 Вазопрессоры временно при рефрактерности'
+  },
+  obstructive: {
+    name: 'Обструктивный шок',
+    emoji: '🟣',
+    color: '#a855f7',
+    ef: 45,
+    ivc: 27,
+    ivcCollapse: 8,
+    aorta: 21,
+    fluid: false,
+    blines: false,
+    ptx: false,
+    tamponade: true,
+    rv: true,
+    bp: 75,
+    hr: 120,
+    spo2: 90,
+    sv: 45,
+    treatment: '🫀 При тампонаде — перикардиоцентез<br>🫁 При ТЭЛА — тромболизис (альтеплаза 100 мг)<br>💨 При напряжённом PTX — декомпрессия<br>🏃 Немедленное действие — обратимая причина<br>📋 ESC 2019: тромболизис при ТЭЛА + СЛР'
+  },
+  distributive: {
+    name: 'Дистрибутивный шок',
+    emoji: '🔵',
+    color: '#3b82f6',
+    ef: 70,
+    ivc: 8,
+    ivcCollapse: 85,
+    aorta: 21,
+    fluid: false,
+    blines: false,
+    ptx: false,
+    tamponade: false,
+    rv: false,
+    bp: 78,
+    hr: 125,
+    spo2: 94,
+    sv: 75,
+    treatment: '💊 Вазопрессоры (норадреналин 1-я линия)<br>🧫 Антибиотики широкого спектра (при сепсисе)<br>💉 Умеренная инфузия под контролем RUSH<br>🩺 Лактат, гемокультуры до антибиотиков<br>📊 Мониторинг НПВ каждые 30 мин'
+  }
+};
+
+var CASES = [
+  {
+    title: 'Кейс #1 · Тампонада сердца у онкологического пациента',
+    patient: 'Мужчина, 58 лет. Рак лёгкого (стадия IV, химиотерапия)',
+    vitals: { bp: '80/55', hr: 118, spo2: 94 },
+    presentation: 'Нарастающая одышка, слабость, предобморок. ЭКГ: низковольтажный QRS, синусовая тахикардия.',
+    findings: [
+      { label: 'H · Сердце', value: 'Большой анэхогенный ободок вокруг сердца (~2 см). Диастолический коллапс ПЖ. Гиперконтрактильность ЛЖ.', status: 'abnormal' },
+      { label: 'I · НПВ', value: 'Расширена (>2.5 см), не коллабирует → ЦВД высокое', status: 'abnormal' },
+      { label: 'M · Morrison', value: 'Свободная жидкость отсутствует', status: 'normal' },
+      { label: 'A · Аорта', value: 'Норма ~2.1 см', status: 'normal' },
+      { label: 'P · Лёгкие', value: 'Lung Sliding сохранён с обеих сторон. B-линии отсутствуют.', status: 'normal' }
+    ],
+    diagnosis: 'Тампонада сердца (злокачественный выпот)',
+    action: 'Экстренный перикардиоцентез под УЗИ-контролем. Субкостальный доступ. Аспирация 200–400 мл. Консультация торакального хирурга.',
+    key: 'Триада Бека: гипотензия + приглушённые тоны + набухание вен. RUSH подтвердил за <2 мин.',
+    shockType: 'obstructive'
+  },
+  {
+    title: 'Кейс #2 · Разрыв аневризмы брюшной аорты (ААА)',
+    patient: 'Мужчина, 72 года. АГ, курит 40 лет.',
+    vitals: { bp: '70/40', hr: 126, spo2: 96 },
+    presentation: 'АД 70/40, ЧСС 126, бледность, боль в животе. Пульсирующее образование в эпигастрии. ЭКГ: синусовая тахикардия.',
+    findings: [
+      { label: 'H · Сердце', value: 'ФВ сохранена, гипердинамическая. Нет выпота. ЛЖ в норме.', status: 'normal' },
+      { label: 'I · НПВ', value: 'Малая, полностью коллабирует → массивная гиповолемия', status: 'abnormal' },
+      { label: 'M · Morrison', value: 'Свободная жидкость в брюшной полости — справа и слева!', status: 'abnormal' },
+      { label: 'A · Аорта', value: '⚠️ ДИАМЕТР 7.2 СМ! Интрамуральный тромб. Свободная жидкость рядом с аортой.', status: 'abnormal' },
+      { label: 'P · Лёгкие', value: 'B-линии умеренные. Нет пневмоторакса.', status: 'warning' }
+    ],
+    diagnosis: 'Разрыв ААА 7.2 см с гемоперитонеумом',
+    action: 'НЕМЕДЛЕННЫЙ вызов сосудистого хирурга! КТ отменена (нестабилен!). Массивная инфузия, 2 группы крови. Экстренная лапаротомия. Исход: выжил.',
+    key: 'Чувствительность POCUS для ААА: 99% (Knaut et al.). КТ нестабильного = опасность!',
+    shockType: 'hypovolemic'
+  },
+  {
+    title: 'Кейс #3 · Массивная ТЭЛА с остановкой кровообращения',
+    patient: 'Женщина, 45 лет. Перелом бедра 10 дней назад, иммобилизация.',
+    vitals: { bp: 'Н/О (СЛР)', hr: 0, spo2: null },
+    presentation: 'Внезапная одышка, боль в груди, потеря сознания. Остановка кровообращения, ЭМД (электрическая активность без пульса). ЭКГ: S1Q3T3.',
+    findings: [
+      { label: 'H · Сердце', value: 'ПЖ резко дилатирован (ПЖ>ЛЖ). McConnell sign — акинезия свободной стенки ПЖ. Нет выпота.', status: 'abnormal' },
+      { label: 'I · НПВ', value: 'Значительно расширена, не коллабирует → острое лёгочное сердце', status: 'abnormal' },
+      { label: 'M · Morrison', value: 'Нет свободной жидкости', status: 'normal' },
+      { label: 'A · Аорта', value: 'Норма', status: 'normal' },
+      { label: 'P · Лёгкие', value: 'Lung Sliding с обеих сторон есть → пневмоторакс исключён', status: 'normal' }
+    ],
+    diagnosis: 'Массивная ТЭЛА (перелом бедра + иммобилизация) + ЭМД',
+    action: 'Системный тромболизис: альтеплаза 100 мг IV на фоне СЛР. Восстановление ритма через 45 мин. РХПТ на 3-й день. Выписан.',
+    key: 'ESC 2019: DVT + признаки перегрузки ПЖ + ЭМД = массивная ТЭЛА → тромболизис (Класс I). RUSH за время паузы СЛР (<10 сек) исключил тампонаду и PTX.',
+    shockType: 'obstructive'
+  },
+  {
+    title: 'Кейс #4 · Септический шок: мониторинг инфузии',
+    patient: 'Женщина, 67 лет. СКВ, хроническая болезнь почек.',
+    vitals: { bp: '82/50', hr: 124, spo2: 96 },
+    presentation: 'Лихорадка 39.5°C, озноб, резкое ухудшение. Лейкоциты 22×10⁹, лактат 4.2 ммоль/л, прокальцитонин↑↑. Диагноз: уросепсис, септический шок.',
+    findings: [
+      { label: 'Исходно (T=0)', value: 'НПВ 0.8 см, коллапс >80% → ЦВД=0. ФВ 75%, гипердинамическое. B-линии отсутствуют. → Показана болюсная инфузия 500 мл.', status: 'abnormal' },
+      { label: 'T=30 мин (500 мл)', value: 'НПВ 1.4 см, коллапс 55%. АД 95/60. → Продолжить инфузию осторожно.', status: 'warning' },
+      { label: 'T=60 мин (1500 мл)', value: '⛔ НПВ 2.3 см, коллапс <30%. B-линии с обеих сторон → СТОП! Риск отёка лёгких!', status: 'abnormal' },
+      { label: 'A · Аорта', value: 'Норма на всех этапах', status: 'normal' },
+      { label: 'Решение', value: 'Вазопрессоры. Инфузию ограничить. Динамический мониторинг RUSH.', status: 'warning' }
+    ],
+    diagnosis: 'Септический шок (уросепсис) — динамический мониторинг инфузии',
+    action: 'RUSH при сепсисе — не только диагностический, но и мониторинговый инструмент. Появление B-линий на фоне инфузии = предиктор отёка лёгких. Сигнал СТОП!',
+    key: 'Rezayat et al., 2018: ранний POCUS-протокол при шоке → улучшение функции почек (СКФ↑). Динамическая оценка НПВ + B-линий каждые 30 мин.',
+    shockType: 'distributive'
+  }
+];
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(name) {
+  try {
+    document.querySelectorAll('.tab-content').forEach(function(el) {
+      el.classList.add('hidden');
+    });
+    document.querySelectorAll('.tab-btn').forEach(function(el) {
+      el.classList.remove('active');
+    });
+    var target = document.getElementById('tab-' + name);
+    if (target) target.classList.remove('hidden');
+    var btns = document.querySelectorAll('.tab-btn');
+    btns.forEach(function(btn) {
+      if (btn.textContent.toLowerCase().indexOf(name.substring(0, 3)) !== -1 ||
+          btn.getAttribute('onclick') === 'switchTab(\'' + name + '\')') {
+        btn.classList.add('active');
+      }
+    });
+
+    if (name === 'evidence') {
+      setTimeout(initEvidenceChart, 150);
+    }
+    if (name === 'physics') {
+      setTimeout(drawArtifactCanvases, 150);
+    }
+  } catch(e) {
+    console.error('switchTab error:', e);
+  }
+}
+
+// ============================================================
+// TOGGLE SWITCHES
+// ============================================================
+function setupToggle(id) {
+  try {
+    var input = document.getElementById('toggle-' + id);
+    var bg = document.getElementById('toggle-' + id + '-bg');
+    var dot = document.getElementById('toggle-' + id + '-dot');
+    if (!input || !bg || !dot) return;
+    input.addEventListener('change', function() {
+      if (input.checked) {
+        bg.style.background = '#3b82f6';
+        dot.style.transform = 'translateX(20px)';
+      } else {
+        bg.style.background = '#475569';
+        dot.style.transform = 'translateX(0)';
+      }
+    });
+  } catch(e) { console.error('setupToggle error:', e, id); }
+}
+
+['fluid','blines','ptx','tamponade','rv'].forEach(setupToggle);
+
+// ============================================================
+// SELECT SHOCK TYPE
+// ============================================================
+function selectShock(type) {
+  try {
+    if (!SHOCK_DATA[type]) { console.error('Unknown shock type:', type); return; }
+    currentShock = type;
+    var data = SHOCK_DATA[type];
+
+    // Highlight cards
+    Object.keys(SHOCK_DATA).forEach(function(k) {
+      var card = document.getElementById('card-' + k);
+      if (card) card.classList.remove('selected');
+    });
+    var selectedCard = document.getElementById('card-' + type);
+    if (selectedCard) selectedCard.classList.add('selected');
+
+    // Update sliders
+    var sliders = {
+      'slider-ef': data.ef,
+      'slider-ivc': data.ivc,
+      'slider-ivc-collapse': data.ivcCollapse,
+      'slider-aorta': data.aorta,
+      'slider-bp': data.bp,
+      'slider-hr': data.hr,
+      'slider-spo2': data.spo2
+    };
+    Object.keys(sliders).forEach(function(sliderId) {
+      var slider = document.getElementById(sliderId);
+      if (slider) slider.value = sliders[sliderId];
+    });
+
+    // Update toggles
+    var toggles = {
+      'toggle-fluid': data.fluid,
+      'toggle-blines': data.blines,
+      'toggle-ptx': data.ptx,
+      'toggle-tamponade': data.tamponade,
+      'toggle-rv': data.rv
+    };
+    Object.keys(toggles).forEach(function(toggleId) {
+      var input = document.getElementById(toggleId);
+      if (input) {
+        input.checked = toggles[toggleId];
+        var bg = document.getElementById(toggleId + '-bg');
+        var dot = document.getElementById(toggleId + '-dot');
+        if (bg) bg.style.background = toggles[toggleId] ? '#3b82f6' : '#475569';
+        if (dot) dot.style.transform = toggles[toggleId] ? 'translateX(20px)' : 'translateX(0)';
+      }
+    });
+
+    updateVitals();
+    updateRUSH();
+  } catch(e) { console.error('selectShock error:', e); }
+}
+
+// ============================================================
+// UPDATE VITALS
+// ============================================================
+function updateVitals() {
+  try {
+    var bp = parseInt(document.getElementById('slider-bp').value) || 80;
+    var hr = parseInt(document.getElementById('slider-hr').value) || 80;
+    var spo2 = parseInt(document.getElementById('slider-spo2').value) || 98;
+
+    var bpEl = document.getElementById('bp-val');
+    var hrEl = document.getElementById('hr-val');
+    var spo2El = document.getElementById('spo2-val');
+
+    if (bpEl) bpEl.textContent = bp;
+    if (hrEl) hrEl.textContent = hr;
+    if (spo2El) spo2El.textContent = spo2;
+
+    // Color coding
+    if (bpEl) bpEl.style.color = bp < 90 ? '#f87171' : bp < 110 ? '#facc15' : '#4ade80';
+    if (hrEl) hrEl.style.color = (hr > 100 || hr < 60) ? '#f87171' : '#4ade80';
+    if (spo2El) spo2El.style.color = spo2 < 90 ? '#f87171' : spo2 < 95 ? '#facc15' : '#4ade80';
+
+    updateRUSH();
+  } catch(e) { console.error('updateVitals error:', e); }
+}
+
+// ============================================================
+// UPDATE RUSH ANALYSIS
+// ============================================================
+function updateRUSH() {
+  try {
+    var ef = parseInt(document.getElementById('slider-ef').value) || 55;
+    var ivcRaw = parseInt(document.getElementById('slider-ivc').value) || 20;
+    var ivc = ivcRaw / 10; // convert to cm
+    var ivcCollapse = parseInt(document.getElementById('slider-ivc-collapse').value) || 50;
+    var aortaRaw = parseInt(document.getElementById('slider-aorta').value) || 21;
+    var aorta = aortaRaw / 10;
+    var hr = parseInt(document.getElementById('slider-hr').value) || 80;
+
+    var fluid = document.getElementById('toggle-fluid').checked;
+    var blines = document.getElementById('toggle-blines').checked;
+    var ptx = document.getElementById('toggle-ptx').checked;
+    var tamponade = document.getElementById('toggle-tamponade').checked;
+    var rv = document.getElementById('toggle-rv').checked;
+
+    // Update display values
+    var efEl = document.getElementById('ef-val');
+    var ivcEl = document.getElementById('ivc-val');
+    var ivcColEl = document.getElementById('ivc-collapse-val');
+    var aortaEl = document.getElementById('aorta-val');
+
+    if (efEl) efEl.textContent = ef;
+    if (ivcEl) ivcEl.textContent = ivc.toFixed(1);
+    if (ivcColEl) ivcColEl.textContent = ivcCollapse;
+    if (aortaEl) aortaEl.textContent = aorta.toFixed(1);
+
+    // H - Heart analysis
+    var hResult = '';
+    var hBadge = '';
+    if (ef < 35) {
+      hResult = 'ФВ тяжело снижена (' + ef + '%) — кардиогенный шок';
+      hBadge = '<span class="finding-badge finding-abnormal">↓↓ ФВ</span>';
+    } else if (ef < 50) {
+      hResult = 'ФВ умеренно снижена (' + ef + '%)';
+      hBadge = '<span class="finding-badge finding-warning">↓ ФВ</span>';
+    } else if (ef >= 65) {
+      hResult = 'Гипердинамическая ФВ (' + ef + '%) — гипово/дистрибутивный';
+      hBadge = '<span class="finding-badge finding-warning">↑↑ ФВ</span>';
+    } else {
+      hResult = 'ФВ в норме (' + ef + '%)';
+      hBadge = '<span class="finding-badge finding-normal">N ФВ</span>';
+    }
+    if (tamponade) {
+      hResult += ' | ⚠️ Перикардиальный выпот → Тампонада?';
+      hBadge += ' <span class="finding-badge finding-abnormal">Тампонада</span>';
+    }
+    if (rv) {
+      hResult += ' | ⚠️ ПЖ дилатирован — McConnell sign → ТЭЛА?';
+      hBadge += ' <span class="finding-badge finding-abnormal">ПЖ↑</span>';
+    }
+
+    // I - IVC analysis
+    var iResult = '';
+    var iBadge = '';
+    var cvp = 0;
+    if (ivc < 1.5 && ivcCollapse > 50) {
+      iResult = 'Малая НПВ (' + ivc.toFixed(1) + ' см) + коллапс ' + ivcCollapse + '% → ЦВД 0–5 мм рт.ст.';
+      iBadge = '<span class="finding-badge finding-abnormal">ЦВД↓↓</span>';
+      cvp = 3;
+    } else if (ivc >= 1.5 && ivc <= 2.5 && ivcCollapse > 50) {
+      iResult = 'НПВ ' + ivc.toFixed(1) + ' см + коллапс ' + ivcCollapse + '% → ЦВД 6–10 мм рт.ст.';
+      iBadge = '<span class="finding-badge finding-normal">ЦВД N</span>';
+      cvp = 8;
+    } else if (ivc >= 1.5 && ivc <= 2.5 && ivcCollapse <= 50) {
+      iResult = 'НПВ ' + ivc.toFixed(1) + ' см + коллапс ' + ivcCollapse + '% → ЦВД 11–15 мм рт.ст.';
+      iBadge = '<span class="finding-badge finding-warning">ЦВД↑</span>';
+      cvp = 13;
+    } else if (ivc > 2.5 && ivcCollapse <= 50) {
+      iResult = 'Расширена (' + ivc.toFixed(1) + ' см) + коллапс ' + ivcCollapse + '% → ЦВД 16–20 мм рт.ст.';
+      iBadge = '<span class="finding-badge finding-abnormal">ЦВД↑↑</span>';
+      cvp = 18;
+    } else {
+      iResult = 'НПВ ' + ivc.toFixed(1) + ' см, коллапс ' + ivcCollapse + '%';
+      iBadge = '<span class="finding-badge finding-warning">ЦВД ?</span>';
+      cvp = 10;
+    }
+
+    // M - Morrison
+    var mResult = fluid ? '⚠️ Свободная жидкость в брюшной полости → геморрагический шок?' : 'Свободная жидкость не обнаружена';
+    var mBadge = fluid ? '<span class="finding-badge finding-abnormal">+Жидкость</span>' : '<span class="finding-badge finding-normal">Чисто</span>';
+
+    // A - Aorta
+    var aResult = '';
+    var aBadge = '';
+    if (aorta >= 5) {
+      aResult = '🚨 ААА ' + aorta.toFixed(1) + ' см — высокий риск разрыва!';
+      aBadge = '<span class="finding-badge finding-abnormal">ААА ≥5см!</span>';
+    } else if (aorta >= 4) {
+      aResult = '⚠️ ААА ' + aorta.toFixed(1) + ' см — угроза разрыва';
+      aBadge = '<span class="finding-badge finding-abnormal">ААА ≥4см</span>';
+    } else if (aorta >= 3) {
+      aResult = 'Аорта ' + aorta.toFixed(1) + ' см — пограничный размер';
+      aBadge = '<span class="finding-badge finding-warning">Аорта ≥3см</span>';
+    } else {
+      aResult = 'Аорта ' + aorta.toFixed(1) + ' см — норма (~3 см)';
+      aBadge = '<span class="finding-badge finding-normal">N Аорта</span>';
+    }
+
+    // P - Pulmonary
+    var pResult = '';
+    var pBadge = '';
+    if (ptx) {
+      pResult = '🚨 Lung Sliding отсутствует — Пневмоторакс!';
+      pBadge = '<span class="finding-badge finding-abnormal">PTX!</span>';
+    } else if (blines) {
+      pResult = '⚠️ B-линии (≥3/поле) — интерстициальный отёк лёгких';
+      pBadge = '<span class="finding-badge finding-abnormal">B-линии</span>';
+    } else {
+      pResult = 'A-линии, Lung Sliding сохранён — норма';
+      pBadge = '<span class="finding-badge finding-normal">N Лёгкие</span>';
+    }
+
+    // Update HI-MAP display
+    var updates = {
+      'h': { result: hResult, badge: hBadge },
+      'i': { result: iResult, badge: iBadge },
+      'm': { result: mResult, badge: mBadge },
+      'a': { result: aResult, badge: aBadge },
+      'p': { result: pResult, badge: pBadge }
+    };
+    Object.keys(updates).forEach(function(key) {
+      var rEl = document.getElementById(key + '-result');
+      var bEl = document.getElementById(key + '-badge');
+      if (rEl) rEl.textContent = updates[key].result.replace(/<[^>]+>/g, '');
+      if (bEl) bEl.innerHTML = updates[key].badge;
+    });
+
+    // CO Calculation
+    var sv = Math.round(ef * 0.85 + (ivcCollapse < 50 ? 10 : -5));
+    sv = Math.max(10, Math.min(150, sv));
+    var co = (sv * hr / 1000).toFixed(1);
+
+    var coEl = document.getElementById('co-value');
+    var svEl = document.getElementById('sv-value');
+    var coIntEl = document.getElementById('co-interpretation');
+
+    if (coEl) {
+      coEl.textContent = co;
+      coEl.style.color = parseFloat(co) < 4 ? '#f87171' : parseFloat(co) > 8 ? '#facc15' : '#4ade80';
+    }
+    if (svEl) svEl.textContent = sv;
+    if (coIntEl) {
+      if (parseFloat(co) < 4) coIntEl.textContent = 'МОК снижен — недостаточный сердечный выброс';
+      else if (parseFloat(co) > 8) coIntEl.textContent = 'МОК высокий — гипердинамическое состояние';
+      else coIntEl.textContent = 'МОК в норме (4–8 л/мин)';
+    }
+
+    // Diagnosis
+    var scores = calculateDiagnosisScores(ef, ivc, ivcCollapse, fluid, blines, ptx, tamponade, rv, aorta);
+    updateDiagnosis(scores);
+    updateProbabilityChart(scores);
+    drawEcho(ef, tamponade, rv);
+    drawIVC(ivc, ivcCollapse);
+    drawLungs(blines, ptx);
+  } catch(e) { console.error('updateRUSH error:', e); }
+}
+
+// ============================================================
+// DIAGNOSIS SCORING
+// ============================================================
+function calculateDiagnosisScores(ef, ivc, ivcCollapse, fluid, blines, ptx, tamponade, rv, aorta) {
+  try {
+    var scores = { cardiogenic: 0, hypovolemic: 0, obstructive: 0, distributive: 0 };
+
+    // EF scoring
+    if (ef < 35) scores.cardiogenic += 40;
+    else if (ef >= 65) { scores.hypovolemic += 20; scores.distributive += 30; }
+    else if (ef >= 50) { scores.hypovolemic += 10; scores.distributive += 20; scores.obstructive += 15; }
+
+    // IVC scoring
+    if (ivc > 2.5 && ivcCollapse < 30) { scores.cardiogenic += 30; scores.obstructive += 30; }
+    else if (ivc < 1.5 && ivcCollapse > 70) { scores.hypovolemic += 35; scores.distributive += 25; }
+    else if (ivc >= 1.5 && ivc <= 2.5 && ivcCollapse > 50) { scores.obstructive += 10; }
+
+    // Fluid
+    if (fluid) { scores.hypovolemic += 35; }
+
+    // B-lines
+    if (blines) { scores.cardiogenic += 20; }
+
+    // PTX
+    if (ptx) { scores.obstructive += 40; }
+
+    // Tamponade
+    if (tamponade) { scores.obstructive += 35; scores.cardiogenic -= 10; }
+
+    // RV dilation
+    if (rv) { scores.obstructive += 30; }
+
+    // Aorta
+    if (aorta >= 4) { scores.hypovolemic += 25; }
+
+    // Normalize to percentages
+    var total = 0;
+    Object.keys(scores).forEach(function(k) {
+      scores[k] = Math.max(0, scores[k]);
+      total += scores[k];
+    });
+    if (total === 0) { Object.keys(scores).forEach(function(k) { scores[k] = 25; }); total = 100; }
+    Object.keys(scores).forEach(function(k) { scores[k] = Math.round(scores[k] / total * 100); });
+
+    return scores;
+  } catch(e) {
+    console.error('calculateDiagnosisScores error:', e);
+    return { cardiogenic: 25, hypovolemic: 25, obstructive: 25, distributive: 25 };
+  }
+}
+
+function updateDiagnosis(scores) {
+  try {
+    var maxType = Object.keys(scores).reduce(function(a, b) { return scores[a] > scores[b] ? a : b; });
+    var maxScore = scores[maxType];
+    var data = SHOCK_DATA[maxType];
+
+    var diagEl = document.getElementById('diagnosis-result');
+    var treatEl = document.getElementById('treatment-text');
+
+    if (diagEl) {
+      var confidence = maxScore > 60 ? 'Высокая' : maxScore > 40 ? 'Умеренная' : 'Низкая';
+      var confColor = maxScore > 60 ? '#4ade80' : maxScore > 40 ? '#facc15' : '#f87171';
+      diagEl.innerHTML = '<div class="text-3xl mb-2">' + data.emoji + '</div>' +
+        '<div class="text-lg font-bold" style="color:' + data.color + '">' + data.name + '</div>' +
+        '<div class="text-sm mt-1" style="color:' + confColor + '">Достоверность: ' + confidence + ' (' + maxScore + '%)</div>' +
+        '<div class="mt-2 text-xs text-slate-400">На основании паттерна RUSH</div>';
+    }
+
+    if (treatEl) {
+      treatEl.innerHTML = data.treatment;
+    }
+  } catch(e) { console.error('updateDiagnosis error:', e); }
+}
+
+// ============================================================
+// PROBABILITY CHART
+// ============================================================
+function updateProbabilityChart(scores) {
+  try {
+    var ctx = document.getElementById('probabilityChart');
+    if (!ctx) return;
+
+    var labels = ['Кардиогенный', 'Гиповолемический', 'Обструктивный', 'Дистрибутивный'];
+    var values = [scores.cardiogenic, scores.hypovolemic, scores.obstructive, scores.distributive];
+    var colors = ['rgba(239,68,68,0.7)', 'rgba(34,197,94,0.7)', 'rgba(168,85,247,0.7)', 'rgba(59,130,246,0.7)'];
+    var borderColors = ['#ef4444', '#22c55e', '#a855f7', '#3b82f6'];
+
+    if (probabilityChart) {
+      probabilityChart.data.datasets[0].data = values;
+      probabilityChart.update();
+      return;
+    }
+
+    probabilityChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Вероятность (%)',
+          data: values,
+          backgroundColor: colors,
+          borderColor: borderColors,
+          borderWidth: 2,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) { return context.raw + '%'; }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: { color: '#94a3b8', callback: function(v) { return v + '%'; } },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          x: {
+            ticks: { color: '#94a3b8' },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  } catch(e) { console.error('updateProbabilityChart error:', e); }
+}
+
+// ============================================================
+// ECHO CANVAS
+// ============================================================
+function drawEcho(ef, tamponade, rv) {
+  try {
+    var canvas = document.getElementById('echoCanvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var w = canvas.width;
+    var h = canvas.height;
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
+
+    var cx = w * 0.5;
+    var cy = h * 0.52;
+
+    // Pericardial effusion
+    if (tamponade) {
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 95, 75, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,200,0,0.15)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,200,0,0.5)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    // LV
+    var lvScale = 0.7 + (ef / 100) * 0.3;
+    ctx.beginPath();
+    ctx.ellipse(cx - 12, cy + 5, 52 * lvScale, 62 * lvScale, -0.15, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(220,80,80,0.6)';
+    ctx.fill();
+    ctx.strokeStyle = '#e87070';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // RV
+    var rvScale = rv ? 1.4 : 0.8;
+    ctx.beginPath();
+    ctx.ellipse(cx + 50 * rvScale, cy - 5, 38 * rvScale, 45, 0.2, 0, Math.PI * 2);
+    ctx.fillStyle = rv ? 'rgba(168,85,247,0.5)' : 'rgba(100,160,220,0.4)';
+    ctx.fill();
+    ctx.strokeStyle = rv ? '#a855f7' : '#60a5fa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Labels
+    ctx.font = '11px monospace';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('ЛЖ', cx - 20, cy + 8);
+    ctx.fillStyle = rv ? '#c084fc' : '#93c5fd';
+    ctx.fillText('ПЖ', cx + 35 * rvScale, cy - 2);
+
+    // EF badge
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = ef < 40 ? '#f87171' : ef > 65 ? '#4ade80' : '#facc15';
+    ctx.fillText('ФВ: ' + ef + '%', 8, 20);
+
+    // IVC indicator
+    if (rv) {
+      ctx.font = '10px monospace';
+      ctx.fillStyle = '#c084fc';
+      ctx.fillText('McConnell +', 8, h - 10);
+    }
+    if (tamponade) {
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText('Тампонада!', cx - 30, h - 10);
+    }
+
+    // Update badges
+    var badgesEl = document.getElementById('echo-badges');
+    if (badgesEl) {
+      var badges = '';
+      if (ef < 40) badges += '<span class="finding-badge finding-abnormal">ФВ↓↓</span>';
+      else if (ef > 65) badges += '<span class="finding-badge finding-warning">ФВ↑↑</span>';
+      else badges += '<span class="finding-badge finding-normal">ФВ N</span>';
+      if (tamponade) badges += '<span class="finding-badge finding-abnormal">Выпот</span>';
+      if (rv) badges += '<span class="finding-badge finding-abnormal">ПЖ дилат.</span>';
+      badgesEl.innerHTML = badges;
+    }
+  } catch(e) { console.error('drawEcho error:', e); }
+}
+
+// ============================================================
+// IVC CANVAS
+// ============================================================
+function drawIVC(ivc, collapse) {
+  try {
+    var canvas = document.getElementById('ivcCanvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var w = canvas.width;
+    var h = canvas.height;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    var cx = w / 2;
+    var maxRadius = Math.min(ivc * 14, 28);
+    var minRadius = maxRadius * (1 - collapse / 100);
+
+    // Draw breathing cycles
+    var segments = 6;
+    var segW = w / segments;
+    for (var i = 0; i < segments; i++) {
+      var x = i * segW;
+      var inspiration = (i % 2 === 1);
+      var r = inspiration ? minRadius : maxRadius;
+      var color = inspiration ? 'rgba(34,197,94,0.3)' : 'rgba(59,130,246,0.3)';
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(x + 2, h / 2 - r, segW - 4, r * 2, 4);
+      ctx.fill();
+
+      ctx.strokeStyle = inspiration ? '#22c55e' : '#3b82f6';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Labels
+    ctx.font = '10px monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Выдох', 4, 12);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('Вдох', 65, 12);
+
+    ctx.font = 'bold 11px monospace';
+    ctx.fillStyle = ivc > 2.5 ? '#f87171' : ivc < 1.5 ? '#4ade80' : '#facc15';
+    ctx.fillText(ivc.toFixed(1) + ' см · ' + collapse + '% коллапс', w / 2 - 60, h - 6);
+
+    // IVC interpretation
+    var ivcIntEl = document.getElementById('ivc-interpretation');
+    if (ivcIntEl) {
+      var cvpText = '';
+      if (ivc < 1.5 && collapse > 50) cvpText = '🟢 ЦВД 0–5 мм рт.ст. · Гиповолемия / Дистрибутивный';
+      else if (ivc >= 1.5 && ivc <= 2.5 && collapse > 50) cvpText = '🟡 ЦВД 6–10 мм рт.ст. · Норма или умеренный дефицит';
+      else if (ivc >= 1.5 && ivc <= 2.5 && collapse <= 50) cvpText = '🟠 ЦВД 11–15 мм рт.ст. · Перегрузка объёмом';
+      else cvpText = '🔴 ЦВД 16–20 мм рт.ст. · Кардиогенный / Обструктивный';
+      ivcIntEl.innerHTML = '<span class="text-xs">' + cvpText + '</span>';
+    }
+  } catch(e) { console.error('drawIVC error:', e); }
+}
+
+// ============================================================
+// LUNG CANVASES
+// ============================================================
+function drawLungs(blines, ptx) {
+  try {
+    for (var i = 0; i < 4; i++) {
+      var canvas = document.getElementById('lungCanvas-' + i);
+      if (!canvas) continue;
+      var ctx = canvas.getContext('2d');
+      var w = canvas.width;
+      var h = canvas.height;
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, w, h);
+
+      if (ptx) {
+        // Barcode sign - only horizontal lines
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1;
+        for (var y = 5; y < h; y += 6) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+        // Pleural line (bright)
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 12);
+        ctx.lineTo(w, 12);
+        ctx.stroke();
+        ctx.font = '8px monospace';
+        ctx.fillStyle = '#f87171';
+        ctx.fillText('PTX!', 4, h - 4);
+      } else if (blines) {
+        // B-lines pattern
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        for (var ay = 5; ay < h; ay += 8) {
+          ctx.beginPath();
+          ctx.moveTo(0, ay);
+          ctx.lineTo(w, ay);
+          ctx.stroke();
+        }
+        // Pleural line
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 14);
+        ctx.lineTo(w, 14);
+        ctx.stroke();
+        // B-lines (vertical, bright)
+        var numBlines = 3 + Math.floor(Math.random() * 2);
+        for (var bi = 0; bi < numBlines; bi++) {
+          var bx = 10 + bi * (w / numBlines);
+          var grad = ctx.createLinearGradient(bx, 14, bx, h);
+          grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(bx, 14);
+          ctx.lineTo(bx, h);
+          ctx.stroke();
+        }
+        ctx.font = '8px monospace';
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText('B-лин', 4, h - 4);
+      } else {
+        // A-lines (normal)
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.lineWidth = 1;
+        for (var ay2 = 14; ay2 < h; ay2 += 14) {
+          ctx.beginPath();
+          ctx.moveTo(0, ay2);
+          ctx.lineTo(w, ay2);
+          ctx.stroke();
+        }
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 14);
+        ctx.lineTo(w, 14);
+        ctx.stroke();
+        ctx.font = '8px monospace';
+        ctx.fillStyle = '#4ade80';
+        ctx.fillText('A-лин', 4, h - 4);
+      }
+    }
+  } catch(e) { console.error('drawLungs error:', e); }
+}
+
+// ============================================================
+// ARTIFACT CANVASES (Physics tab)
+// ============================================================
+function drawArtifactCanvases() {
+  try {
+    // A-lines canvas
+    var aCanvas = document.getElementById('alineCanvas');
+    if (aCanvas) {
+      var ctx = aCanvas.getContext('2d');
+      var w = aCanvas.width; var h = aCanvas.height;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, w, h);
+      // Pleural line
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, 14); ctx.lineTo(w, 14); ctx.stroke();
+      // A-lines (horizontal reverbs)
+      for (var i = 1; i <= 3; i++) {
+        ctx.strokeStyle = 'rgba(255,255,255,' + (0.5 - i * 0.12) + ')';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(0, 14 + i * 18); ctx.lineTo(w, 14 + i * 18); ctx.stroke();
+      }
+      ctx.font = '9px monospace'; ctx.fillStyle = '#4ade80'; ctx.fillText('A-линии (норма)', 4, h - 4);
+    }
+
+    // B-lines canvas
+    var bCanvas = document.getElementById('blineCanvas');
+    if (bCanvas) {
+      var ctx2 = bCanvas.getContext('2d');
+      var w2 = bCanvas.width; var h2 = bCanvas.height;
+      ctx2.fillStyle = '#000';
+      ctx2.fillRect(0, 0, w2, h2);
+      ctx2.strokeStyle = '#aaa';
+      ctx2.lineWidth = 2;
+      ctx2.beginPath(); ctx2.moveTo(0, 14); ctx2.lineTo(w2, 14); ctx2.stroke();
+      for (var j = 0; j < 4; j++) {
+        var bx2 = 15 + j * (w2 / 4);
+        var g = ctx2.createLinearGradient(bx2, 14, bx2, h2);
+        g.addColorStop(0, 'rgba(255,255,255,0.95)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx2.strokeStyle = g;
+        ctx2.lineWidth = 2;
+        ctx2.beginPath(); ctx2.moveTo(bx2, 14); ctx2.lineTo(bx2, h2); ctx2.stroke();
+      }
+      ctx2.font = '9px monospace'; ctx2.fillStyle = '#fbbf24'; ctx2.fillText('B-линии (отёк)', 4, h2 - 4);
+    }
+
+    // Barcode canvas
+    var barcodeCanvas = document.getElementById('barcodeCanvas');
+    if (barcodeCanvas) {
+      var ctx3 = barcodeCanvas.getContext('2d');
+      var w3 = barcodeCanvas.width; var h3 = barcodeCanvas.height;
+      ctx3.fillStyle = '#000';
+      ctx3.fillRect(0, 0, w3, h3);
+      // Only horizontal lines (no granularity below pleural)
+      for (var hy = 2; hy < h3; hy += 5) {
+        ctx3.strokeStyle = 'rgba(255,255,255,' + (hy < 18 ? 0.8 : 0.1) + ')';
+        ctx3.lineWidth = 1;
+        ctx3.beginPath(); ctx3.moveTo(0, hy); ctx3.lineTo(w3, hy); ctx3.stroke();
+      }
+      ctx3.font = '9px monospace'; ctx3.fillStyle = '#f87171'; ctx3.fillText('Barcode (PTX)', 4, h3 - 4);
+    }
+  } catch(e) { console.error('drawArtifactCanvases error:', e); }
+}
+
+// ============================================================
+// EVIDENCE CHART
+// ============================================================
+function initEvidenceChart() {
+  try {
+    var ctx = document.getElementById('evidenceChart');
+    if (!ctx || evidenceChart) return;
+
+    evidenceChart = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ['Чувствительность', 'Специфичность', 'Точность', 'Верный тип шока', 'Скорость (<5 мин)'],
+        datasets: [
+          {
+            label: 'RUSH Exam',
+            data: [87, 88, 93, 92, 90],
+            backgroundColor: 'rgba(59,130,246,0.2)',
+            borderColor: '#3b82f6',
+            pointBackgroundColor: '#3b82f6',
+            pointRadius: 5,
+            borderWidth: 2
+          },
+          {
+            label: 'Клиническая оценка без УЗИ',
+            data: [65, 70, 68, 60, 85],
+            backgroundColor: 'rgba(239,68,68,0.1)',
+            borderColor: '#ef4444',
+            pointBackgroundColor: '#ef4444',
+            pointRadius: 5,
+            borderWidth: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: '#94a3b8' }
+          }
+        },
+        scales: {
+          r: {
+            beginAtZero: true,
+            max: 100,
+            ticks: { color: '#475569', backdropColor: 'transparent', stepSize: 20 },
+            grid: { color: 'rgba(255,255,255,0.08)' },
+            angleLines: { color: 'rgba(255,255,255,0.08)' },
+            pointLabels: { color: '#94a3b8', font: { size: 11 } }
+          }
+        }
+      }
+    });
+  } catch(e) { console.error('initEvidenceChart error:', e); }
+}
+
+// ============================================================
+// CLINICAL CASES
+// ============================================================
+function loadCase(index) {
+  try {
+    if (index < 0 || index >= CASES.length) { console.error('Invalid case index:', index); return; }
+    var c = CASES[index];
+    var modal = document.getElementById('case-modal');
+    var content = document.getElementById('modal-content-inner');
+    if (!modal || !content) return;
+
+    var shockColors = { cardiogenic: '#ef4444', hypovolemic: '#22c55e', obstructive: '#a855f7', distributive: '#3b82f6' };
+    var color = shockColors[c.shockType] || '#3b82f6';
+
+    var findingsHtml = c.findings.map(function(f) {
+      var badgeClass = f.status === 'normal' ? 'finding-normal' : f.status === 'abnormal' ? 'finding-abnormal' : 'finding-warning';
+      return '<div class="glass rounded-xl p-3 mb-2">' +
+        '<div class="flex items-start gap-2">' +
+        '<span class="finding-badge ' + badgeClass + ' flex-shrink-0">' + f.label + '</span>' +
+        '<span class="text-xs text-slate-300">' + f.value + '</span>' +
+        '</div></div>';
+    }).join('');
+
+    var vitalsHtml = 'АД: ' + c.vitals.bp +
+      (c.vitals.hr ? ' · ЧСС: ' + c.vitals.hr : '') +
+      (c.vitals.spo2 ? ' · SpO₂: ' + c.vitals.spo2 + '%' : '');
+
+    content.innerHTML = '<div class="mb-4">' +
+      '<h2 class="text-xl font-bold mb-1" style="color:' + color + '">' + c.title + '</h2>' +
+      '<div class="text-sm text-slate-400">' + c.patient + '</div>' +
+      '</div>' +
+      '<div class="glass rounded-xl p-3 mb-4">' +
+      '<div class="text-xs text-slate-400 mb-1">Витальные параметры</div>' +
+      '<div class="font-semibold text-yellow-300 text-sm">' + vitalsHtml + '</div>' +
+      '</div>' +
+      '<div class="glass rounded-xl p-3 mb-4">' +
+      '<div class="text-xs text-slate-400 mb-1">Презентация</div>' +
+      '<div class="text-sm text-slate-300">' + c.presentation + '</div>' +
+      '</div>' +
+      '<div class="mb-4">' +
+      '<div class="text-xs text-slate-400 mb-2 font-semibold uppercase tracking-wider">Результаты RUSH</div>' +
+      findingsHtml +
+      '</div>' +
+      '<div class="glass rounded-xl p-3 mb-3 border-l-4" style="border-color:' + color + '">' +
+      '<div class="text-xs text-slate-400 mb-1">Диагноз</div>' +
+      '<div class="font-bold" style="color:' + color + '">' + c.diagnosis + '</div>' +
+      '</div>' +
+      '<div class="glass rounded-xl p-3 mb-3 bg-green-900/20 border border-green-700/30">' +
+      '<div class="text-xs text-green-400 mb-1">Действия</div>' +
+      '<div class="text-sm text-green-300">' + c.action + '</div>' +
+      '</div>' +
+      '<div class="glass rounded-xl p-3 bg-blue-900/20 border border-blue-700/30">' +
+      '<div class="text-xs text-blue-400 mb-1">💡 Ключевой момент</div>' +
+      '<div class="text-sm text-blue-300">' + c.key + '</div>' +
+      '</div>';
+
+    modal.classList.remove('hidden');
+  } catch(e) { console.error('loadCase error:', e); }
+}
+
+function closeCaseModal(event) {
+  try {
+    if (!event || event.target === document.getElementById('case-modal')) {
+      document.getElementById('case-modal').classList.add('hidden');
+    }
+  } catch(e) { console.error('closeCaseModal error:', e); }
+}
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+window.addEventListener('load', function() {
+  try {
+    // Set canvas sizes
+    var echoCanvas = document.getElementById('echoCanvas');
+    if (echoCanvas) { echoCanvas.width = echoCanvas.offsetWidth || 300; }
+    var ivcCanvas = document.getElementById('ivcCanvas');
+    if (ivcCanvas) { ivcCanvas.width = ivcCanvas.offsetWidth || 300; }
+
+    // Size lung canvases
+    for (var i = 0; i < 4; i++) {
+      var lc = document.getElementById('lungCanvas-' + i);
+      if (lc) { lc.width = lc.offsetWidth || 120; }
+    }
+
+    // Artifact canvases
+    var artifactIds = ['alineCanvas', 'blineCanvas', 'barcodeCanvas'];
+    artifactIds.forEach(function(id) {
+      var c = document.getElementById(id);
+      if (c) c.width = c.offsetWidth || 200;
+    });
+
+    // Initial state: select cardiogenic
+    selectShock('cardiogenic');
+
+    // Initialize probability chart
+    updateRUSH();
+
+    console.log('RUSH Exam Simulator initialized successfully');
+  } catch(e) {
+    console.error('Initialization error:', e);
+  }
+});
+
+// Handle resize
+window.addEventListener('resize', function() {
+  try {
+    var echoCanvas = document.getElementById('echoCanvas');
+    if (echoCanvas) echoCanvas.width = echoCanvas.offsetWidth || 300;
+    var ivcCanvas = document.getElementById('ivcCanvas');
+    if (ivcCanvas) ivcCanvas.width = ivcCanvas.offsetWidth || 300;
+    for (var i = 0; i < 4; i++) {
+      var lc = document.getElementById('lungCanvas-' + i);
+      if (lc) lc.width = lc.offsetWidth || 120;
+    }
+    updateRUSH();
+  } catch(e) {}
+});
+</script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>
