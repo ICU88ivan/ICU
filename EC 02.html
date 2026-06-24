@@ -380,3 +380,23 @@ table.diff tr:nth-child(even){background:#f7f7f7}
 <tr><th>Стадия</th><th>Сознание</th><th>Зрачки</th><th>Фотореакция</th><th>Слезотечение</th><th>Мышечный тонус</th><th>Дыхание</th></tr>  
 <tr><td><strong>1. Аналгезия</strong></td><td>Постепенно угасает</td><td>Нормальные или слегка расширены</td><td>Сохранена</td><td>Норма</td><td>Повышен</td><td>Ровное</td></tr>  
 <tr><td><strong>2. Возбуждение</strong></td><td>Отсутствует</td><td>Расширены (мидриаз)</td><td>Сохранена</td><td>Усилено</td><td>Повышен (двигательное возбуждение)</td><td>Нерегулярное, тахипно
+
+  <script>
+function toggle(id) {
+ var el = document.getElementById(id);
+ el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+}
+function showAll() {
+ document.querySelectorAll('.en').forEach(function(el) {
+   el.style.display = 'block';
+ });
+}
+function hideAll() {
+ document.querySelectorAll('.en').forEach(function(el) {
+   el.style.display = 'none';
+ });
+}
+</script>
+
+</body>
+</html>
