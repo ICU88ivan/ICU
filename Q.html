@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация </title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Подготовка к зачету</h1>
+        <p>Учебная практика «Медицинский уход»</p>
+
+        <form id="registrationForm">
+            <div class="form-group">
+                <label for="fullName">ФИО студента:</label>
+                <input type="text" id="fullName" placeholder="Иванов Иван Иванович" required>
+            </div>
+            <div class="form-group">
+                <label for="groupNumber">Номер группы:</label>
+                <input type="text" id="groupNumber" placeholder="1201" required>
+            </div>
+            <button type="submit">Зарегистрироваться и получить билет</button>
+        </form>
+
+        <div id="ticketResult" class="ticket-container" style="display:none;">
+            <!-- Сюда будет вставлен результат -->
+        </div>
+
+        <hr>
+
+        <h2>Список зарегистрированных студентов</h2>
+        <button id="downloadList">Скачать список (.csv)</button>
+        <div id="registrationList">
+             <!-- Сюда будет выводиться список -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
