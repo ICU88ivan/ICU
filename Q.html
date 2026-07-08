@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация </title>
+    <title>Регистрация на зачет</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="container">
-        <h1>Подготовка к зачету</h1>
+        <h1>Дифференцированный зачет</h1>
         <p>Учебная практика «Медицинский уход»</p>
 
         <form id="registrationForm">
@@ -30,10 +30,19 @@
 
         <hr>
 
-        <h2>Список студентов</h2>
-        <button id="downloadList">Скачать список (.csv)</button>
-        <div id="registrationList">
-             <!-- Сюда будет выводиться список -->
+        <!-- Блок управления списком -->
+        <div class="list-controls">
+            <button id="downloadList" class="btn-green">📥 Скачать список (.csv)</button>
+            <button id="toggleList" class="btn-blue">👁 Показать список</button>
+            <button id="clearList" class="btn-red">🗑 Очистить список</button>
+        </div>
+
+        <!-- Сам список (изначально скрыт) -->
+        <div id="registrationListWrapper" style="display:none;">
+            <h3>Список зарегистрированных студентов</h3>
+            <div id="registrationList">
+                <!-- Записи вставляются через JS -->
+            </div>
         </div>
     </div>
 
