@@ -1,5 +1,7 @@
+// Ждем, пока весь HTML-документ будет готов
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Данные о билетах (25 билетов) ---
+
+    // --- Данные о билетах (не изменились) ---
     const tickets = [
         { id: 1, questions: ["Проведение генеральной уборки процедурного (перевязочного, манипуляционного) кабинета.", "Проведение гигиенической антисептики кожи рук.", "Подсчет пульса и определение его характеристик, регистрация в температурном листе."] },
         { id: 2, questions: ["Подготовка пациентов к инструментальным методам исследования.", "Проведение гигиенической антисептики кожи рук.", "Кормление пациентов с дефицитом самообслуживания (ложечкой и поильником)."] },
@@ -28,207 +30,179 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 25, questions: ["Комплексная профилактика пролежней.", "Проведение гигиенической антисептики кожи рук.", "Гигиенический уход за полостью рта."] }
     ];
 
-    // --- DOM-элементы ---
-    const form = document.getElementById('registrationForm');
-    const ticketResultDiv = document.getElementById('ticketResult');
-    const downloadBtn = document.getElementById('downloadList');
-    const toggleBtn = document.getElementById('toggleList');
-    const clearBtn = document.getElementById('clearList');
-    const listWrapper = document.getElementById('registrationListWrapper');
-    const registrationListDiv = document.getElementById('registrationList');
+    // --- Находим все нужные элементы на странице ---
+    const elements = {
+        form: document.getElementById('registrationForm'),
+        ticketResultDiv: document.getElementById('ticketResult'),
+        downloadBtn: document.getElementById('downloadList'),
+        toggleBtn: document.getElementById('toggleList'),
+        clearBtn: document.getElementById('clearList'),
+        listWrapper: document.getElementById('registrationListWrapper'),
+        registrationListDiv: document.getElementById('registrationList')
+    };
 
-    // --- Вспомогательные функции ---
+    // --- Функции для работы с localStorage ---
     const getRegistrations = () => JSON.parse(localStorage.getItem('registrations')) || [];
     const saveRegistrations = (data) => localStorage.setItem('registrations', JSON.stringify(data));
 
-    // --- Отображение списка ---
-    const displayRegistrations = () => {
+    // --- Главная функция для отрисовки списка ---
+    function renderList() {
         const registrations = getRegistrations();
-        registrationListDiv.innerHTML = '';
+        elements.registrationListDiv.innerHTML = '';
 
         if (registrations.length === 0) {
-            registrationListDiv.innerHTML = '<p style="color:#888;">Пока никто не зарегистрировался.</p>';
+            elements.registrationListDiv.innerHTML = '<p style="color:#888; text-align:center;">Список пуст.</p>';
             return;
         }
 
         registrations.forEach((reg, index) => {
             const item = document.createElement('div');
             item.className = 'reg-item';
-            item.id = `reg-${index}`;
             item.innerHTML = `
-                <span class="info" id="info-${index}">
+                <span class="info">
                     <strong>${index + 1}.</strong> ${reg.fullName} (Группа: ${reg.groupNumber}) — Билет №${reg.ticket.id}
                 </span>
-                <span class="actions" id="actions-${index}">
-                    <button class="btn-sm btn-outline edit-btn" data-index="${index}">✏️</button>
+                <span class="actions">
+                    <button class="btn-sm btn-outline edit-btn" data-index="${index}">✏️ Редактировать</button>
                 </span>
             `;
-            registrationListDiv.appendChild(item);
+            elements.registrationListDiv.appendChild(item);
         });
+    }
 
-        // Навешиваем обработчики на все кнопки редактирования
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const idx = parseInt(e.target.dataset.index);
-                enterEditMode(idx);
-            });
-        });
-    };
-
-    // --- Режим редактирования ---
-    const enterEditMode = (index) => {
+    // --- Функция для входа в режим редактирования ---
+    function enableEditMode(index) {
+        const item = elements.registrationListDiv.children[index];
         const registrations = getRegistrations();
         const reg = registrations[index];
-        const infoSpan = document.getElementById(`info-${index}`);
-        const actionsSpan = document.getElementById(`actions-${index}`);
 
-        // Заменяем текст на поля ввода
-        infoSpan.innerHTML = `
-            <strong>${index + 1}.</strong>
-            <input type="text" class="edit-input" id="edit-name-${index}" value="${reg.fullName.replace(/"/g, '&quot;')}">
-            Группа:
-            <input type="text" class="edit-group-input" id="edit-group-${index}" value="${reg.groupNumber}">
-            — Билет №${reg.ticket.id}
+        item.innerHTML = `
+            <span class="info">
+                <strong>${index + 1}.</strong>
+                <input type="text" class="edit-input" value="${reg.fullName.replace(/"/g, '&quot;')}">
+                Группа:
+                <input type="text" class="edit-group-input" value="${reg.groupNumber}">
+                — Билет №${reg.ticket.id}
+            </span>
+            <span class="actions">
+                <button class="btn-sm btn-green save-btn">💾 Сохранить</button>
+                <button class="btn-sm btn-red cancel-btn">✖ Отмена</button>
+            </span>
         `;
+        // Устанавливаем фокус на поле ввода
+        const input = item.querySelector('.edit-input');
+        if(input) input.focus();
+    }
 
-        // Меняем кнопки: сохранить и отмена
-        actionsSpan.innerHTML = `
-            <button class="btn-sm btn-green save-btn" data-index="${index}">💾</button>
-            <button class="btn-sm btn-red cancel-btn" data-index="${index}">✖</button>
-        `;
+    // --- Установка обработчиков событий ---
 
-        // Обработчик сохранения
-        document.querySelector(`.save-btn[data-index="${index}"]`).addEventListener('click', () => {
-            const newName = document.getElementById(`edit-name-${index}`).value.trim();
-            const newGroup = document.getElementById(`edit-group-${index}`).value.trim();
+    // 1. Показать / Скрыть список
+    if (elements.toggleBtn) {
+        elements.toggleBtn.addEventListener('click', () => {
+            const isVisible = elements.listWrapper.style.display === 'block';
+            if (isVisible) {
+                elements.listWrapper.style.display = 'none';
+                elements.toggleBtn.textContent = '👁 Показать список';
+            } else {
+                elements.listWrapper.style.display = 'block';
+                elements.toggleBtn.textContent = '🙈 Скрыть список';
+                renderList(); // Отрисовываем список при показе
+            }
+        });
+    }
 
-            if (!newName || !newGroup) {
+    // 2. Очистить список
+    if (elements.clearBtn) {
+        elements.clearBtn.addEventListener('click', () => {
+            if (getRegistrations().length === 0) {
+                alert('Список уже пуст.');
+                return;
+            }
+            if (confirm('Вы уверены, что хотите полностью очистить список? Это действие нельзя отменить.')) {
+                saveRegistrations([]); // Сохраняем пустой массив
+                renderList(); // Перерисовываем пустой список
+                alert('Список очищен.');
+            }
+        });
+    }
+
+    // 3. Редактирование, сохранение, отмена (через делегирование)
+    elements.registrationListDiv.addEventListener('click', (e) => {
+        const target = e.target;
+        const item = target.closest('.reg-item');
+        if (!item) return;
+
+        // Находим индекс элемента в списке
+        const index = Array.from(elements.registrationListDiv.children).indexOf(item);
+        const registrations = getRegistrations();
+
+        if (target.classList.contains('edit-btn')) {
+            enableEditMode(index);
+        } else if (target.classList.contains('save-btn')) {
+            const newName = item.querySelector('.edit-input').value.trim();
+            const newGroup = item.querySelector('.edit-group-input').value.trim();
+            if (newName && newGroup) {
+                registrations[index].fullName = newName;
+                registrations[index].groupNumber = newGroup;
+                saveRegistrations(registrations);
+                renderList(); // Перерисовываем весь список с обновленными данными
+            } else {
                 alert('ФИО и номер группы не могут быть пустыми.');
+            }
+        } else if (target.classList.contains('cancel-btn')) {
+            renderList(); // Просто перерисовываем список, отменяя изменения
+        }
+    });
+
+    // 4. Регистрация нового студента
+    if (elements.form) {
+        elements.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const fullName = e.target.elements.fullName.value.trim();
+            const groupNumber = e.target.elements.groupNumber.value.trim();
+
+            if (!fullName || !groupNumber) {
+                alert('Пожалуйста, заполните все поля.');
                 return;
             }
 
-            registrations[index].fullName = newName;
-            registrations[index].groupNumber = newGroup;
+            const randomIndex = Math.floor(Math.random() * tickets.length);
+            const assignedTicket = tickets[randomIndex];
+            
+            elements.ticketResultDiv.style.display = 'block';
+            elements.ticketResultDiv.innerHTML = `<h2>Ваш билет № ${assignedTicket.id}</h2><ul>${assignedTicket.questions.map((q, i) => `<li><strong>Вопрос ${i + 1}:</strong> ${q}</li>`).join('')}</ul>`;
+
+            const registrations = getRegistrations();
+            registrations.push({ fullName, groupNumber, ticket: assignedTicket });
             saveRegistrations(registrations);
-            displayRegistrations();
+
+            // Если список видим, обновляем его
+            if (elements.listWrapper.style.display === 'block') {
+                renderList();
+            }
+
+            e.target.reset();
         });
+    }
 
-        // Обработчик отмены
-        document.querySelector(`.cancel-btn[data-index="${index}"]`).addEventListener('click', () => {
-            displayRegistrations();
+    // 5. Скачивание CSV
+    if (elements.downloadBtn) {
+        elements.downloadBtn.addEventListener('click', () => {
+            const registrations = getRegistrations();
+            if (registrations.length === 0) {
+                alert('Нет данных для скачивания.');
+                return;
+            }
+
+            const headers = ["ФИО", "Номер группы", "Номер билета", "Вопрос 1", "Вопрос 2", "Вопрос 3"].join(';');
+            const rows = registrations.map(reg => [reg.fullName, reg.groupNumber, reg.ticket.id, ...reg.ticket.questions].map(field => `"${String(field).replace(/"/g, '""')}"`).join(';'));
+            const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "list.csv";
+            link.click();
+            URL.revokeObjectURL(link.href);
         });
-
-        // Фокус на поле ввода ФИО
-        setTimeout(() => {
-            const input = document.getElementById(`edit-name-${index}`);
-            if (input) input.focus();
-        }, 50);
-    };
-
-    // --- Переключение видимости списка ---
-    let listVisible = false;
-    toggleBtn.addEventListener('click', () => {
-        listVisible = !listVisible;
-        if (listVisible) {
-            listWrapper.style.display = 'block';
-            toggleBtn.textContent = '🙈 Скрыть список';
-            displayRegistrations(); // обновить при показе
-        } else {
-            listWrapper.style.display = 'none';
-            toggleBtn.textContent = '👁 Показать список';
-        }
-    });
-
-    // --- Очистка списка ---
-    clearBtn.addEventListener('click', () => {
-        if (getRegistrations().length === 0) {
-            alert('Список уже пуст.');
-            return;
-        }
-        if (confirm('Вы уверены, что хотите полностью очистить список зарегистрированных студентов? Это действие нельзя отменить.')) {
-            localStorage.removeItem('registrations');
-            displayRegistrations();
-            alert('Список очищен.');
-        }
-    });
-
-    // --- Обработчик отправки формы (регистрация) ---
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const fullName = document.getElementById('fullName').value.trim();
-        const groupNumber = document.getElementById('groupNumber').value.trim();
-
-        if (!fullName || !groupNumber) {
-            alert('Пожалуйста, заполните все поля.');
-            return;
-        }
-
-        // Случайный билет
-        const randomIndex = Math.floor(Math.random() * tickets.length);
-        const assignedTicket = tickets[randomIndex];
-
-        // Показываем билет
-        ticketResultDiv.style.display = 'block';
-        ticketResultDiv.innerHTML = `
-            <h2>Ваш билет № ${assignedTicket.id}</h2>
-            <ul>
-                <li><strong>Вопрос 1:</strong> ${assignedTicket.questions[0]}</li>
-                <li><strong>Вопрос 2:</strong> ${assignedTicket.questions[1]}</li>
-                <li><strong>Вопрос 3:</strong> ${assignedTicket.questions[2]}</li>
-            </ul>
-        `;
-
-        // Сохраняем в localStorage
-        const registrations = getRegistrations();
-        registrations.push({
-            fullName: fullName,
-            groupNumber: groupNumber,
-            ticket: assignedTicket
-        });
-        saveRegistrations(registrations);
-
-        // Обновляем список, если он виден
-        if (listVisible) displayRegistrations();
-
-        // Очищаем форму
-        form.reset();
-    });
-
-    // --- Скачивание CSV (с BOM для корректной кириллицы в Excel) ---
-    downloadBtn.addEventListener('click', () => {
-        const registrations = getRegistrations();
-        if (registrations.length === 0) {
-            alert('Нет данных для скачивания.');
-            return;
-        }
-
-        const headers = ["ФИО", "Номер группы", "Номер билета", "Вопрос 1", "Вопрос 2", "Вопрос 3"].join(';');
-
-        const rows = registrations.map(reg => {
-            const rowData = [
-                reg.fullName,
-                reg.groupNumber,
-                reg.ticket.id,
-                ...reg.ticket.questions
-            ];
-            return rowData.map(field => `"${String(field).replace(/"/g, '""')}"`).join(';');
-        });
-
-        // BOM (Byte Order Mark) в начале — чтобы Excel правильно открыл UTF-8
-        const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", "list.csv");
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
-
-    // --- Первоначальная загрузка (список скрыт) ---
-    // Ничего не показываем, ждём нажатия кнопки «Показать список»
+    }
 });
