@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Данные о билетах (остаются без изменений) ---
+    // --- Данные о билетах (25 билетов) ---
     const tickets = [
         { id: 1, questions: ["Проведение генеральной уборки процедурного (перевязочного, манипуляционного) кабинета.", "Проведение гигиенической антисептики кожи рук.", "Подсчет пульса и определение его характеристик, регистрация в температурном листе."] },
         { id: 2, questions: ["Подготовка пациентов к инструментальным методам исследования.", "Проведение гигиенической антисептики кожи рук.", "Кормление пациентов с дефицитом самообслуживания (ложечкой и поильником)."] },
@@ -28,26 +28,131 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 25, questions: ["Комплексная профилактика пролежней.", "Проведение гигиенической антисептики кожи рук.", "Гигиенический уход за полостью рта."] }
     ];
 
+    // --- DOM-элементы ---
     const form = document.getElementById('registrationForm');
     const ticketResultDiv = document.getElementById('ticketResult');
     const downloadBtn = document.getElementById('downloadList');
+    const toggleBtn = document.getElementById('toggleList');
+    const clearBtn = document.getElementById('clearList');
+    const listWrapper = document.getElementById('registrationListWrapper');
     const registrationListDiv = document.getElementById('registrationList');
 
-    // Функция для отображения списка зарегистрированных
+    // --- Вспомогательные функции ---
+    const getRegistrations = () => JSON.parse(localStorage.getItem('registrations')) || [];
+    const saveRegistrations = (data) => localStorage.setItem('registrations', JSON.stringify(data));
+
+    // --- Отображение списка ---
     const displayRegistrations = () => {
-        const registrations = JSON.parse(localStorage.getItem('registrations')) || [];
+        const registrations = getRegistrations();
         registrationListDiv.innerHTML = '';
-        if (registrations.length > 0) {
-            const list = registrations.map((reg, index) =>
-                `<p>${index + 1}. ${reg.fullName} (Группа: ${reg.groupNumber}) - Билет №${reg.ticket.id}</p>`
-            ).join('');
-            registrationListDiv.innerHTML = list;
-        } else {
-            registrationListDiv.innerHTML = '<p>Пока никто не зарегистрировался.</p>';
+
+        if (registrations.length === 0) {
+            registrationListDiv.innerHTML = '<p style="color:#888;">Пока никто не зарегистрировался.</p>';
+            return;
         }
+
+        registrations.forEach((reg, index) => {
+            const item = document.createElement('div');
+            item.className = 'reg-item';
+            item.id = `reg-${index}`;
+            item.innerHTML = `
+                <span class="info" id="info-${index}">
+                    <strong>${index + 1}.</strong> ${reg.fullName} (Группа: ${reg.groupNumber}) — Билет №${reg.ticket.id}
+                </span>
+                <span class="actions" id="actions-${index}">
+                    <button class="btn-sm btn-outline edit-btn" data-index="${index}">✏️</button>
+                </span>
+            `;
+            registrationListDiv.appendChild(item);
+        });
+
+        // Навешиваем обработчики на все кнопки редактирования
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.dataset.index);
+                enterEditMode(idx);
+            });
+        });
     };
 
-    // Обработчик отправки формы
+    // --- Режим редактирования ---
+    const enterEditMode = (index) => {
+        const registrations = getRegistrations();
+        const reg = registrations[index];
+        const infoSpan = document.getElementById(`info-${index}`);
+        const actionsSpan = document.getElementById(`actions-${index}`);
+
+        // Заменяем текст на поля ввода
+        infoSpan.innerHTML = `
+            <strong>${index + 1}.</strong>
+            <input type="text" class="edit-input" id="edit-name-${index}" value="${reg.fullName.replace(/"/g, '&quot;')}">
+            Группа:
+            <input type="text" class="edit-group-input" id="edit-group-${index}" value="${reg.groupNumber}">
+            — Билет №${reg.ticket.id}
+        `;
+
+        // Меняем кнопки: сохранить и отмена
+        actionsSpan.innerHTML = `
+            <button class="btn-sm btn-green save-btn" data-index="${index}">💾</button>
+            <button class="btn-sm btn-red cancel-btn" data-index="${index}">✖</button>
+        `;
+
+        // Обработчик сохранения
+        document.querySelector(`.save-btn[data-index="${index}"]`).addEventListener('click', () => {
+            const newName = document.getElementById(`edit-name-${index}`).value.trim();
+            const newGroup = document.getElementById(`edit-group-${index}`).value.trim();
+
+            if (!newName || !newGroup) {
+                alert('ФИО и номер группы не могут быть пустыми.');
+                return;
+            }
+
+            registrations[index].fullName = newName;
+            registrations[index].groupNumber = newGroup;
+            saveRegistrations(registrations);
+            displayRegistrations();
+        });
+
+        // Обработчик отмены
+        document.querySelector(`.cancel-btn[data-index="${index}"]`).addEventListener('click', () => {
+            displayRegistrations();
+        });
+
+        // Фокус на поле ввода ФИО
+        setTimeout(() => {
+            const input = document.getElementById(`edit-name-${index}`);
+            if (input) input.focus();
+        }, 50);
+    };
+
+    // --- Переключение видимости списка ---
+    let listVisible = false;
+    toggleBtn.addEventListener('click', () => {
+        listVisible = !listVisible;
+        if (listVisible) {
+            listWrapper.style.display = 'block';
+            toggleBtn.textContent = '🙈 Скрыть список';
+            displayRegistrations(); // обновить при показе
+        } else {
+            listWrapper.style.display = 'none';
+            toggleBtn.textContent = '👁 Показать список';
+        }
+    });
+
+    // --- Очистка списка ---
+    clearBtn.addEventListener('click', () => {
+        if (getRegistrations().length === 0) {
+            alert('Список уже пуст.');
+            return;
+        }
+        if (confirm('Вы уверены, что хотите полностью очистить список зарегистрированных студентов? Это действие нельзя отменить.')) {
+            localStorage.removeItem('registrations');
+            displayRegistrations();
+            alert('Список очищен.');
+        }
+    });
+
+    // --- Обработчик отправки формы (регистрация) ---
     form.addEventListener('submit', (e) => {
         e.preventDefault();
 
@@ -59,9 +164,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Случайный билет
         const randomIndex = Math.floor(Math.random() * tickets.length);
         const assignedTicket = tickets[randomIndex];
 
+        // Показываем билет
         ticketResultDiv.style.display = 'block';
         ticketResultDiv.innerHTML = `
             <h2>Ваш билет № ${assignedTicket.id}</h2>
@@ -72,31 +179,32 @@ document.addEventListener('DOMContentLoaded', () => {
             </ul>
         `;
 
-        const registrations = JSON.parse(localStorage.getItem('registrations')) || [];
+        // Сохраняем в localStorage
+        const registrations = getRegistrations();
         registrations.push({
             fullName: fullName,
             groupNumber: groupNumber,
             ticket: assignedTicket
         });
-        localStorage.setItem('registrations', JSON.stringify(registrations));
+        saveRegistrations(registrations);
 
-        displayRegistrations();
+        // Обновляем список, если он виден
+        if (listVisible) displayRegistrations();
+
+        // Очищаем форму
         form.reset();
     });
 
-    // --- ИЗМЕНЕННАЯ ЧАСТЬ ---
-    // Обработчик для кнопки скачивания
+    // --- Скачивание CSV (с BOM для корректной кириллицы в Excel) ---
     downloadBtn.addEventListener('click', () => {
-        const registrations = JSON.parse(localStorage.getItem('registrations')) || [];
+        const registrations = getRegistrations();
         if (registrations.length === 0) {
             alert('Нет данных для скачивания.');
             return;
         }
 
-        // Формируем заголовки CSV
         const headers = ["ФИО", "Номер группы", "Номер билета", "Вопрос 1", "Вопрос 2", "Вопрос 3"].join(';');
 
-        // Формируем строки с данными
         const rows = registrations.map(reg => {
             const rowData = [
                 reg.fullName,
@@ -104,29 +212,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 reg.ticket.id,
                 ...reg.ticket.questions
             ];
-            // Оборачиваем каждое поле в кавычки для надежности
             return rowData.map(field => `"${String(field).replace(/"/g, '""')}"`).join(';');
         });
 
-        // Собираем контент с BOM (Byte Order Mark) в начале для корректной работы с кириллицей в Excel
+        // BOM (Byte Order Mark) в начале — чтобы Excel правильно открыл UTF-8
         const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
 
-        // Создаем Blob (более надежный способ, чем data URI)
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-
-        // Создаем временную ссылку для скачивания файла
         const link = document.createElement("a");
-        if (link.download !== undefined) { // Проверка поддержки атрибута download
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", "list.csv");
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "list.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     });
 
-    // Отображаем список при первой загрузке страницы
-    displayRegistrations();
+    // --- Первоначальная загрузка (список скрыт) ---
+    // Ничего не показываем, ждём нажатия кнопки «Показать список»
 });
