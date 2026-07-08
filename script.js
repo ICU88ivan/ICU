@@ -58,12 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
         registrations.forEach((reg, index) => {
             const item = document.createElement('div');
             item.className = 'reg-item';
+            // **ИЗМЕНЕНИЕ**: Добавлена кнопка удаления
             item.innerHTML = `
                 <span class="info">
                     <strong>${index + 1}.</strong> ${reg.fullName} (Группа: ${reg.groupNumber}) — Билет №${reg.ticket.id}
                 </span>
                 <span class="actions">
-                    <button class="btn-sm btn-outline edit-btn" data-index="${index}">✏️ Редактировать</button>
+                    <button class="btn-sm btn-outline edit-btn" title="Редактировать">✏️</button>
+                    <button class="btn-sm btn-red delete-btn" title="Удалить">🗑️</button>
                 </span>
             `;
             elements.registrationListDiv.appendChild(item);
@@ -71,8 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Функция для входа в режим редактирования ---
-    function enableEditMode(index) {
-        const item = elements.registrationListDiv.children[index];
+    function enableEditMode(item, index) {
         const registrations = getRegistrations();
         const reg = registrations[index];
 
@@ -85,11 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 — Билет №${reg.ticket.id}
             </span>
             <span class="actions">
-                <button class="btn-sm btn-green save-btn">💾 Сохранить</button>
-                <button class="btn-sm btn-red cancel-btn">✖ Отмена</button>
+                <button class="btn-sm btn-green save-btn" title="Сохранить">💾</button>
+                <button class="btn-sm btn-red cancel-btn" title="Отмена">✖</button>
             </span>
         `;
-        // Устанавливаем фокус на поле ввода
         const input = item.querySelector('.edit-input');
         if(input) input.focus();
     }
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 elements.listWrapper.style.display = 'block';
                 elements.toggleBtn.textContent = '🙈 Скрыть список';
-                renderList(); // Отрисовываем список при показе
+                renderList();
             }
         });
     }
@@ -118,39 +118,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Список уже пуст.');
                 return;
             }
-            if (confirm('Вы уверены, что хотите полностью очистить список? Это действие нельзя отменить.')) {
-                saveRegistrations([]); // Сохраняем пустой массив
-                renderList(); // Перерисовываем пустой список
+            if (confirm('Вы уверены, что хотите ПОЛНОСТЬЮ очистить список? Это действие нельзя отменить.')) {
+                saveRegistrations([]);
+                renderList();
                 alert('Список очищен.');
             }
         });
     }
 
-    // 3. Редактирование, сохранение, отмена (через делегирование)
+    // 3. Редактирование, сохранение, отмена и УДАЛЕНИЕ (через делегирование)
     elements.registrationListDiv.addEventListener('click', (e) => {
-        const target = e.target;
+        const target = e.target.closest('button'); // Ищем нажатую кнопку
+        if (!target) return;
+
         const item = target.closest('.reg-item');
         if (!item) return;
 
-        // Находим индекс элемента в списке
         const index = Array.from(elements.registrationListDiv.children).indexOf(item);
-        const registrations = getRegistrations();
+        let registrations = getRegistrations();
 
         if (target.classList.contains('edit-btn')) {
-            enableEditMode(index);
-        } else if (target.classList.contains('save-btn')) {
+            enableEditMode(item, index);
+        } 
+        else if (target.classList.contains('save-btn')) {
             const newName = item.querySelector('.edit-input').value.trim();
             const newGroup = item.querySelector('.edit-group-input').value.trim();
             if (newName && newGroup) {
                 registrations[index].fullName = newName;
                 registrations[index].groupNumber = newGroup;
                 saveRegistrations(registrations);
-                renderList(); // Перерисовываем весь список с обновленными данными
+                renderList();
             } else {
                 alert('ФИО и номер группы не могут быть пустыми.');
             }
-        } else if (target.classList.contains('cancel-btn')) {
-            renderList(); // Просто перерисовываем список, отменяя изменения
+        } 
+        else if (target.classList.contains('cancel-btn')) {
+            renderList();
+        } 
+        // **ИЗМЕНЕНИЕ**: Логика для кнопки удаления
+        else if (target.classList.contains('delete-btn')) {
+            const studentName = registrations[index].fullName;
+            if (confirm(`Вы уверены, что хотите удалить студента "${studentName}"?`)) {
+                registrations.splice(index, 1); // Удаляем элемент из массива
+                saveRegistrations(registrations); // Сохраняем обновленный массив
+                renderList(); // Перерисовываем список
+            }
         }
     });
 
@@ -176,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             registrations.push({ fullName, groupNumber, ticket: assignedTicket });
             saveRegistrations(registrations);
 
-            // Если список видим, обновляем его
             if (elements.listWrapper.style.display === 'block') {
                 renderList();
             }
