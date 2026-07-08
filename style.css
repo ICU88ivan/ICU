@@ -17,13 +17,19 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 700px;
+    max-width: 750px;
     text-align: center;
 }
 
 h1 {
     color: #005a9c;
     margin-bottom: 5px;
+}
+
+h3 {
+    color: #005a9c;
+    margin: 15px 0 10px;
+    text-align: left;
 }
 
 p {
@@ -38,6 +44,7 @@ hr {
     margin: 30px 0;
 }
 
+/* Форма */
 .form-group {
     margin-bottom: 20px;
     text-align: left;
@@ -57,29 +64,76 @@ hr {
     box-sizing: border-box;
 }
 
+/* Кнопки */
 button {
-    background-color: #007bff;
     color: white;
     border: none;
-    padding: 12px 25px;
+    padding: 10px 20px;
     border-radius: 5px;
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, opacity 0.3s;
 }
 
 button:hover {
+    opacity: 0.9;
+}
+
+button[type="submit"] {
+    background-color: #007bff;
+    padding: 12px 30px;
+    font-size: 16px;
+}
+button[type="submit"]:hover {
     background-color: #0056b3;
 }
 
-#downloadList {
-    background-color: #28a745;
-    margin-bottom: 20px;
+/* Панель управления списком */
+.list-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 10px;
 }
-#downloadList:hover {
+
+.btn-green {
+    background-color: #28a745;
+}
+.btn-green:hover {
     background-color: #218838;
 }
 
+.btn-blue {
+    background-color: #17a2b8;
+}
+.btn-blue:hover {
+    background-color: #138496;
+}
+
+.btn-red {
+    background-color: #dc3545;
+}
+.btn-red:hover {
+    background-color: #c82333;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 13px;
+}
+
+.btn-outline {
+    background: none;
+    border: 1px solid #007bff;
+    color: #007bff;
+}
+.btn-outline:hover {
+    background: #007bff;
+    color: white;
+}
+
+/* Билет */
 .ticket-container {
     margin-top: 30px;
     padding: 20px;
@@ -107,9 +161,58 @@ button:hover {
     border-left: 4px solid #007bff;
 }
 
-#registrationList {
+/* Список зарегистрированных */
+#registrationListWrapper {
     margin-top: 15px;
+}
+
+#registrationList {
+    margin-top: 10px;
     text-align: left;
     font-size: 14px;
     color: #444;
+}
+
+.reg-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.reg-item:hover {
+    background-color: #f8f9fa;
+}
+
+.reg-item .info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.reg-item .actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* Режим редактирования */
+.edit-input {
+    padding: 6px 8px;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 180px;
+    box-sizing: border-box;
+}
+
+.edit-group-input {
+    padding: 6px 8px;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 70px;
+    box-sizing: border-box;
 }
