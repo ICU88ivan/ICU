@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Данные о билетах ---
+    // --- Данные о билетах (остаются без изменений) ---
     const tickets = [
         { id: 1, questions: ["Проведение генеральной уборки процедурного (перевязочного, манипуляционного) кабинета.", "Проведение гигиенической антисептики кожи рук.", "Подсчет пульса и определение его характеристик, регистрация в температурном листе."] },
         { id: 2, questions: ["Подготовка пациентов к инструментальным методам исследования.", "Проведение гигиенической антисептики кожи рук.", "Кормление пациентов с дефицитом самообслуживания (ложечкой и поильником)."] },
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const registrations = JSON.parse(localStorage.getItem('registrations')) || [];
         registrationListDiv.innerHTML = '';
         if (registrations.length > 0) {
-            const list = registrations.map((reg, index) => 
+            const list = registrations.map((reg, index) =>
                 `<p>${index + 1}. ${reg.fullName} (Группа: ${reg.groupNumber}) - Билет №${reg.ticket.id}</p>`
             ).join('');
             registrationListDiv.innerHTML = list;
@@ -59,11 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Выбираем случайный билет
         const randomIndex = Math.floor(Math.random() * tickets.length);
         const assignedTicket = tickets[randomIndex];
-        
-        // Отображаем результат
+
         ticketResultDiv.style.display = 'block';
         ticketResultDiv.innerHTML = `
             <h2>Ваш билет № ${assignedTicket.id}</h2>
@@ -73,8 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <li><strong>Вопрос 3:</strong> ${assignedTicket.questions[2]}</li>
             </ul>
         `;
-        
-        // Сохраняем данные в localStorage
+
         const registrations = JSON.parse(localStorage.getItem('registrations')) || [];
         registrations.push({
             fullName: fullName,
@@ -83,13 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         localStorage.setItem('registrations', JSON.stringify(registrations));
 
-        // Обновляем отображаемый список
         displayRegistrations();
-        
-        // Очищаем форму
         form.reset();
     });
 
+    // --- ИЗМЕНЕННАЯ ЧАСТЬ ---
     // Обработчик для кнопки скачивания
     downloadBtn.addEventListener('click', () => {
         const registrations = JSON.parse(localStorage.getItem('registrations')) || [];
@@ -98,30 +93,38 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Формируем CSV
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "ФИО;Номер группы;Номер билета;Вопрос 1;Вопрос 2;Вопрос 3\n";
+        // Формируем заголовки CSV
+        const headers = ["ФИО", "Номер группы", "Номер билета", "Вопрос 1", "Вопрос 2", "Вопрос 3"].join(';');
 
-        registrations.forEach(reg => {
-            const row = [
-                `"${reg.fullName}"`,
-                `"${reg.groupNumber}"`,
-                `"${reg.ticket.id}"`,
-                `"${reg.ticket.questions[0]}"`,
-                `"${reg.ticket.questions[1]}"`,
-                `"${reg.ticket.questions[2]}"`
-            ].join(';');
-            csvContent += row + "\n";
+        // Формируем строки с данными
+        const rows = registrations.map(reg => {
+            const rowData = [
+                reg.fullName,
+                reg.groupNumber,
+                reg.ticket.id,
+                ...reg.ticket.questions
+            ];
+            // Оборачиваем каждое поле в кавычки для надежности
+            return rowData.map(field => `"${String(field).replace(/"/g, '""')}"`).join(';');
         });
 
-        // Создаем ссылку и скачиваем файл
-        const encodedUri = encodeURI(csvContent);
+        // Собираем контент с BOM (Byte Order Mark) в начале для корректной работы с кириллицей в Excel
+        const csvContent = '\uFEFF' + [headers, ...rows].join('\n');
+
+        // Создаем Blob (более надежный способ, чем data URI)
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+        // Создаем временную ссылку для скачивания файла
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "list.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        if (link.download !== undefined) { // Проверка поддержки атрибута download
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "list.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     });
 
     // Отображаем список при первой загрузке страницы
