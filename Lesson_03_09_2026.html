@@ -121,7 +121,6 @@
             margin: 30px 0;
         }
 
-        /* Стили для блока об авторе из вашего запроса */
         .author-card {
             background-color: var(--secondary-color);
             padding: 20px;
@@ -162,10 +161,6 @@
             text-decoration: none;
             font-weight: bold;
         }
-
-        .links-section a:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
@@ -194,7 +189,7 @@
 
         <div class="btn-group">
             <button type="button" class="btn btn-primary" onclick="sendEmail('reg')">📨 Записаться (почта)</button>
-            <a href="https://t.me/+tWmgZPZqJf4yNGE6" target="_blank" class="btn btn-telegram">✈️ Написать в Telegram</a>
+            <button type="button" class="btn btn-telegram" onclick="sendTelegram('reg')">✈️ В Telegram</button>
         </div>
     </form>
 
@@ -205,7 +200,7 @@
     </div>
     <div class="btn-group">
         <button type="button" class="btn btn-primary" onclick="sendEmail('feedback')" style="background-color: #34a853;">✉️ Оставить отзыв (почта)</button>
-        <a href="https://t.me/+tWmgZPZqJf4yNGE6" target="_blank" class="btn btn-telegram">✈️ Отзыв в Telegram</a>
+        <button type="button" class="btn btn-telegram" onclick="sendTelegram('feedback')">✈️ Отзыв в Telegram</button>
     </div>
 
     <div class="divider"></div>
@@ -232,31 +227,61 @@
             </p>
         </div>
     </div>
-
 </div>
 
 <script>
+    const emailAddress = "i@ibabkow.ru";
+    const telegramChatLink = "https://t.me/+tWmgZPZqJf4yNGE6";
+
     function sendEmail(type) {
-        const email = "i@ibabkow.ru";
-        
         if (type === 'reg') {
             const fullName = document.getElementById('fullName').value;
             const groupNum = document.getElementById('groupNum').value;
             const questions = document.getElementById('questions').value;
             
             if(!fullName || !groupNum) {
-                alert("Пожалуйста, заполните ФИО и номер группы перед отправкой!");
+                alert("Пожалуйста, заполните ФИО и номер группы!");
                 return;
             }
 
             const subject = encodeURIComponent(`Регистрация на лекцию: ${fullName}, гр. ${groupNum}`);
             const body = encodeURIComponent(`Ф.И.О.: ${fullName}\nНомер группы: ${groupNum}\n\nВопросы и пожелания:\n${questions}`);
-            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            window.location.href = `mailto:${emailAddress}?subject=${subject}&body=${body}`;
         } 
         else if (type === 'feedback') {
             const subject = encodeURIComponent("Отзыв/Пожелание по лекции");
-            const body = encodeURIComponent("Здравствуйте, Иван Леонидович!\n\nМой отзыв/пожелание:\n[Напишите ваш текст здесь]");
-            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            const body = encodeURIComponent("Здравствуйте, Иван Леонидович!\n\nМой отзыв:\n");
+            window.location.href = `mailto:${emailAddress}?subject=${subject}&body=${body}`;
+        }
+    }
+
+    async function sendTelegram(type) {
+        let messageToCopy = "";
+
+        if (type === 'reg') {
+            const fullName = document.getElementById('fullName').value;
+            const groupNum = document.getElementById('groupNum').value;
+            const questions = document.getElementById('questions').value || "Нет вопросов";
+            
+            if(!fullName || !groupNum) {
+                alert("Пожалуйста, заполните ФИО и номер группы перед отправкой!");
+                return;
+            }
+
+            messageToCopy = `📋 Регистрация на лекцию:\nФ.И.О.: ${fullName}\nГруппа: ${groupNum}\nВопросы: ${questions}`;
+        } else if (type === 'feedback') {
+            messageToCopy = "Здравствуйте, Иван Леонидович!\n\nХочу оставить отзыв: ";
+        }
+
+        try {
+            // Копируем текст в буфер обмена
+            await navigator.clipboard.writeText(messageToCopy);
+            alert("✅ Ваши данные успешно скопированы!\n\nСейчас откроется Telegram. Просто нажмите кнопку «Вставить» (или Ctrl+V) в поле сообщения и отправьте в чат группы.");
+            window.open(telegramChatLink, '_blank');
+        } catch (err) {
+            console.error('Ошибка при копировании: ', err);
+            alert("Не удалось автоматически скопировать данные. Пожалуйста, откройте Telegram и напишите сообщение вручную.");
+            window.open(telegramChatLink, '_blank');
         }
     }
 </script>
