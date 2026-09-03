@@ -3,22 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Регистрация присутствия на лекции =) | Бабков И.Л.</title>
+    <title>Регистрация на лекцию | Бабков И.Л.</title>
     <style>
         :root {
-            --primary-color: #0b57d0;
-            --secondary-color: #e8f0fe;
-            --accent-color: #d93025;
-            --text-color: #3c4043;
-            --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            --primary: #0b57d0;
+            --primary-gradient: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+            --secondary-bg: #f0f4f9;
+            --accent-green: #0f9d58;
+            --accent-green-grad: linear-gradient(135deg, #34a853 0%, #0d652d 100%);
+            --tg-blue: #0088cc;
+            --tg-blue-grad: linear-gradient(135deg, #29b6f6 0%, #0277bd 100%);
+            --text-main: #202124;
+            --text-sub: #5f6368;
+            --bg-body: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 50%, #e8eaf6 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-gradient);
-            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-body);
+            background-attachment: fixed;
+            color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 20px 12px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -26,177 +37,218 @@
         }
 
         .container {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             max-width: 600px;
             width: 100%;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            overflow: hidden;
-            padding: 30px;
-            box-sizing: border-box;
+            border-radius: 24px;
+            box-shadow: 0 16px 40px rgba(0, 40, 100, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+            padding: 35px 28px;
+            animation: cardAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .header h1 {
-            color: var(--primary-color);
-            margin-bottom: 10px;
-            font-size: 24px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 10px 0;
+            font-size: 26px;
+            font-weight: 800;
         }
 
         .header p {
-            color: #5f6368;
+            color: var(--text-sub);
             font-size: 15px;
+            line-height: 1.5;
+            margin: 0;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 600;
-            color: var(--text-color);
+            font-size: 14px;
+            color: var(--text-main);
         }
 
         .form-group input, 
         .form-group textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #dadce0;
-            border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: border-color 0.3s ease;
+            padding: 14px 16px;
+            border: 2px solid #e0e3e7;
+            border-radius: 12px;
+            font-size: 15px;
+            background: #fafafa;
+        }
+
+        .form-group input:hover,
+        .form-group textarea:hover {
+            background: #fff;
+            border-color: #bcc1c8;
         }
 
         .form-group input:focus, 
         .form-group textarea:focus {
             outline: none;
-            border-color: var(--primary-color);
+            background: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(11, 87, 208, 0.15);
+            transform: translateY(-1px);
         }
 
         .btn-group {
             display: flex;
-            gap: 15px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 15px;
         }
 
         .btn {
             flex: 1;
-            padding: 12px 20px;
+            padding: 14px 18px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
             text-align: center;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.18);
         }
 
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
+        .btn:active {
+            transform: scale(0.97);
         }
 
-        .btn-telegram {
-            background-color: #0088cc;
-            color: white;
-        }
+        .btn-primary { background: var(--primary-gradient); }
+        .btn-telegram { background: var(--tg-blue-grad); }
+        .btn-feedback { background: var(--accent-green-grad); }
 
         .divider {
             height: 1px;
-            background-color: #dadce0;
+            background: linear-gradient(90deg, transparent, #dadce0 50%, transparent);
             margin: 30px 0;
         }
 
-        /* Обновленные стили карточки автора для десктопа */
+        /* Интерактивная карточка автора */
         .author-card {
-            background-color: var(--secondary-color);
-            padding: 24px;
-            border-radius: 12px;
+            background-color: var(--secondary-bg);
+            padding: 22px;
+            border-radius: 16px;
             display: flex;
-            flex-direction: row;
-            gap: 20px;
+            gap: 18px;
             align-items: flex-start;
-            margin-top: 30px;
+            margin-top: 25px;
+            border: 1px solid rgba(11, 87, 208, 0.08);
         }
         
         .author-avatar {
-            font-size: 45px;
+            font-size: 42px;
             background: white;
-            padding: 10px;
+            padding: 8px;
             border-radius: 50%;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             flex-shrink: 0;
             display: flex;
             justify-content: center;
             align-items: center;
+            animation: pulseEmoji 3s ease-in-out infinite;
+        }
+
+        @keyframes pulseEmoji {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
         }
 
         .author-info h2 {
-            margin: 0 0 10px 0;
-            font-size: 20px;
-            color: var(--primary-color);
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            color: var(--primary);
         }
 
         .author-info p {
-            margin: 0 0 10px 0;
-            line-height: 1.6;
+            margin: 0 0 8px 0;
+            line-height: 1.55;
             font-size: 14px;
+            color: #3c4043;
         }
 
         .links-section {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 15px;
+            font-size: 14px;
         }
 
         .links-section a {
-            color: var(--primary-color);
+            color: var(--primary);
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 700;
+            border-bottom: 1.5px dashed var(--primary);
+            padding-bottom: 2px;
         }
 
-        /* АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ ТЕЛЕФОНОВ */
+        .links-section a:hover {
+            border-bottom-style: solid;
+        }
+
+        /* Оптимизация для мобильных устройств */
         @media (max-width: 600px) {
+            .container {
+                padding: 24px 16px;
+                border-radius: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
             .author-card {
-                flex-direction: column; 
-                align-items: center;    
-                text-align: center;     
-                padding: 20px 15px;
-                gap: 15px;
-            }
-
-            .author-info h2 {
-                font-size: 18px;
-            }
-
-            .author-info p {
-                font-size: 13px; 
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: 20px 14px;
             }
 
             .author-info a[href^="mailto:"] {
-                justify-content: center; 
+                justify-content: center;
                 width: 100%;
-                padding: 8px 0;
-                margin-top: 10px !important;
-                background-color: rgba(11, 87, 208, 0.05); 
-                border-radius: 8px;
-            }
-            
-            .btn-group {
-                flex-direction: column;
+                background: white;
+                padding: 10px;
+                border-radius: 10px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.05);
             }
         }
     </style>
@@ -205,14 +257,54 @@
 
 <div class="container">
     <div class="header">
-        <h1>🩺 Регистрация присутствия на лекции</h1>
+        <h1>🩺 Регистрация на лекцию</h1>
         <p>Тема: Сепсис и септический шок. Современные подходы к диагностике и лечению (Surviving Sepsis Campaign 2026).</p>
     </div>
 
-    <form id="registrationForm">
+    <form id="registrationForm" onsubmit="event.preventDefault();">
         <div class="form-group">
-            <label for="fullName">Ф.И.О.</label>
-            <input type="text" id="fullName" placeholder="Иванов Иван Иванович" required>
+            <label for="fullName">Ф.И.О. (начните вводить для подсказки)</label>
+            <input type="text" id="fullName" list="studentsList" placeholder="Введите Ф.И.О или выберите в списке" required autocomplete="off">
+            <datalist id="studentsList">
+                <option value="Анслан Анастасия Александровна">
+                <option value="Вилькоцкая Яна Андреевна">
+                <option value="Гайко Александр Павлович">
+                <option value="Герасимова Дарья Алексеевна">
+                <option value="Гриб Михаил Сергеевич">
+                <option value="Грищеня Диана Владимировна">
+                <option value="Денисов Андрей Дмитриевич">
+                <option value="Дрозд Дарья Дмитриевна">
+                <option value="Дубчак Екатерина Валерьевна">
+                <option value="Заранко Савелий Андреевич">
+                <option value="Кирьянова Валерия Константиновна">
+                <option value="Король Владислав Александрович">
+                <option value="Котова Александра Олеговна">
+                <option value="Кубеко Андрей Владимирович">
+                <option value="Куличкова Софья Михайловна">
+                <option value="Лапковский Александр Николаевич">
+                <option value="Матыскин Александр Михайлович">
+                <option value="Матюхевич Анастасия Сергеевна">
+                <option value="Машкарев Михаил Дмитриевич">
+                <option value="Мурашко Александр Игоревич">
+                <option value="Новиков Александр Александрович">
+                <option value="Новичкова Яна Игоревна">
+                <option value="Новицкая Полина Вадимовна">
+                <option value="Панкратович Артём Евгеньевич">
+                <option value="Пацель Антоний Мечиславович">
+                <option value="Прусакова Анастасия Александровна">
+                <option value="Пучило Илья Максимович">
+                <option value="Раджух Никита Маеинович">
+                <option value="Рай Никита Игоревич">
+                <option value="Рябцева Алеся Антоновна">
+                <option value="Солдатова Валерия Александровна">
+                <option value="Сорока Василиса Дмитриевна">
+                <option value="Струневский Всеволод Александрович">
+                <option value="Толкачёв Иван Денисович">
+                <option value="Усик Владимир Алексеевич">
+                <option value="Черноус Анастасия Сергеевна">
+                <option value="Шелест Юлия Александровна">
+                <option value="Шестак Наталья Александровна">
+            </datalist>
         </div>
 
         <div class="form-group">
@@ -222,7 +314,7 @@
 
         <div class="form-group">
             <label for="questions">Вопросы и пожелания к лекции</label>
-            <textarea id="questions" rows="4" placeholder="Напишите, что бы вы хотели узнать подробнее..."></textarea>
+            <textarea id="questions" rows="3" placeholder="Напишите, что бы вы хотели узнать подробнее..."></textarea>
         </div>
 
         <div class="btn-group">
@@ -233,22 +325,23 @@
 
     <div class="divider"></div>
 
-    <div class="header" style="margin-bottom: 15px;">
-        <h2 style="font-size: 20px; color: var(--text-color);">Есть отзыв или пожелание?</h2>
+    <div class="header" style="margin-bottom: 12px;">
+        <h2 style="font-size: 18px; margin: 0; color: var(--text-main);">Есть отзыв или пожелание?</h2>
     </div>
     <div class="btn-group">
-        <button type="button" class="btn btn-primary" onclick="sendEmail('feedback')" style="background-color: #34a853;">✉️ Оставить отзыв (почта)</button>
+        <button type="button" class="btn btn-feedback" onclick="sendEmail('feedback')">✉️ Отзыв (почта)</button>
         <button type="button" class="btn btn-telegram" onclick="sendTelegram('feedback')">✈️ Отзыв в Telegram</button>
     </div>
 
     <div class="divider"></div>
 
     <div class="links-section">
-        <p>🌐 Посетите мой сайт с материалами: <br>
+        <p>🌐 Образовательные материалы: <br>
            <a href="https://icu88ivan.github.io/ICU/" target="_blank">icu88ivan.github.io/ICU/</a>
         </p>
     </div>
 
+    <!-- Блок об авторе с адаптацией -->
     <div class="author-card">
         <div class="author-avatar">👨‍⚕️</div>
         <div class="author-info">
@@ -256,11 +349,11 @@
             <p>Материалы подготовил: <strong>Бабков Иван Леонидович</strong> — врач-анестезиолог-реаниматолог, врач-ультразвуковой-диагностики, сотрудник кафедры анестезиологии и реаниматологии с курсом ПК УО "БГМУ".</p>
             <p>Подробнее об авторе: <a href="https://www.bsmu.by/personalii/babkov-ivan-leonidovich/?sphrase_id=325251" target="_blank" rel="noopener noreferrer">профиль на сайте БГМУ</a>.</p>
             <p>
-                <a href="mailto:i@ibabkow.ru" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0b57d0; margin-top: 6px; font-weight: 500;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0b57d0" width="20" height="20">
-                    <path d="M2 4V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V4C22 2.9 21.1 2 20 2H4C2.9 2 2 2.9 2 4ZM4 6L12 12L20 6V20H4V6Z"/>
-                </svg>
-                <span>i@ibabkow.ru</span>
+                <a href="mailto:i@ibabkow.ru" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0b57d0; margin-top: 6px; font-weight:600;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0b57d0" width="18" height="18">
+                        <path d="M2 4V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V4C22 2.9 21.1 2 20 2H4C2.9 2 2 2.9 2 4ZM4 6L12 12L20 6V20H4V6Z"/>
+                    </svg>
+                    <span>i@ibabkow.ru</span>
                 </a>
             </p>
         </div>
@@ -273,9 +366,9 @@
 
     function sendEmail(type) {
         if (type === 'reg') {
-            const fullName = document.getElementById('fullName').value;
-            const groupNum = document.getElementById('groupNum').value;
-            const questions = document.getElementById('questions').value;
+            const fullName = document.getElementById('fullName').value.trim();
+            const groupNum = document.getElementById('groupNum').value.trim();
+            const questions = document.getElementById('questions').value.trim();
             
             if(!fullName || !groupNum) {
                 alert("Пожалуйста, заполните ФИО и номер группы!");
@@ -283,7 +376,7 @@
             }
 
             const subject = encodeURIComponent(`Регистрация на лекцию: ${fullName}, гр. ${groupNum}`);
-            const body = encodeURIComponent(`Ф.И.О.: ${fullName}\nНомер группы: ${groupNum}\n\nВопросы и пожелания:\n${questions}`);
+            const body = encodeURIComponent(`Ф.И.О.: ${fullName}\nНомер группы: ${groupNum}\n\nВопросы и пожелания:\n${questions || 'Нет'}`);
             window.location.href = `mailto:${emailAddress}?subject=${subject}&body=${body}`;
         } 
         else if (type === 'feedback') {
@@ -297,12 +390,12 @@
         let messageToCopy = "";
 
         if (type === 'reg') {
-            const fullName = document.getElementById('fullName').value;
-            const groupNum = document.getElementById('groupNum').value;
-            const questions = document.getElementById('questions').value || "Нет вопросов";
+            const fullName = document.getElementById('fullName').value.trim();
+            const groupNum = document.getElementById('groupNum').value.trim();
+            const questions = document.getElementById('questions').value.trim() || "Нет";
             
             if(!fullName || !groupNum) {
-                alert("Пожалуйста, заполните ФИО и номер группы перед отправкой!");
+                alert("Пожалуйста, заполните ФИО и номер группы перед переходом в Telegram!");
                 return;
             }
 
@@ -313,11 +406,9 @@
 
         try {
             await navigator.clipboard.writeText(messageToCopy);
-            alert("✅ Ваши данные успешно скопированы!\n\nСейчас откроется Telegram. Просто нажмите кнопку «Вставить» (или Ctrl+V) в поле сообщения и отправьте в чат группы.");
+            alert("✅ Данные скопированы в буфер обмена!\n\nСейчас откроется чат Telegram — просто вставьте текст (Ctrl+V или долгое нажатие -> «Вставить») и отправьте сообщение.");
             window.open(telegramChatLink, '_blank');
         } catch (err) {
-            console.error('Ошибка при копировании: ', err);
-            alert("Не удалось автоматически скопировать данные. Пожалуйста, откройте Telegram и напишите сообщение вручную.");
             window.open(telegramChatLink, '_blank');
         }
     }
