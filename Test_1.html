@@ -230,13 +230,13 @@ footer {
       <div class="badge-logo">BIL</div>
       <div>
         <div style="font-size:.85rem;line-height:1.2;font-weight:700;color:var(--text-main);">
-          Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ[cite: 4, 5]
+          Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ
         </div>
       </div>
     </div>
     <div class="mono" style="font-size:12px; display:flex; gap:0.5rem;">
       <span class="pill pill-shield">ЗАЩИТА АКТИВНА</span>
-      <span class="pill pill-primary">4 КУРС (ЛД / ПД)[cite: 8]</span>
+      <span class="pill pill-primary">4 КУРС (ЛД / ПД)</span>
     </div>
   </div>
 </header>
@@ -245,7 +245,7 @@ footer {
 
   <!-- ЭКРАН 1: РЕГИСТРАЦИЯ СТУДЕНТА -->
   <section id="screenLogin" class="card">
-    <div class="eyebrow" style="margin-bottom:.5rem;"> БАНК (180 ВОПРОСОВ)</div>
+    <div class="eyebrow" style="margin-bottom:.5rem;">КАФЕДРАЛЬНЫЙ БАНК (180 ВОПРОСОВ)</div>
     <h1>Тестирование: Анестезиология и реаниматология</h1>
     <p class="sub" style="margin-top:.6rem;">
       Для каждого вопроса указано: <b>один</b> или <b>несколько</b> правильных ответов. Выберите подходящий режим тестирования.
@@ -317,7 +317,7 @@ footer {
           В чат Telegram группы (копировать и перейти)
         </button>
         <button type="button" class="btn btn-primary" onclick="sendToEmail()">
-          Отправить на e-mail: i@ibabkow.ru[cite: 5]
+          Отправить на e-mail: i@ibabkow.ru
         </button>
       </div>
     </div>
@@ -335,16 +335,16 @@ footer {
 
 <footer>
   <div class="wrap">
-    <div>Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ[cite: 4, 5]</div>
+    <div>Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ</div>
     <div style="margin-top: 0.4rem;">Модуль автоматизированного тестирования знаний студентов</div>
     <div class="mono" style="margin-top: 0.4rem; color: var(--text-main); font-weight:700;">
-      Автор разработки: <b>Бабков Иван Леонидович</b> &copy; 2026[cite: 4, 5]
+      Автор разработки: <b>Бабков Иван Леонидович</b> &copy; 2026
     </div>
   </div>
 </footer>
 
 <script>
-// --- БАЗА ИЗ 180 ВОПРОСОВ, ВЕРИФИЦИРОВАННАЯ ПО ЭТАЛОНУ ---
+// --- БАЗА ИЗ 180 ВОПРОСОВ ---
 const fullQuizData = [
   // Раздел 1. Основы анестезиологии и реаниматологии (1-70)
   { q: "1. Что является основными аспектами анестезиологии и реаниматологии как научно-практической дисциплины?", options: ["Изучение методов обезболивания", "Разработка механизмов анестезии", "Восстановление функций жизненно важных органов и систем", "Лечение хронических заболеваний"], correct: [0, 1, 2] },
@@ -401,7 +401,7 @@ const fullQuizData = [
   { q: "52. Какие типы ноцицепторов описаны в тексте?", options: ["Все ответы верны (механорецепторы, терморецепторы, хеморецепторы, полимодальные ноцицепторы)", "Только механорецепторы", "Только терморецепторы", "Исключительно барорецепторы"], correct: [0] },
   { q: "53. Какие волокна обеспечивают проведение боли?", options: ["Aδ-волокна — плохо миелинизированные", "C-волокна — немиелинизированные", "Aα-волокна — хорошо миелинизированные", "B-волокна — слабо миелинизированные"], correct: [0, 1] },
   { q: "54. Какими характеристиками обладает «первичная» (эпикритическая) боль?", options: ["Проводится Aδ-волокнами", "Быстрое (в течение одной секунды) локализованное восприятие", "Короткая продолжительность", "Медленное начало и нечёткая локализация"], correct: [0, 1, 2] },
-  { q: "55. Какими характеристиками обладает «вторичная» (протопатитическая) боль?", options: ["Проводится C-волокнами", "Медленное начало (от нескольких секунд до минут)", "Нечёткая локализация", "Быстрое локализованное восприятие"], correct: [0, 1, 2] },
+  { q: "55. Какими характеристиками обладает «вторичная» (протопатическая) боль?", options: ["Проводится C-волокнами", "Медленное начало (от нескольких секунд до минут)", "Нечёткая локализация", "Быстрое локализованное восприятие"], correct: [0, 1, 2] },
   { q: "56. Какие группы веществ входят в состав общих анестетиков despite их разнородную химическую структуру?", options: ["Все ответы верны (инертные газы, галогенированные углеводороды, барбитураты, производные имидазола)", "Только опиоиды", "Только местные анестетики", "Исключительно транквилизаторы"], correct: [0] },
   { q: "57. Какое состояние характеризует общую анестезию?", options: ["Все ответы верны (обратимая утрата сознания, анальгезия, амнезия, угнетение рефлексов и миорелаксация)", "Только седация", "Только обезболивание", "Необратимая кома"], correct: [0] },
   { q: "58. Кто предложил липоидную теорию общей анестезии?", options: ["Герман (1866)", "Мейер и Овертон (1899–1901)", "Траубе (1904–1913)", "Л. Полинг (1961)"], correct: [0, 1] },
@@ -533,8 +533,8 @@ const fullQuizData = [
   { q: "180. В каких случаях BIS-мониторинг особенно полезен?", options: ["При тотальной внутривенной анестезии", "При угрозе сохранения сознания у пациента", "При ингаляционной анестезии с контролем МАК", "При регионарной анестезии без седации"], correct: [0, 1] }
 ];
 
-const TEACHER_EMAIL = "i@ibabkow.ru";[cite: 5]
-const TG_GROUP_LINK = "https://t.me/+_vy3U_9RG6E3OGVi";[cite: 5]
+const TEACHER_EMAIL = "i@ibabkow.ru";
+const TG_GROUP_LINK = "https://t.me/+_vy3U_9RG6E3OGVi";
 
 let currentQuizSet = [];
 let studentName = "";
@@ -614,7 +614,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Алгоритм перемешивания Фишера — Йетса
+// Перемешивание Фишера — Йетса
 function shuffle(array) {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -653,28 +653,6 @@ function startQuiz(isFullMode) {
   document.getElementById('quizStudentLabel').textContent = studentName;
   renderQuestion();
 }
-
-// Привязка обработчиков запуска к элементам DOM
-document.addEventListener('DOMContentLoaded', () => {
-  const btnExpress = document.getElementById('btnStartExpress');
-  const btnFull = document.getElementById('btnStartFull');
-  const inputEl = document.getElementById('studentNameInput');
-
-  if (btnExpress) {
-    btnExpress.onclick = () => startQuiz(false);
-  }
-  if (btnFull) {
-    btnFull.onclick = () => startQuiz(true);
-  }
-  if (inputEl) {
-    inputEl.onkeydown = (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        startQuiz(false);
-      }
-    };
-  }
-});
 
 function renderQuestion() {
   const q = currentQuizSet[currentIndex];
