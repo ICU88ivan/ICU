@@ -44,7 +44,7 @@ body {
 .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 .wrap { max-width: 52rem; margin: 0 auto; padding: 0 1.25rem; width: 100%; }
 
-/* Защита от выделения текста только на вопросах */
+/* ЗАЩИТА 1: Запрет выделения текста на вопросах и вариантах */
 #screenQuiz .question-title, 
 #screenQuiz .option-text, 
 #screenQuiz .mode-badge {
@@ -52,20 +52,22 @@ body {
   -moz-user-select: none !important;
   -ms-user-select: none !important;
   user-select: none !important;
+  -webkit-touch-callout: none !important;
 }
 
-/* Мягкий блюр при смене вкладки или вызове ножниц */
+/* ЗАЩИТА 2: Блюр и скрытие содержимого при попытке захвата экрана */
 .blur-shield {
-  filter: blur(24px) grayscale(100%) !important;
-  opacity: 0.15 !important;
+  filter: blur(28px) grayscale(100%) !important;
+  opacity: 0.1 !important;
+  pointer-events: none !important;
   transition: filter 0.15s ease, opacity 0.15s ease;
 }
 
-/* Защита от печати и сохранения в PDF */
+/* ЗАЩИТА 3: Строгий запрет печати и сохранения в PDF */
 @media print {
   body * { display: none !important; }
   body::after {
-    content: "Печать материалов тестирования и сохранение в PDF запрещены!";
+    content: "Печать материалов тестирования и сохранение в PDF строго запрещены!";
     display: block !important;
     font-size: 20pt;
     text-align: center;
@@ -76,7 +78,7 @@ body {
   }
 }
 
-/* Верхняя строка */
+/* --- ВЕРХНЯЯ СТРОКА --- */
 .topbar {
   background: rgba(255, 255, 255, 0.95);
   border-bottom: 1px solid var(--line);
@@ -99,16 +101,15 @@ body {
 .pill-primary { background: #dbeafe; color: var(--primary); border: 1px solid #bfdbfe; }
 .pill-shield { background: #fee2e2; color: var(--red); border: 1px solid #fecaca; }
 
-/* Кнопки */
+/* --- КНОПКИ --- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   gap: 0.6rem; border-radius: 0.75rem; padding: 0.85rem 1.4rem;
   font-weight: 600; font-size: 0.95rem; text-decoration: none;
   cursor: pointer !important; border: none; font-family: inherit;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 100;
   pointer-events: auto !important;
+  user-select: none;
 }
 .btn:active { transform: scale(0.98); }
 .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
@@ -118,13 +119,11 @@ body {
 .btn-soft { background: #f1f5f9; color: var(--text-sub); border: 1px solid var(--line); }
 .btn-soft:hover { background: #e2e8f0; color: var(--text-main); }
 
-/* Карточки */
+/* --- КАРТОЧКИ --- */
 .card {
   background: var(--panel); border: 1px solid var(--line);
   border-radius: 1.25rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
   padding: 2.2rem; margin-bottom: 2rem;
-  position: relative;
-  z-index: 10;
 }
 h1 { font-size: clamp(1.6rem, 4.5vw, 2.2rem); font-weight: 800; line-height: 1.25; color: var(--text-main); }
 h2 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
@@ -142,8 +141,6 @@ input[type="text"] {
   outline: none;
   background: #ffffff;
   color: var(--text-main);
-  position: relative;
-  z-index: 100;
   pointer-events: auto !important;
 }
 input[type="text"]:focus {
@@ -151,9 +148,10 @@ input[type="text"]:focus {
   box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
 }
 
-/* Стили вопросов */
+/* --- СТИЛИ ВОПРОСОВ И ВАРИАНТОВ --- */
 .progress-bar-wrap { width: 100%; height: 8px; background: #e2e8f0; border-radius: 9999px; overflow: hidden; margin-top: 1rem; }
 .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+
 .question-title { font-size: 1.15rem; font-weight: 700; line-height: 1.5; margin: 1.2rem 0 1rem; color: #0f172a; }
 
 .mode-badge {
@@ -170,16 +168,17 @@ input[type="text"]:focus {
   border-radius: 0.85rem; border: 1.5px solid var(--line); background: #fff;
   cursor: pointer !important; transition: all 0.2s;
   pointer-events: auto !important;
+  user-select: none;
 }
 .option-item:hover { border-color: #cbd5e1; background: var(--panel-hover); }
 .option-item.selected { border-color: var(--primary); background: #eff6ff; }
 .option-item input {
   width: 1.25rem; height: 1.25rem; margin-top: 0.15rem; accent-color: var(--primary);
-  cursor: pointer !important;
+  cursor: pointer;
 }
 .option-text { font-size: 0.98rem; line-height: 1.45; color: #1e293b; font-weight: 500; cursor: pointer; }
 
-/* Ревью ответов */
+/* --- РЕВЬЮ ОТВЕТОВ --- */
 .review-item {
   border: 1px solid var(--line); border-radius: 0.85rem; padding: 1.25rem;
   margin-bottom: 1rem; background: #ffffff;
@@ -192,7 +191,7 @@ input[type="text"]:focus {
 .review-opt.is-correct { background: var(--green-bg); color: #14532d; font-weight: 600; }
 .review-opt.user-wrong { background: var(--red-bg); color: #7f1d1d; text-decoration: line-through; }
 
-/* Toast-уведомление */
+/* --- ВСПЛЫВАЮЩИЙ TOAST --- */
 .toast-container {
   position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%);
   z-index: 99999; display: flex; flex-direction: column; gap: 0.6rem;
@@ -230,13 +229,13 @@ footer {
       <div class="badge-logo">BIL</div>
       <div>
         <div style="font-size:.85rem;line-height:1.2;font-weight:700;color:var(--text-main);">
-          Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ
+          Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ[cite: 4, 5]
         </div>
       </div>
     </div>
     <div class="mono" style="font-size:12px; display:flex; gap:0.5rem;">
       <span class="pill pill-shield">ЗАЩИТА АКТИВНА</span>
-      <span class="pill pill-primary">4 КУРС (ЛД / ПД)</span>
+      <span class="pill pill-primary">4 КУРС (ЛД / ПД)</span>[cite: 8]
     </div>
   </div>
 </header>
@@ -245,10 +244,10 @@ footer {
 
   <!-- ЭКРАН 1: РЕГИСТРАЦИЯ СТУДЕНТА -->
   <section id="screenLogin" class="card">
-    <div class="eyebrow" style="margin-bottom:.5rem;"> БАНК (180 ВОПРОСОВ)</div>
-    <h1>Тестирование: Анестезиология и реаниматология</h1>
+    <div class="eyebrow" style="margin-bottom:.5rem;">БАНК (180 ВОПРОСОВ)</div>
+    <h1>Тестирование: Анестезиология и реаниматология 4 курс</h1>
     <p class="sub" style="margin-top:.6rem;">
-      Для каждого вопроса указано: <b>один</b> или <b>несколько</b> правильных ответов. Выберите подходящий режим тестирования.
+      Для каждого вопроса указано: <b>один</b> или <b>несколько</b> правильных ответов. Копирование материалов и создание снимков экрана защищены регламентом безопасности.
     </p>
 
     <div style="margin-top: 1.8rem;">
@@ -346,6 +345,7 @@ footer {
 <script>
 // --- БАЗА ИЗ 180 ВОПРОСОВ ---
 const fullQuizData = [
+  // Раздел 1. Основы анестезиологии и реаниматологии (1-70)
   { q: "1. Что является основными аспектами анестезиологии и реаниматологии как научно-практической дисциплины?", options: ["Изучение методов обезболивания", "Разработка механизмов анестезии", "Восстановление функций жизненно важных органов и систем", "Лечение хронических заболеваний"], correct: [0, 1, 2] },
   { q: "2. На стыке каких дисциплин возникла анестезиология и реаниматология?", options: ["Физиологии", "Фармакологии", "Клинической хирургии", "Патологической анатомии"], correct: [0, 1, 2] },
   { q: "3. Что входит в основную задачу анестезиологии?", options: ["Защита пациента от операционной травмы", "Создание оптимальных условий для работы хирурга", "Проведение профилактических осмотров", "Ведение амбулаторного приёма"], correct: [0, 1] },
@@ -400,7 +400,7 @@ const fullQuizData = [
   { q: "52. Какие типы ноцицепторов описаны в тексте?", options: ["Все ответы верны (механорецепторы, терморецепторы, хеморецепторы, полимодальные ноцицепторы)", "Только механорецепторы", "Только терморецепторы", "Исключительно барорецепторы"], correct: [0] },
   { q: "53. Какие волокна обеспечивают проведение боли?", options: ["Aδ-волокна — плохо миелинизированные", "C-волокна — немиелинизированные", "Aα-волокна — хорошо миелинизированные", "B-волокна — слабо миелинизированные"], correct: [0, 1] },
   { q: "54. Какими характеристиками обладает «первичная» (эпикритическая) боль?", options: ["Проводится Aδ-волокнами", "Быстрое (в течение одной секунды) локализованное восприятие", "Короткая продолжительность", "Медленное начало и нечёткая локализация"], correct: [0, 1, 2] },
-  { q: "55. Какими характеристиками обладает «вторичная» (протопатическая) боль?", options: ["Проводится C-волокнами", "Медленное начало (от нескольких секунд до минут)", "Нечёткая локализация", "Быстрое локализованное восприятие"], correct: [0, 1, 2] },
+  { q: "55. Какими характеристиками обладает «вторичная» (протопатитическая) боль?", options: ["Проводится C-волокнами", "Медленное начало (от нескольких секунд до минут)", "Нечёткая локализация", "Быстрое локализованное восприятие"], correct: [0, 1, 2] },
   { q: "56. Какие группы веществ входят в состав общих анестетиков despite их разнородную химическую структуру?", options: ["Все ответы верны (инертные газы, галогенированные углеводороды, барбитураты, производные имидазола)", "Только опиоиды", "Только местные анестетики", "Исключительно транквилизаторы"], correct: [0] },
   { q: "57. Какое состояние характеризует общую анестезию?", options: ["Все ответы верны (обратимая утрата сознания, анальгезия, амнезия, угнетение рефлексов и миорелаксация)", "Только седация", "Только обезболивание", "Необратимая кома"], correct: [0] },
   { q: "58. Кто предложил липоидную теорию общей анестезии?", options: ["Герман (1866)", "Мейер и Овертон (1899–1901)", "Траубе (1904–1913)", "Л. Полинг (1961)"], correct: [0, 1] },
@@ -533,7 +533,7 @@ const fullQuizData = [
 ];
 
 const TEACHER_EMAIL = "i@ibabkow.ru";[cite: 5]
-const TG_GROUP_LINK = "https://t.me/+_vy3U_9RG6E3OGVi";
+const TG_GROUP_LINK = "https://t.me/+_vy3U_9RG6E3OGVi";[cite: 5]
 
 let currentQuizSet = [];
 let studentName = "";
@@ -565,7 +565,7 @@ function showToast(text) {
 window.addEventListener('keyup', (e) => {
   if (e.key === 'PrintScreen') {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText('Скриншот защищен.');
+      navigator.clipboard.writeText('Скриншот защищен регламентом кафедры.');
     }
     showToast('Снятие скриншота ограничено регламентом 🔒');
   }
@@ -613,7 +613,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Алгоритм Фишера — Йетса
+// Перемешивание Фишера — Йетса
 function shuffle(array) {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -622,25 +622,6 @@ function shuffle(array) {
   }
   return arr;
 }
-
-// Инициализация кнопок
-document.addEventListener('DOMContentLoaded', () => {
-  const btnExpress = document.getElementById('btnStartExpress');
-  const btnFull = document.getElementById('btnStartFull');
-  const inputEl = document.getElementById('studentNameInput');
-
-  if (btnExpress) {
-    btnExpress.onclick = () => startQuiz(false);
-  }
-  if (btnFull) {
-    btnFull.onclick = () => startQuiz(true);
-  }
-  if (inputEl) {
-    inputEl.onkeydown = (e) => {
-      if (e.key === 'Enter') startQuiz(false);
-    };
-  }
-});
 
 // Запуск теста
 function startQuiz(isFullMode) {
@@ -671,6 +652,28 @@ function startQuiz(isFullMode) {
   document.getElementById('quizStudentLabel').textContent = studentName;
   renderQuestion();
 }
+
+// Привязка слушателей к элементам управления
+document.addEventListener('DOMContentLoaded', () => {
+  const btnExpress = document.getElementById('btnStartExpress');
+  const btnFull = document.getElementById('btnStartFull');
+  const inputEl = document.getElementById('studentNameInput');
+
+  if (btnExpress) {
+    btnExpress.addEventListener('click', () => startQuiz(false));
+  }
+  if (btnFull) {
+    btnFull.addEventListener('click', () => startQuiz(true));
+  }
+  if (inputEl) {
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        startQuiz(false);
+      }
+    });
+  }
+});
 
 function renderQuestion() {
   const q = currentQuizSet[currentIndex];
@@ -703,7 +706,7 @@ function renderQuestion() {
       <label class="option-text" for="opt_${idx}">${optText}</label>
     `;
 
-    item.onclick = (e) => {
+    item.addEventListener('click', (e) => {
       const input = item.querySelector('input');
       if (isSingle) {
         document.querySelectorAll('#optionsGrid .option-item').forEach(el => el.classList.remove('selected'));
@@ -715,7 +718,7 @@ function renderQuestion() {
         }
         item.classList.toggle('selected', input.checked);
       }
-    };
+    });
     grid.appendChild(item);
   });
 }
@@ -783,7 +786,7 @@ function finishQuiz() {
   generateReview();
 }
 
-// Отрисовка сертификата
+// --- ОТРИСОВКА СЕРТИФИКАТА В CANVAS ---
 function drawCertificate(pct) {
   const canvas = document.getElementById('certCanvas');
   const ctx = canvas.getContext('2d');
