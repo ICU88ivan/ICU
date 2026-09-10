@@ -44,7 +44,7 @@ body {
 .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 .wrap { max-width: 52rem; margin: 0 auto; padding: 0 1.25rem; width: 100%; }
 
-/* ЗАЩИТА 1: Запрет выделения текста на вопросах и вариантах */
+/* Защита от выделения текста только на вопросах */
 #screenQuiz .question-title, 
 #screenQuiz .option-text, 
 #screenQuiz .mode-badge {
@@ -52,22 +52,20 @@ body {
   -moz-user-select: none !important;
   -ms-user-select: none !important;
   user-select: none !important;
-  -webkit-touch-callout: none !important;
 }
 
-/* ЗАЩИТА 2: Блюр и скрытие содержимого при попытке захвата экрана */
+/* Мягкий блюр при смене вкладки или вызове ножниц */
 .blur-shield {
-  filter: blur(28px) grayscale(100%) !important;
-  opacity: 0.1 !important;
-  pointer-events: none !important;
+  filter: blur(24px) grayscale(100%) !important;
+  opacity: 0.15 !important;
   transition: filter 0.15s ease, opacity 0.15s ease;
 }
 
-/* ЗАЩИТА 3: Строгий запрет печати и сохранения в PDF */
+/* Защита от печати и сохранения в PDF */
 @media print {
   body * { display: none !important; }
   body::after {
-    content: "Печать материалов тестирования и сохранение в PDF строго запрещены!";
+    content: "Печать материалов тестирования и сохранение в PDF запрещены!";
     display: block !important;
     font-size: 20pt;
     text-align: center;
@@ -78,7 +76,7 @@ body {
   }
 }
 
-/* --- ВЕРХНЯЯ СТРОКА --- */
+/* Верхняя строка */
 .topbar {
   background: rgba(255, 255, 255, 0.95);
   border-bottom: 1px solid var(--line);
@@ -101,13 +99,15 @@ body {
 .pill-primary { background: #dbeafe; color: var(--primary); border: 1px solid #bfdbfe; }
 .pill-shield { background: #fee2e2; color: var(--red); border: 1px solid #fecaca; }
 
-/* --- КНОПКИ --- */
+/* Кнопки */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   gap: 0.6rem; border-radius: 0.75rem; padding: 0.85rem 1.4rem;
   font-weight: 600; font-size: 0.95rem; text-decoration: none;
   cursor: pointer !important; border: none; font-family: inherit;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 100;
   pointer-events: auto !important;
 }
 .btn:active { transform: scale(0.98); }
@@ -118,11 +118,13 @@ body {
 .btn-soft { background: #f1f5f9; color: var(--text-sub); border: 1px solid var(--line); }
 .btn-soft:hover { background: #e2e8f0; color: var(--text-main); }
 
-/* --- КАРТОЧКИ --- */
+/* Карточки */
 .card {
   background: var(--panel); border: 1px solid var(--line);
   border-radius: 1.25rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
   padding: 2.2rem; margin-bottom: 2rem;
+  position: relative;
+  z-index: 10;
 }
 h1 { font-size: clamp(1.6rem, 4.5vw, 2.2rem); font-weight: 800; line-height: 1.25; color: var(--text-main); }
 h2 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
@@ -140,6 +142,8 @@ input[type="text"] {
   outline: none;
   background: #ffffff;
   color: var(--text-main);
+  position: relative;
+  z-index: 100;
   pointer-events: auto !important;
 }
 input[type="text"]:focus {
@@ -147,10 +151,9 @@ input[type="text"]:focus {
   box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
 }
 
-/* --- СТИЛИ ВОПРОСОВ И ВАРИАНТОВ --- */
+/* Стили вопросов */
 .progress-bar-wrap { width: 100%; height: 8px; background: #e2e8f0; border-radius: 9999px; overflow: hidden; margin-top: 1rem; }
 .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
-
 .question-title { font-size: 1.15rem; font-weight: 700; line-height: 1.5; margin: 1.2rem 0 1rem; color: #0f172a; }
 
 .mode-badge {
@@ -176,7 +179,7 @@ input[type="text"]:focus {
 }
 .option-text { font-size: 0.98rem; line-height: 1.45; color: #1e293b; font-weight: 500; cursor: pointer; }
 
-/* --- РЕВЬЮ ОТВЕТОВ --- */
+/* Ревью ответов */
 .review-item {
   border: 1px solid var(--line); border-radius: 0.85rem; padding: 1.25rem;
   margin-bottom: 1rem; background: #ffffff;
@@ -189,7 +192,7 @@ input[type="text"]:focus {
 .review-opt.is-correct { background: var(--green-bg); color: #14532d; font-weight: 600; }
 .review-opt.user-wrong { background: var(--red-bg); color: #7f1d1d; text-decoration: line-through; }
 
-/* --- ВСПЛЫВАЮЩИЙ TOAST --- */
+/* Toast-уведомление */
 .toast-container {
   position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%);
   z-index: 99999; display: flex; flex-direction: column; gap: 0.6rem;
@@ -242,22 +245,22 @@ footer {
 
   <!-- ЭКРАН 1: РЕГИСТРАЦИЯ СТУДЕНТА -->
   <section id="screenLogin" class="card">
-    <div class="eyebrow" style="margin-bottom:.5rem;">БАНК (180 ВОПРОСОВ)</div>
-    <h1>Тестирование: Анестезиология и реаниматология 4 курс</h1>
+    <div class="eyebrow" style="margin-bottom:.5rem;"> БАНК (180 ВОПРОСОВ)</div>
+    <h1>Тестирование: Анестезиология и реаниматология</h1>
     <p class="sub" style="margin-top:.6rem;">
-      Для каждого вопроса указано: <b>один</b> или <b>несколько</b> правильных ответов. Копирование материалов и создание снимков экрана защищены регламентом безопасности.
+      Для каждого вопроса указано: <b>один</b> или <b>несколько</b> правильных ответов. Выберите подходящий режим тестирования.
     </p>
 
     <div style="margin-top: 1.8rem;">
       <label class="mono" style="font-size: 11px; color: var(--text-sub); display: block; margin-bottom: 0.5rem; font-weight:700;">ФАМИЛИЯ, ИМЯ, ОТЧЕСТВО (ПРИ НАЛИЧИИ) И № ГРУППЫ СТУДЕНТА:</label>
-      <input type="text" id="studentNameInput" placeholder="Например: Иванов Иван Иванович, группа 1423" autocomplete="off" onkeydown="if(event.key==='Enter') startQuiz(false)">
+      <input type="text" id="studentNameInput" placeholder="Например: Иванов Иван Иванович, группа " autocomplete="off">
     </div>
 
     <div style="margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.8rem;">
-      <button type="button" class="btn btn-primary" onclick="startQuiz(false)">
+      <button type="button" id="btnStartExpress" class="btn btn-primary">
         🚀 Начать экспресс-тест (20 случайных)
       </button>
-      <button type="button" class="btn btn-soft" onclick="startQuiz(true)">
+      <button type="button" id="btnStartFull" class="btn btn-soft">
         📚 Полный тест (все 180 вопросов)
       </button>
     </div>
@@ -343,7 +346,6 @@ footer {
 <script>
 // --- БАЗА ИЗ 180 ВОПРОСОВ ---
 const fullQuizData = [
-  // Раздел 1. Основы анестезиологии и реаниматологии (1-70)
   { q: "1. Что является основными аспектами анестезиологии и реаниматологии как научно-практической дисциплины?", options: ["Изучение методов обезболивания", "Разработка механизмов анестезии", "Восстановление функций жизненно важных органов и систем", "Лечение хронических заболеваний"], correct: [0, 1, 2] },
   { q: "2. На стыке каких дисциплин возникла анестезиология и реаниматология?", options: ["Физиологии", "Фармакологии", "Клинической хирургии", "Патологической анатомии"], correct: [0, 1, 2] },
   { q: "3. Что входит в основную задачу анестезиологии?", options: ["Защита пациента от операционной травмы", "Создание оптимальных условий для работы хирурга", "Проведение профилактических осмотров", "Ведение амбулаторного приёма"], correct: [0, 1] },
@@ -507,7 +509,7 @@ const fullQuizData = [
   { q: "157. О чём свидетельствует внезапное падение ETCO₂ до нуля?", options: ["Об отключении дыхательного контура", "Об экстубации", "Об остановке кровообращения", "О гиповентиляции"], correct: [0, 1, 2] },
   { q: "158. О чём свидетельствует повышение ETCO₂?", options: ["О гиповентиляции", "Об увеличении продукции CO₂ (злокачественная гипертермия, сепсис)", "О гипервентиляции", "О тиреотоксическом кризе"], correct: [0, 1, 3] },
   { q: "159. Какие параметры контролируются при ИВЛ согласно Постановлению МЗ РБ № 99?", options: ["Все ответы верны (Ppeak, Pplat, Vte, FiO2)", "Только частота дыхания", "Только минутный объем", "Только влажность смеси"], correct: [0] },
-  { q: "160. Что предусматривает концепция протективной ИВЛ?", options: ["Все ответы верны (малые дыхательные объемы 6-8 мл/кг, Pplat <= 30, подбор PEEP, пермиссивная гиперкапния)", "Объемы 12-15 мл/кг", "Давление плато более 40 см вод. ст.", "Полный отказ от PEEP"], correct: [0] },
+  { q: "160. Что предусматривает концепция протективной ИВЛ?", options: ["Все ответы верны (малые дыхательные объемы 6-8 мл/кг, Pplat не более 30 см вод. ст., подбор PEEP, пермиссивная гиперкапния)", "Объемы 12-15 мл/кг", "Давление плато более 40 см вод. ст.", "Полный отказ от PEEP"], correct: [0] },
   { q: "161. Какие шкалы используются для оценки уровня сознания?", options: ["Шкала комы Глазго (ШКГ)", "Шкала FOUR", "Шкала RASS", "Шкала ASA"], correct: [0, 1, 2] },
   { q: "162. Какие компоненты оценивает шкала комы Глазго?", options: ["Глазные реакции (E)", "Вербальные реакции (V)", "Двигательные реакции (M)", "Стволовые рефлексы"], correct: [0, 1, 2] },
   { q: "163. Какие компоненты оценивает шкала FOUR?", options: ["Все ответы верны (глазные E, двигательные M, стволовые рефлексы B, дыхательный паттерн R)", "Только вербальный ответ", "Только память", "Исключительно мышечную силу"], correct: [0] },
@@ -530,8 +532,8 @@ const fullQuizData = [
   { q: "180. В каких случаях BIS-мониторинг особенно полезен?", options: ["При тотальной внутривенной анестезии", "При угрозе сохранения сознания у пациента", "При ингаляционной анестезии с контролем МАК", "При регионарной анестезии без седации"], correct: [0, 1] }
 ];
 
-const TEACHER_EMAIL = "i@ibabkow.ru";[cite: 13]
-const TG_GROUP_LINK = "https://t.me/+_vy3U_9RG6E3OGVi";[cite: 13]
+const TEACHER_EMAIL = "i@ibabkow.ru";[cite: 5]
+const TG_GROUP_LINK = "https://t.me/+_vy3U_9RG6E3OGVi";
 
 let currentQuizSet = [];
 let studentName = "";
@@ -559,17 +561,17 @@ function showToast(text) {
   setTimeout(() => { if (toast.parentNode) toast.remove(); }, 2500);
 }
 
-// Защита от PrintScreen (очистка буфера без блокировки интерфейса)
+// Защита от PrintScreen
 window.addEventListener('keyup', (e) => {
   if (e.key === 'PrintScreen') {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText('Скриншот защищен регламентом кафедры.');
+      navigator.clipboard.writeText('Скриншот защищен.');
     }
     showToast('Снятие скриншота ограничено регламентом 🔒');
   }
 });
 
-// Защита от потери фокуса окна при тестировании (блюр накладывается только на область вопроса)
+// Блюр зоны вопросов при потере фокуса
 window.addEventListener('blur', () => {
   if (isQuizActive) {
     const qBox = document.getElementById('quizQuestionContainer');
@@ -595,14 +597,13 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-// Блокировка системных сочетаний копирования во время прохождения вопросов
+// Запрет копирования служебными комбинациями
 document.addEventListener('keydown', (e) => {
   if (!isQuizActive) return;
-  
   if (e.ctrlKey && ['c', 'C', 'u', 'U', 's', 'S', 'p', 'P'].includes(e.key)) {
     if (e.target.tagName !== 'INPUT') {
       e.preventDefault();
-      showToast('Действие ограничено политикой безопасности 🔒');
+      showToast('Копирование ограничено 🔒');
       return false;
     }
   }
@@ -612,7 +613,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Перемешивание Фишера — Йетса
+// Алгоритм Фишера — Йетса
 function shuffle(array) {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -622,12 +623,31 @@ function shuffle(array) {
   return arr;
 }
 
+// Инициализация кнопок
+document.addEventListener('DOMContentLoaded', () => {
+  const btnExpress = document.getElementById('btnStartExpress');
+  const btnFull = document.getElementById('btnStartFull');
+  const inputEl = document.getElementById('studentNameInput');
+
+  if (btnExpress) {
+    btnExpress.onclick = () => startQuiz(false);
+  }
+  if (btnFull) {
+    btnFull.onclick = () => startQuiz(true);
+  }
+  if (inputEl) {
+    inputEl.onkeydown = (e) => {
+      if (e.key === 'Enter') startQuiz(false);
+    };
+  }
+});
+
 // Запуск теста
 function startQuiz(isFullMode) {
   const inputEl = document.getElementById('studentNameInput');
   const name = inputEl ? inputEl.value.trim() : "";
   if (!name) {
-    alert("Пожалуйста, введите Фамилию, Имя, Отчество (если имеется) и № группы!");
+    alert("Пожалуйста, введите Фамилию, Имя, Отчество и № группы!");
     if (inputEl) inputEl.focus();
     return;
   }
@@ -683,7 +703,7 @@ function renderQuestion() {
       <label class="option-text" for="opt_${idx}">${optText}</label>
     `;
 
-    item.addEventListener('click', (e) => {
+    item.onclick = (e) => {
       const input = item.querySelector('input');
       if (isSingle) {
         document.querySelectorAll('#optionsGrid .option-item').forEach(el => el.classList.remove('selected'));
@@ -695,7 +715,7 @@ function renderQuestion() {
         }
         item.classList.toggle('selected', input.checked);
       }
-    });
+    };
     grid.appendChild(item);
   });
 }
@@ -763,7 +783,7 @@ function finishQuiz() {
   generateReview();
 }
 
-// --- ОТРИСОВКА СЕРТИФИКАТА В CANVAS ---
+// Отрисовка сертификата
 function drawCertificate(pct) {
   const canvas = document.getElementById('certCanvas');
   const ctx = canvas.getContext('2d');
@@ -915,7 +935,7 @@ function sendToEmail() {
   const pct = Math.round((correctCount / total) * 100);
   const subject = encodeURIComponent(`Результат теста - ${studentName} - 4 курс`);
   const body = encodeURIComponent(
-`Здравствуйте, преподаватель!
+`Здравствуйте, Иван Леонидович!
 
 Направляю отчет о прохождении тестирования по курсу анестезиологии и реаниматологии:
 
@@ -928,7 +948,7 @@ function sendToEmail() {
 (Сгенерированный графический сертификат сохранен в формате PNG без возможности внесения правок).`
   );
 
-  window.location.href = `mailto:${TEACHER_EMAIL}?subject=${subject}&body=${body}`;
+  window.location.href = `mailto:${TEACHER_EMAIL}?subject=${subject}&body=${body}`;[cite: 5]
   showToast("Открываем почтовый клиент... ✉️");
 }
 
@@ -951,7 +971,7 @@ async function sendToTelegram() {
   }
 
   setTimeout(() => {
-    window.open(TG_GROUP_LINK, '_blank', 'noopener,noreferrer');
+    window.open(TG_GROUP_LINK, '_blank', 'noopener,noreferrer');[cite: 5]
   }, 450);
 }
 </script>
