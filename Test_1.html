@@ -32,24 +32,6 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* Запрет выделения текста на вопросах */
-.no-select, .card, .question-title, .option-text, .options-grid {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-  -webkit-touch-callout: none !important;
-}
-
-/* Поле ввода обязательно должно быть доступным для кликов и набора */
-input[type="text"] {
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  user-select: text !important;
-  pointer-events: auto !important;
-}
-
 body {
   background: var(--bg);
   color: var(--text-main);
@@ -61,27 +43,6 @@ body {
 
 .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 .wrap { max-width: 52rem; margin: 0 auto; padding: 0 1.25rem; width: 100%; }
-
-/* --- РЕЖИМ ЗАЩИТЫ ЭКРАНА И БЛЮР --- */
-.screen-protected {
-  filter: blur(35px) grayscale(100%) !important;
-  transition: filter 0.15s ease;
-}
-
-#antiCheatOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.96);
-  backdrop-filter: blur(20px);
-  z-index: 10000;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  text-align: center;
-  padding: 2rem;
-}
 
 /* Защита от печати */
 @media print {
@@ -98,7 +59,7 @@ body {
 
 /* --- ВЕРХНЯЯ СТРОКА --- */
 .topbar {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(8px);
   position: sticky; top: 0; z-index: 50;
@@ -117,17 +78,16 @@ body {
   letter-spacing: .05em; font-weight: 700; display: inline-flex; align-items: center; gap: .4rem;
 }
 .pill-primary { background: #dbeafe; color: var(--primary); border: 1px solid #bfdbfe; }
-.pill-shield { background: #fee2e2; color: var(--red); border: 1px solid #fecaca; }
 
 /* --- КНОПКИ --- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   gap: 0.6rem; border-radius: 0.75rem; padding: 0.85rem 1.4rem;
   font-weight: 600; font-size: 0.95rem; text-decoration: none;
-  cursor: pointer; border: none; font-family: inherit;
+  cursor: pointer !important; border: none; font-family: inherit;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 10;
+  pointer-events: auto !important;
+  user-select: none;
 }
 .btn:active { transform: scale(0.98); }
 .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
@@ -148,6 +108,24 @@ h2 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
 .sub { color: var(--text-sub); font-size: 0.95rem; line-height: 1.6; }
 .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .15em; color: var(--primary); font-weight: 700; text-transform: uppercase; }
 
+/* Поле ввода */
+input[type="text"] {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border-radius: 0.75rem;
+  border: 1.5px solid var(--line);
+  font-size: 1.1rem;
+  font-weight: 600;
+  outline: none;
+  background: #ffffff;
+  color: var(--text-main);
+  pointer-events: auto !important;
+}
+input[type="text"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+
 /* --- СТИЛИ ВОПРОСОВ И ВАРИАНТОВ --- */
 .progress-bar-wrap { width: 100%; height: 8px; background: #e2e8f0; border-radius: 9999px; overflow: hidden; margin-top: 1rem; }
 .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
@@ -166,7 +144,9 @@ h2 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
 .option-item {
   display: flex; align-items: flex-start; gap: 0.85rem; padding: 1rem 1.25rem;
   border-radius: 0.85rem; border: 1.5px solid var(--line); background: #fff;
-  cursor: pointer; transition: all 0.2s;
+  cursor: pointer !important; transition: all 0.2s;
+  pointer-events: auto !important;
+  user-select: none;
 }
 .option-item:hover { border-color: #cbd5e1; background: var(--panel-hover); }
 .option-item.selected { border-color: var(--primary); background: #eff6ff; }
@@ -174,7 +154,7 @@ h2 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
   width: 1.25rem; height: 1.25rem; margin-top: 0.15rem; accent-color: var(--primary);
   cursor: pointer;
 }
-.option-text { font-size: 0.98rem; line-height: 1.45; color: #1e293b; font-weight: 500; }
+.option-text { font-size: 0.98rem; line-height: 1.45; color: #1e293b; font-weight: 500; cursor: pointer; }
 
 /* --- РЕВЬЮ ОТВЕТОВ --- */
 .review-item {
@@ -220,18 +200,6 @@ footer {
 
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Оверлей при попытке скриншота или ухода с экрана -->
-<div id="antiCheatOverlay">
-  <div style="font-size: 3.5rem; margin-bottom: 0.8rem;">🛡️</div>
-  <h2 style="color: #ef4444; font-size: 1.5rem; margin-bottom: 0.5rem;">Режим защиты активен</h2>
-  <p style="color: #94a3b8; max-width: 440px; font-size: 0.95rem; line-height: 1.5;">
-    Создание скриншотов, копирование текста и переключение окон заблокированы во время тестирования.
-  </p>
-  <button type="button" class="btn btn-primary" style="margin-top: 1.5rem;" onclick="resumeTest()">
-    Вернуться к тестированию
-  </button>
-</div>
-
 <!-- Верхняя строка -->
 <header class="topbar">
   <div class="wrap">
@@ -239,13 +207,12 @@ footer {
       <div class="badge-logo">BIL</div>
       <div>
         <div style="font-size:.85rem;line-height:1.2;font-weight:700;color:var(--text-main);">
-          Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ
+          Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ[cite: 4, 5]
         </div>
       </div>
     </div>
-    <div class="mono" style="font-size:12px; display:flex; gap:0.5rem;">
-      <span class="pill pill-shield">ЗАЩИТА АКТИВНА</span>
-      <span class="pill pill-primary">4 КУРС</span>
+    <div class="mono" style="font-size:12px;">
+      <span class="pill pill-primary">4 КУРС (ЛД / ПД)</span>[cite: 8]
     </div>
   </div>
 </header>
@@ -254,15 +221,15 @@ footer {
 
   <!-- ЭКРАН 1: РЕГИСТРАЦИЯ СТУДЕНТА -->
   <section id="screenLogin" class="card">
-    <div class="eyebrow" style="margin-bottom:.5rem;">БАЗА (180 ВОПРОСОВ)</div>
+    <div class="eyebrow" style="margin-bottom:.5rem;">КАФЕДРАЛЬНЫЙ БАНК (180 ВОПРОСОВ)</div>
     <h1>Тестирование: Анестезиология и реаниматология</h1>
     <p class="sub" style="margin-top:.6rem;">
-      Для каждого вопроса выводится точное указание: <b>один</b> или <b>несколько</b> правильных ответов. Во время тестирования копирование материалов и создание снимков экрана запрещены.
+      Для каждого вопроса указано: <b>один</b> или <b>несколько</b> правильных ответов. Выберите удобный режим тестирования.
     </p>
 
     <div style="margin-top: 1.8rem;">
       <label class="mono" style="font-size: 11px; color: var(--text-sub); display: block; margin-bottom: 0.5rem; font-weight:700;">ФАМИЛИЯ, ИМЯ, ОТЧЕСТВО (ПРИ НАЛИЧИИ) И № ГРУППЫ СТУДЕНТА:</label>
-      <input type="text" id="studentNameInput" placeholder="Введите ФИО и номер группы..." style="width:100%; padding:0.9rem 1.2rem; border-radius:0.75rem; border:1.5px solid var(--line); font-size:1.1rem; font-weight:600; outline:none;" onkeydown="if(event.key==='Enter') startQuiz(false)">
+      <input type="text" id="studentNameInput" placeholder="Например: Иванов Иван Иванович, группа 1423" autocomplete="off" onkeydown="if(event.key==='Enter') startQuiz(false)">
     </div>
 
     <div style="margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.8rem;">
@@ -324,10 +291,10 @@ footer {
       <span class="mono" style="font-size: 11px; font-weight: 700; color: var(--text-sub); display:block; margin-bottom:0.8rem;">ОТПРАВИТЬ РЕЗУЛЬТАТ ПРЕПОДАВАТЕЛЮ:</span>
       <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
         <button type="button" class="btn btn-tg" onclick="sendToTelegram()">
-          В чат Telegram (копировать и перейти)
+          В чат Telegram группы (копировать и перейти)
         </button>
         <button type="button" class="btn btn-primary" onclick="sendToEmail()">
-          Отправить на e-mail: i@ibabkow.ru
+          Отправить на e-mail: i@ibabkow.ru[cite: 11]
         </button>
       </div>
     </div>
@@ -345,17 +312,18 @@ footer {
 
 <footer>
   <div class="wrap">
-    <div>Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ</div>
+    <div>Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ[cite: 4, 5]</div>
     <div style="margin-top: 0.4rem;">Модуль автоматизированного тестирования знаний студентов</div>
     <div class="mono" style="margin-top: 0.4rem; color: var(--text-main); font-weight:700;">
-      Автор разработки: <b>Бабков Иван Леонидович</b> &copy; 2026
+      Автор разработки: <b>Бабков Иван Леонидович</b> &copy; 2026[cite: 4, 5]
     </div>
   </div>
 </footer>
 
 <script>
-// --- БАЗА ВОПРОСОВ (180 ВОПРОСОВ) ---
+// --- БАЗА ИЗ 180 ВОПРОСОВ ---
 const fullQuizData = [
+  // Раздел 1. Основы анестезиологии и реаниматологии (1-70)
   { q: "1. Что является основными аспектами анестезиологии и реаниматологии как научно-практической дисциплины?", options: ["Изучение методов обезболивания", "Разработка механизмов анестезии", "Восстановление функций жизненно важных органов и систем", "Лечение хронических заболеваний"], correct: [0, 1, 2] },
   { q: "2. На стыке каких дисциплин возникла анестезиология и реаниматология?", options: ["Физиологии", "Фармакологии", "Клинической хирургии", "Патологической анатомии"], correct: [0, 1, 2] },
   { q: "3. Что входит в основную задачу анестезиологии?", options: ["Защита пациента от операционной травмы", "Создание оптимальных условий для работы хирурга", "Проведение профилактических осмотров", "Ведение амбулаторного приёма"], correct: [0, 1] },
@@ -410,7 +378,7 @@ const fullQuizData = [
   { q: "52. Какие типы ноцицепторов описаны в тексте?", options: ["Все ответы верны (механорецепторы, терморецепторы, хеморецепторы, полимодальные ноцицепторы)", "Только механорецепторы", "Только терморецепторы", "Исключительно барорецепторы"], correct: [0] },
   { q: "53. Какие волокна обеспечивают проведение боли?", options: ["Aδ-волокна — плохо миелинизированные", "C-волокна — немиелинизированные", "Aα-волокна — хорошо миелинизированные", "B-волокна — слабо миелинизированные"], correct: [0, 1] },
   { q: "54. Какими характеристиками обладает «первичная» (эпикритическая) боль?", options: ["Проводится Aδ-волокнами", "Быстрое (в течение одной секунды) локализованное восприятие", "Короткая продолжительность", "Медленное начало и нечёткая локализация"], correct: [0, 1, 2] },
-  { q: "55. Какими характеристиками обладает «вторичная» (протопатическая) боль?", options: ["Проводится C-волокнами", "Медленное начало (от нескольких секунд до минут)", "Нечёткая локализация", "Быстрое локализованное восприятие"], correct: [0, 1, 2] },
+  { q: "55. Какими характеристиками обладает «вторичная» (протопатитическая) боль?", options: ["Проводится C-волокнами", "Медленное начало (от нескольких секунд до минут)", "Нечёткая локализация", "Быстрое локализованное восприятие"], correct: [0, 1, 2] },
   { q: "56. Какие группы веществ входят в состав общих анестетиков despite их разнородную химическую структуру?", options: ["Все ответы верны (инертные газы, галогенированные углеводороды, барбитураты, производные имидазола)", "Только опиоиды", "Только местные анестетики", "Исключительно транквилизаторы"], correct: [0] },
   { q: "57. Какое состояние характеризует общую анестезию?", options: ["Все ответы верны (обратимая утрата сознания, анальгезия, амнезия, угнетение рефлексов и миорелаксация)", "Только седация", "Только обезболивание", "Необратимая кома"], correct: [0] },
   { q: "58. Кто предложил липоидную теорию общей анестезии?", options: ["Герман (1866)", "Мейер и Овертон (1899–1901)", "Траубе (1904–1913)", "Л. Полинг (1961)"], correct: [0, 1] },
@@ -551,7 +519,6 @@ let currentIndex = 0;
 let userAnswers = [];
 let correctCount = 0;
 let verificationHash = "";
-let isQuizActive = false; // Флаг: активна ли фаза решения вопросов
 
 const praisePhrases = [
   "Блестяще! Абсолютно точно! 🎯",
@@ -570,88 +537,6 @@ function showToast(text) {
   setTimeout(() => { if (toast.parentNode) toast.remove(); }, 2500);
 }
 
-// Защитный оверлей и функции экрана
-function triggerScreenGuard(reasonText) {
-  const main = document.getElementById('mainContent');
-  const overlay = document.getElementById('antiCheatOverlay');
-  if (main) main.classList.add('screen-protected');
-  if (overlay) overlay.style.display = 'flex';
-  showToast(reasonText || "Действие ограничено политикой безопасности 🛡️");
-}
-
-function resumeTest() {
-  const main = document.getElementById('mainContent');
-  const overlay = document.getElementById('antiCheatOverlay');
-  if (main) main.classList.remove('screen-protected');
-  if (overlay) overlay.style.display = 'none';
-}
-
-function clearClipboard() {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText("Копирование материалов теста защищено.");
-  }
-}
-
-// Установка обработчиков защиты после загрузки DOM
-document.addEventListener('DOMContentLoaded', () => {
-  // 1. Запрет контекстного меню (ПКМ) только на карточках вопросов
-  document.addEventListener('contextmenu', (e) => {
-    if (isQuizActive) {
-      e.preventDefault();
-      showToast("Контекстное меню отключено во время теста 🔒");
-    }
-  });
-
-  // 2. Блокировка событий буфера обмена только при активном тесте
-  ['copy', 'cut', 'paste', 'dragstart'].forEach((evt) => {
-    document.addEventListener(evt, (e) => {
-      if (isQuizActive && e.target.tagName !== 'INPUT') {
-        e.preventDefault();
-      }
-    });
-  });
-
-  // 3. Блокировка клавиш PrintScreen и служебных комбинаций
-  document.addEventListener('keydown', (e) => {
-    if (!isQuizActive) return;
-
-    if (e.key === 'PrintScreen' || e.code === 'PrintScreen') {
-      e.preventDefault();
-      triggerScreenGuard("Скриншоты экрана заблокированы!");
-      clearClipboard();
-      return false;
-    }
-
-    // Ctrl+C, Ctrl+A, Ctrl+X, Ctrl+U, Ctrl+P, Ctrl+S во время вопросов
-    if (e.ctrlKey && ['c', 'C', 'a', 'A', 'x', 'X', 'u', 'U', 'p', 'P', 's', 'S'].includes(e.key)) {
-      if (e.target.tagName !== 'INPUT') {
-        e.preventDefault();
-        showToast("Данное сочетание клавиш отключено 🔒");
-        return false;
-      }
-    }
-
-    // F12
-    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key))) {
-      e.preventDefault();
-      return false;
-    }
-  });
-
-  // 4. Детекция смены вкладки / окна (только когда идет решение теста)
-  window.addEventListener('blur', () => {
-    if (isQuizActive) {
-      triggerScreenGuard("Обнаружен уход с экрана теста или захват экрана!");
-    }
-  });
-
-  document.addEventListener('visibilitychange', () => {
-    if (isQuizActive && document.hidden) {
-      triggerScreenGuard("Смена активной вкладки заблокирована регламентом!");
-    }
-  });
-});
-
 // Перемешивание Фишера — Йетса
 function shuffle(array) {
   const arr = [...array];
@@ -662,7 +547,7 @@ function shuffle(array) {
   return arr;
 }
 
-// Запуск теста
+// Функция старта тестирования
 function startQuiz(isFullMode) {
   const inputEl = document.getElementById('studentNameInput');
   const name = inputEl ? inputEl.value.trim() : "";
@@ -681,8 +566,6 @@ function startQuiz(isFullMode) {
   } else {
     currentQuizSet = shuffle(fullQuizData).slice(0, 20);
   }
-
-  isQuizActive = true; // Активируем защиту
 
   document.getElementById('screenLogin').style.display = 'none';
   document.getElementById('screenResult').style.display = 'none';
@@ -776,9 +659,6 @@ function quitQuiz() {
 }
 
 function finishQuiz() {
-  isQuizActive = false; // Отключаем жесткую блокировку
-  resumeTest();
-
   document.getElementById('screenQuiz').style.display = 'none';
   document.getElementById('screenResult').style.display = 'block';
 
@@ -967,7 +847,7 @@ function sendToEmail() {
 (Сгенерированный графический сертификат сохранен в формате PNG без возможности внесения правок).`
   );
 
-  window.location.href = `mailto:${TEACHER_EMAIL}?subject=${subject}&body=${body}`;
+  window.location.href = `mailto:${TEACHER_EMAIL}?subject=${subject}&body=${body}`;[cite: 11]
   showToast("Открываем почтовый клиент... ✉️");
 }
 
@@ -990,7 +870,7 @@ async function sendToTelegram() {
   }
 
   setTimeout(() => {
-    window.open(TG_GROUP_LINK, '_blank', 'noopener,noreferrer');
+    window.open(TG_GROUP_LINK, '_blank', 'noopener,noreferrer');[cite: 11]
   }, 450);
 }
 </script>
