@@ -103,6 +103,13 @@ body {
 }
 .pill-primary { background: #dbeafe; color: var(--primary); border: 1px solid #bfdbfe; }
 .pill-shield { background: #fee2e2; color: var(--red); border: 1px solid #fecaca; }
+.pill-timer { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.pill-timer.urgent { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; animation: pulse 1s infinite; }
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
 
 /* Кнопки */
 .btn {
@@ -191,6 +198,7 @@ input[type="text"]:focus {
 }
 .review-item.correct { border-left: 5px solid var(--green); }
 .review-item.incorrect { border-left: 5px solid var(--red); }
+.review-item.unanswered { border-left: 5px solid var(--amber); }
 .review-opt {
   padding: 0.4rem 0.6rem; border-radius: 0.4rem; margin: 0.25rem 0; font-size: 0.9rem;
 }
@@ -250,10 +258,10 @@ footer {
 
   <!-- ЭКРАН 1: РЕГИСТРАЦИЯ СТУДЕНТА -->
   <section id="screenLogin" class="card">
-    <div class="eyebrow" style="margin-bottom:.5rem;">БАНК (180 ВОПРОСОВ)</div>
+    <div class="eyebrow" style="margin-bottom:.5rem;">КАФЕДРАЛЬНЫЙ БАНК (180 ВОПРОСОВ)</div>
     <h1>Тестирование: Анестезиология и реаниматология</h1>
     <p class="sub" style="margin-top:.6rem;">
-      Для каждого вопроса указано: <b>один</b> или <b>несколько</b> правильных ответов. Выберите подходящий режим тестирования.
+      Для каждого вопроса указано: <b>один</b> или <b>несколько</b> правильных ответов. На экспресс-тест (20 заданий) отводится строго <b>20 минут</b>. При истечении времени тест завершается автоматически с подсчетом уже данных ответов.
     </p>
 
     <div style="margin-top: 1.8rem;">
@@ -263,10 +271,10 @@ footer {
 
     <div style="margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.8rem;">
       <button type="button" id="btnStartExpress" class="btn btn-primary" onclick="startQuiz(false)">
-        🚀 Начать экспресс-тест (20 случайных)
+        🚀 Начать экспресс-тест (20 вопросов / 20 минут)
       </button>
       <button type="button" id="btnStartFull" class="btn btn-soft" onclick="startQuiz(true)">
-        📚 Полный тест (все 180 вопросов)
+        📚 Полный тест (все 180 вопросов / без ограничения времени)
       </button>
     </div>
   </section>
@@ -274,7 +282,10 @@ footer {
   <!-- ЭКРАН 2: ТЕСТИРОВАНИЕ -->
   <section id="screenQuiz" class="card" style="display: none;">
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-      <span class="mono pill pill-primary" id="quizStudentLabel">—</span>
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <span class="mono pill pill-primary" id="quizStudentLabel">—</span>
+        <span class="mono pill pill-timer" id="quizTimerLabel" style="display:none;">⏱️ 20:00</span>
+      </div>
       <span class="mono" style="font-weight:700; color:var(--text-sub);" id="quizProgressNum">Вопрос 1 / 20</span>
     </div>
 
@@ -549,6 +560,11 @@ let correctCount = 0;
 let verificationHash = "";
 let isQuizActive = false;
 
+// Таймер
+let timerInterval = null;
+let timeRemaining = 20 * 60; // 20 минут в секундах
+let isTimedMode = false;
+
 const praisePhrases = [
   "Блестяще! Абсолютно точно! 🎯",
   "Превосходно! Верный ответ! 🌟",
@@ -676,6 +692,50 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// Управление таймером
+function startTimer() {
+  const timerLabel = document.getElementById('quizTimerLabel');
+  timerLabel.style.display = 'inline-flex';
+  timerLabel.classList.remove('urgent');
+  timeRemaining = 20 * 60; // 20 минут
+
+  updateTimerDisplay();
+
+  if (timerInterval) clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    timeRemaining--;
+    updateTimerDisplay();
+
+    if (timeRemaining <= 180) { // последние 3 минуты
+      timerLabel.classList.add('urgent');
+    }
+
+    if (timeRemaining <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      showToast("⏱️ Время вышло! Тестирование завершено.");
+      finishQuiz();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const timerLabel = document.getElementById('quizTimerLabel');
+  const minutes = Math.floor(timeRemaining / 60);
+  const seconds = timeRemaining % 60;
+  timerLabel.textContent = `⏱️ ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  const timerLabel = document.getElementById('quizTimerLabel');
+  if (timerLabel) timerLabel.style.display = 'none';
+}
+
 // Запуск теста
 function startQuiz(isFullMode) {
   const inputEl = document.getElementById('studentNameInput');
@@ -692,8 +752,12 @@ function startQuiz(isFullMode) {
 
   if (isFullMode) {
     currentQuizSet = [...fullQuizData];
+    isTimedMode = false;
+    stopTimer();
   } else {
     currentQuizSet = shuffle(fullQuizData).slice(0, 20);
+    isTimedMode = true;
+    startTimer();
   }
 
   isQuizActive = true;
@@ -784,13 +848,15 @@ function nextQuestion() {
 }
 
 function quitQuiz() {
-  if (confirm("Вы действительно хотите завершить тестирование досрочно?")) {
+  if (confirm("Вы действительно хотите завершить тестирование досрочно? Будут учтены только уже данные ответы.")) {
     finishQuiz();
   }
 }
 
 function finishQuiz() {
   isQuizActive = false;
+  stopTimer();
+
   const qBox = document.getElementById('quizQuestionContainer');
   if (qBox) qBox.classList.remove('blur-shield');
 
@@ -798,10 +864,11 @@ function finishQuiz() {
   document.getElementById('screenResult').style.display = 'block';
 
   const total = currentQuizSet.length;
+  const answeredCount = userAnswers.length;
   const pct = Math.round((correctCount / total) * 100);
 
   document.getElementById('scorePercent').textContent = `${pct}%`;
-  document.getElementById('scoreDetail').textContent = `Успешно решено: ${correctCount} из ${total} заданий`;
+  document.getElementById('scoreDetail').textContent = `Успешно решено: ${correctCount} из ${total} заданий (Отвечено на ${answeredCount} из ${total})`;
 
   // Генерация контрольного хэша
   const salt = "BIL_BSMU_2026";
@@ -906,18 +973,19 @@ function generateReview() {
   container.innerHTML = '';
 
   currentQuizSet.forEach((q, idx) => {
-    const userAns = userAnswers[idx] || [];
+    const userAns = userAnswers[idx];
+    const isAnswered = Array.isArray(userAns);
     const correctAns = q.correct;
-    const isFullCorrect = userAns.length === correctAns.length &&
+    const isFullCorrect = isAnswered && userAns.length === correctAns.length &&
                           userAns.every((val, i) => val === correctAns[i]);
 
     const box = document.createElement('div');
-    box.className = `review-item ${isFullCorrect ? 'correct' : 'incorrect'}`;
+    box.className = `review-item ${!isAnswered ? 'unanswered' : (isFullCorrect ? 'correct' : 'incorrect')}`;
 
     let optsHtml = '';
     q.options.forEach((optText, oIdx) => {
       const isTarget = correctAns.includes(oIdx);
-      const isUser = userAns.includes(oIdx);
+      const isUser = isAnswered && userAns.includes(oIdx);
 
       let cls = '';
       let badge = '';
@@ -933,6 +1001,14 @@ function generateReview() {
     });
 
     const isSingle = q.correct.length === 1;
+    let statusTitle = '';
+    if (!isAnswered) {
+      statusTitle = `<div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem; color:var(--amber);">⚠️ Время истекло (Ответ не был дан)</div>`;
+    } else if (isFullCorrect) {
+      statusTitle = `<div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem; color:var(--green);">✅ Полностью верно (+1 балл)</div>`;
+    } else {
+      statusTitle = `<div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem; color:var(--red);">❌ Ошибка в выборе</div>`;
+    }
 
     box.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
@@ -943,9 +1019,7 @@ function generateReview() {
       <div style="font-weight:700; font-size:1rem; margin-bottom:0.5rem; color:#0f172a;">
         Вопрос ${idx + 1}: ${q.q}
       </div>
-      <div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem; color:${isFullCorrect ? 'var(--green)' : 'var(--red)'};">
-        ${isFullCorrect ? '✅ Полностью верно (+1 балл)' : '❌ Ошибка в выборе'}
-      </div>
+      ${statusTitle}
       ${optsHtml}
     `;
     container.appendChild(box);
