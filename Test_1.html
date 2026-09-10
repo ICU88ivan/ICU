@@ -44,24 +44,29 @@ body {
 .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 .wrap { max-width: 52rem; margin: 0 auto; padding: 0 1.25rem; width: 100%; }
 
-/* Защита от выделения текста только в зоне вопросов */
+/* ЗАЩИТА 1: Запрет выделения текста на вопросах, вариантах И в блоке разбора ошибок */
 #screenQuiz .question-title, 
 #screenQuiz .option-text, 
-#screenQuiz .mode-badge {
+#screenQuiz .mode-badge,
+#reviewSection,
+#reviewSection *,
+.review-item,
+.review-opt {
   -webkit-user-select: none !important;
   -moz-user-select: none !important;
   -ms-user-select: none !important;
   user-select: none !important;
+  -webkit-touch-callout: none !important;
 }
 
-/* Мягкий блюр только зоны вопроса при переключении окон */
+/* ЗАЩИТА 2: Блюр при переключении окон */
 .blur-shield {
   filter: blur(24px) grayscale(100%) !important;
   opacity: 0.15 !important;
   transition: filter 0.15s ease, opacity 0.15s ease;
 }
 
-/* Защита от печати и сохранения в PDF */
+/* ЗАЩИТА 3: Запрет печати и сохранения в PDF */
 @media print {
   body * { display: none !important; }
   body::after {
@@ -623,6 +628,28 @@ function shuffle(array) {
   }
   return arr;
 }
+
+// Инициализация кнопок
+document.addEventListener('DOMContentLoaded', () => {
+  const btnExpress = document.getElementById('btnStartExpress');
+  const btnFull = document.getElementById('btnStartFull');
+  const inputEl = document.getElementById('studentNameInput');
+
+  if (btnExpress) {
+    btnExpress.onclick = () => startQuiz(false);
+  }
+  if (btnFull) {
+    btnFull.onclick = () => startQuiz(true);
+  }
+  if (inputEl) {
+    inputEl.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        startQuiz(false);
+      }
+    };
+  }
+});
 
 // Запуск теста
 function startQuiz(isFullMode) {
