@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-<title>Тестирование: Анестезиология и реаниматология 4 курс</title>
+<title>Тестирование: Анестезиология и реаниматология 4 курс Промежуточный тест</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
@@ -187,10 +187,10 @@ footer {
 
   <!-- ЭКРАН 1: РЕГИСТРАЦИЯ СТУДЕНТА -->
   <section id="screenLogin" class="card">
-    <div class="eyebrow" style="margin-bottom:.5rem;">ПРОВЕРЕННАЯ БАЗА (180 ВОПРОСОВ)</div>
+    <div class="eyebrow" style="margin-bottom:.5rem;">БАЗА (180 ВОПРОСОВ)</div>
     <h1>Тестирование: Анестезиология и реаниматология</h1>
     <p class="sub" style="margin-top:.6rem;">
-      Все вопросы сверены с эталоном кафедры. Для каждого вопроса выводится точное указание: <b>один</b> или <b>несколько</b> правильных ответов.
+      Для каждого вопроса выводится точное указание: <b>один</b> или <b>несколько</b> правильных ответов.
     </p>
 
     <div style="margin-top: 1.8rem;">
@@ -520,7 +520,7 @@ function shuffle(array) {
 function startQuiz(isFullMode) {
   const name = document.getElementById('studentNameInput').value.trim();
   if (!name) {
-    alert("Пожалуйста, введите фамилию и имя!");
+    alert("Пожалуйста, введите Фамилию, Имя, Отчество (если имеется) № группы !");
     return;
   }
   studentName = name;
