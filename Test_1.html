@@ -32,6 +32,15 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Полный запрет выделения текста и контекстных меню */
+body, .card, .question-title, .option-text, .options-grid, main {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
 body {
   background: var(--bg);
   color: var(--text-main);
@@ -43,6 +52,41 @@ body {
 
 .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 .wrap { max-width: 52rem; margin: 0 auto; padding: 0 1.25rem; width: 100%; }
+
+/* --- РЕЖИМ ЗАЩИТЫ ЭКРАНА И БЛЮР --- */
+.screen-protected {
+  filter: blur(35px) grayscale(100%) !important;
+  pointer-events: none !important;
+  transition: filter 0.15s ease;
+}
+
+#antiCheatOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(20px);
+  z-index: 10000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Защита от печати */
+@media print {
+  body * { display: none !important; }
+  body::after {
+    content: "Печать материалов теста и экспорт в PDF строго запрещены!";
+    display: block !important;
+    font-size: 22pt;
+    text-align: center;
+    color: red;
+    margin-top: 20%;
+  }
+}
 
 /* --- ВЕРХНЯЯ СТРОКА --- */
 .topbar {
@@ -65,6 +109,7 @@ body {
   letter-spacing: .05em; font-weight: 700; display: inline-flex; align-items: center; gap: .4rem;
 }
 .pill-primary { background: #dbeafe; color: var(--primary); border: 1px solid #bfdbfe; }
+.pill-shield { background: #fee2e2; color: var(--red); border: 1px solid #fecaca; }
 
 /* --- КНОПКИ --- */
 .btn {
@@ -99,7 +144,6 @@ h2 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
 
 .question-title { font-size: 1.15rem; font-weight: 700; line-height: 1.5; margin: 1.2rem 0 1rem; color: #0f172a; }
 
-/* Бейджи типа выбора */
 .mode-badge {
   display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem;
   font-family: 'JetBrains Mono', monospace; padding: 0.35rem 0.65rem; border-radius: 0.5rem;
@@ -112,7 +156,7 @@ h2 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
 .option-item {
   display: flex; align-items: flex-start; gap: 0.85rem; padding: 1rem 1.25rem;
   border-radius: 0.85rem; border: 1.5px solid var(--line); background: #fff;
-  cursor: pointer; transition: all 0.2s; user-select: none;
+  cursor: pointer; transition: all 0.2s;
 }
 .option-item:hover { border-color: #cbd5e1; background: var(--panel-hover); }
 .option-item.selected { border-color: var(--primary); background: #eff6ff; }
@@ -122,7 +166,7 @@ h2 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
 }
 .option-text { font-size: 0.98rem; line-height: 1.45; color: #1e293b; font-weight: 500; }
 
-/* --- СТИЛИ РЕВЬЮ ОТВЕТОВ --- */
+/* --- РЕВЬЮ ОТВЕТОВ --- */
 .review-item {
   border: 1px solid var(--line); border-radius: 0.85rem; padding: 1.25rem;
   margin-bottom: 1rem; background: #ffffff;
@@ -135,10 +179,10 @@ h2 { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
 .review-opt.is-correct { background: var(--green-bg); color: #14532d; font-weight: 600; }
 .review-opt.user-wrong { background: var(--red-bg); color: #7f1d1d; text-decoration: line-through; }
 
-/* --- ВСПЛЫВАЮЩИЙ TOAST --- */
+/* --- ВСЕПЛЫВАЮЩИЙ TOAST --- */
 .toast-container {
   position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%);
-  z-index: 9999; display: flex; flex-direction: column; gap: 0.6rem;
+  z-index: 99999; display: flex; flex-direction: column; gap: 0.6rem;
   pointer-events: none; width: 90%; max-width: 440px; align-items: center;
 }
 .toast {
@@ -166,6 +210,18 @@ footer {
 
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- Оверлей при попытке скриншота или ухода с экрана -->
+<div id="antiCheatOverlay">
+  <div style="font-size: 3.5rem; margin-bottom: 0.8rem;">🛡️</div>
+  <h2 style="color: #ef4444; font-size: 1.5rem; margin-bottom: 0.5rem;">Режим защиты активен</h2>
+  <p style="color: #94a3b8; max-width: 440px; font-size: 0.95rem; line-height: 1.5;">
+    Создание скриншотов, копирование текста и переключение окон заблокированы.
+  </p>
+  <button type="button" class="btn btn-primary" style="margin-top: 1.5rem;" onclick="resumeTest()">
+    Вернуться к тестированию
+  </button>
+</div>
+
 <!-- Верхняя строка -->
 <header class="topbar">
   <div class="wrap">
@@ -173,12 +229,13 @@ footer {
       <div class="badge-logo">BIL</div>
       <div>
         <div style="font-size:.85rem;line-height:1.2;font-weight:700;color:var(--text-main);">
-          Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ[cite: 4, 5]
+          Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ
         </div>
       </div>
     </div>
-    <div class="mono" style="font-size:12px;">
-      <span class="pill pill-primary">Для ЛД и ПД</span>[cite: 8]
+    <div class="mono" style="font-size:12px; display:flex; gap:0.5rem;">
+      <span class="pill pill-shield">ЗАЩИТА АКТИВНА</span>
+      <span class="pill pill-primary">4 КУРС</span>
     </div>
   </div>
 </header>
@@ -190,12 +247,12 @@ footer {
     <div class="eyebrow" style="margin-bottom:.5rem;">БАЗА (180 ВОПРОСОВ)</div>
     <h1>Тестирование: Анестезиология и реаниматология</h1>
     <p class="sub" style="margin-top:.6rem;">
-      Для каждого вопроса выводится точное указание: <b>один</b> или <b>несколько</b> правильных ответов.
+      Для каждого вопроса выводится точное указание: <b>один</b> или <b>несколько</b> правильных ответов. Во время тестирования копирование материалов и создание снимков экрана запрещены.
     </p>
 
     <div style="margin-top: 1.8rem;">
-      <label class="mono" style="font-size: 11px; color: var(--text-sub); display: block; margin-bottom: 0.5rem; font-weight:700;">ФАМИЛИЯ, ИМЯ, Отчесто (если имеется) № группы СТУДЕНТА:</label>
-      <input type="text" id="studentNameInput" placeholder="Введите фамилию и имя..." style="width:100%; padding:0.9rem 1.2rem; border-radius:0.75rem; border:1.5px solid var(--line); font-size:1.1rem; font-weight:600; outline:none;" onkeydown="if(event.key==='Enter') startQuiz(false)">
+      <label class="mono" style="font-size: 11px; color: var(--text-sub); display: block; margin-bottom: 0.5rem; font-weight:700;">ФАМИЛИЯ, ИМЯ, ОТЧЕСТВО (ПРИ НАЛИЧИИ) И № ГРУППЫ СТУДЕНТА:</label>
+      <input type="text" id="studentNameInput" placeholder="Введите ФИО и номер группы..." style="width:100%; padding:0.9rem 1.2rem; border-radius:0.75rem; border:1.5px solid var(--line); font-size:1.1rem; font-weight:600; outline:none;" onkeydown="if(event.key==='Enter') startQuiz(false)">
     </div>
 
     <div style="margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.8rem;">
@@ -208,7 +265,7 @@ footer {
     </div>
   </section>
 
-  <!-- ЭКРАН 2: ПРОХОЖДЕНИЕ ТЕСТА -->
+  <!-- ЭКРАН 2: ТЕСТИРОВАНИЕ -->
   <section id="screenQuiz" class="card" style="display: none;">
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
       <span class="mono pill pill-primary" id="quizStudentLabel">—</span>
@@ -220,7 +277,6 @@ footer {
     </div>
 
     <div style="margin-top: 1.5rem;">
-      <!-- Четкое указание количества ответов -->
       <span id="questionModeBadge" class="mode-badge"></span>
       <div class="question-title" id="questionText">Текст вопроса...</div>
     </div>
@@ -242,7 +298,6 @@ footer {
       <p class="sub" id="scoreDetail">Правильных ответов: 0 из 0</p>
     </div>
 
-    <!-- Защищенный сгенерированный сертификат (Canvas) -->
     <div style="margin: 2rem 0; text-align: center;">
       <div class="mono" style="font-size: 11px; font-weight: 700; color: var(--text-sub); margin-bottom: 0.5rem;">
         ОФИЦИАЛЬНЫЙ ГРАФИЧЕСКИЙ СЕРТИФИКАТ (БЕЗ ВОЗМОЖНОСТИ ПРАВКИ):
@@ -255,12 +310,11 @@ footer {
       </div>
     </div>
 
-    <!-- Кнопки отправки -->
     <div style="border-top: 1px solid var(--line); padding-top: 1.5rem; margin-top: 1.5rem;">
       <span class="mono" style="font-size: 11px; font-weight: 700; color: var(--text-sub); display:block; margin-bottom:0.8rem;">ОТПРАВИТЬ РЕЗУЛЬТАТ ПРЕПОДАВАТЕЛЮ:</span>
       <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
         <button type="button" class="btn btn-tg" onclick="sendToTelegram()">
-          В чат Telegram (копировать и перейти)
+          В чат Telegram группы (копировать и перейти)
         </button>
         <button type="button" class="btn btn-primary" onclick="sendToEmail()">
           Отправить на e-mail: i@ibabkow.ru
@@ -268,7 +322,6 @@ footer {
       </div>
     </div>
 
-    <!-- Кнопка показа правильных ответов -->
     <div style="margin-top: 2rem;">
       <button type="button" class="btn btn-soft" id="btnToggleReview" onclick="toggleReview()">
         📖 Показать правильные ответы и разбор ошибок ▼
@@ -282,18 +335,18 @@ footer {
 
 <footer>
   <div class="wrap">
-    <div>Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ[cite: 4, 5]</div>
+    <div>Кафедра анестезиологии и реаниматологии с курсом ПК · БГМУ</div>
     <div style="margin-top: 0.4rem;">Модуль автоматизированного тестирования знаний студентов</div>
     <div class="mono" style="margin-top: 0.4rem; color: var(--text-main); font-weight:700;">
-      Автор разработки: <b>Бабков Иван Леонидович</b> &copy; 2026[cite: 4, 5]
+      Автор разработки: <b>Бабков Иван Леонидович</b> &copy; 2026
     </div>
   </div>
 </footer>
 
 <script>
-// --- ПОЛНАЯ БАЗА 180 ВОПРОСОВ, СВЕРЕННАЯ С ЭТАЛОНОМ И С ДОБАВЛЕНИЕМ «ВСЕ ВЕРНО» ---
+// --- БАЗА ИЗ 180 ВОПРОСОВ ---
 const fullQuizData = [
-  // Раздел 1. Основы анестезиологии и реаниматологии (вопросы 1-70)
+  // Раздел 1. Основы анестезиологии и реаниматологии (1-70)
   { q: "1. Что является основными аспектами анестезиологии и реаниматологии как научно-практической дисциплины?", options: ["Изучение методов обезболивания", "Разработка механизмов анестезии", "Восстановление функций жизненно важных органов и систем", "Лечение хронических заболеваний"], correct: [0, 1, 2] },
   { q: "2. На стыке каких дисциплин возникла анестезиология и реаниматология?", options: ["Физиологии", "Фармакологии", "Клинической хирургии", "Патологической анатомии"], correct: [0, 1, 2] },
   { q: "3. Что входит в основную задачу анестезиологии?", options: ["Защита пациента от операционной травмы", "Создание оптимальных условий для работы хирурга", "Проведение профилактических осмотров", "Ведение амбулаторного приёма"], correct: [0, 1] },
@@ -365,7 +418,7 @@ const fullQuizData = [
   { q: "69. Что включает проведение анестезии?", options: ["Постоянный интраоперационный мониторинг витальных функций", "Адекватную инфузионно-трансфузионную терапию", "Своевременную коррекцию возникающих нарушений гомеостаза", "Послеоперационное ведение только хирургом"], correct: [0, 1, 2] },
   { q: "70. Что обеспечивает анестезиолог в послеоперационном периоде?", options: ["Все ответы верны (наблюдение за пациентом, посиндромную терапию боли, продленную ИВЛ, реанимационные меры)", "Только выписку из отделения", "Заполнение истории болезни", "Амбулаторный контроль"], correct: [0] },
 
-  // Раздел 2. Организация службы анестезиологии и реаниматологии (вопросы 71-120)
+  // Раздел 2. Организация службы (71-120)
   { q: "71. Какая статья Конституции Республики Беларусь закрепляет право граждан на охрану здоровья?", options: ["Статья 41", "Статья 45", "Статья 48", "Статья 50"], correct: [1] },
   { q: "72. В какой редакции действует Закон РБ «О здравоохранении»?", options: ["От 18 июня 1993 года, в редакции от 11 декабря 2020 года № 94-З", "От 18 июня 1993 года, в редакции от 11 декабря 2018 года № 90-З", "От 18 июня 1993 года, в редакции от 11 декабря 2021 года № 96-З", "От 18 июня 1993 года, без редакций"], correct: [0] },
   { q: "73. Какой закон устанавливает правовые основы констатации смерти мозга и забора органов для трансплантации?", options: ["Закон «О здравоохранении»", "Закон «О трансплантации органов и тканей человека»", "Постановление МЗ РБ № 99", "Приказ МЗ РБ № 483"], correct: [1] },
@@ -417,7 +470,7 @@ const fullQuizData = [
   { q: "119. Сколько времени может составлять предоперационная подготовка при расслоении аневризмы брюшной аорты в ОАиР?", options: ["Не более 30 минут", "Не более 1 часа", "Не более 1,5 часов", "Не более 2 часов"], correct: [1] },
   { q: "120. Что относится к противопоказаниям для госпитализации в ОАиР?", options: ["Острый инфаркт миокарда", "Хронические заболевания в терминальной стадии и вегетативное состояние", "Септический шок", "Тяжёлая черепно-мозговая травма"], correct: [1] },
 
-  // Раздел 3. Мониторинг в анестезиологии и реаниматологии (вопросы 121-180)
+  // Раздел 3. Мониторинг (121-180)
   { q: "121. Как определяется мониторинг в современной анестезиологии и реаниматологии?", options: ["Интенсивное непрерывное наблюдение за состоянием пациента во время анестезии", "Наблюдение при проведении интенсивной терапии или реанимационных мероприятий", "Однократный осмотр пациента перед операцией", "Реализуется с помощью комплекса визуальных, инструментальных и лабораторных методов"], correct: [0, 1, 3] },
   { q: "122. Что является главной задачей мониторинга?", options: ["Все ответы верны (сбор полной информации, констатация, оценка динамики и тенденций, прогнозирование)", "Только констатация текущего состояния", "Только распечатка трендов ЭКГ", "Только сбор анамнеза"], correct: [0] },
   { q: "123. Какие принципы лежат в основе клинического мониторинга?", options: ["Принцип целенаправленности", "Принцип умеренности", "Принцип соизмеримой агрессии", "Принцип максимальной инвазивности"], correct: [0, 1, 2] },
@@ -480,8 +533,8 @@ const fullQuizData = [
   { q: "180. В каких случаях BIS-мониторинг особенно полезен?", options: ["При тотальной внутривенной анестезии", "При угрозе сохранения сознания у пациента", "При ингаляционной анестезии с контролем МАК", "При регионарной анестезии без седации"], correct: [0, 1] }
 ];
 
-const TEACHER_EMAIL = "i@ibabkow.ru";
-const TG_GROUP_LINK = "https://t.me/+_vy3U_9RG6E3OGVi";
+const TEACHER_EMAIL = "i@ibabkow.ru";[cite: 5, 6]
+const TG_GROUP_LINK = "https://t.me/+_vy3U_9RG6E3OGVi";[cite: 5]
 
 let currentQuizSet = [];
 let studentName = "";
@@ -507,7 +560,84 @@ function showToast(text) {
   setTimeout(() => { if (toast.parentNode) toast.remove(); }, 2500);
 }
 
-// Перемешивание Фишера — Йетса
+// --- МОДУЛЬ АНТИ-КОПИРОВАНИЯ И АНТИ-СКРИНШОТА ---
+const overlay = document.getElementById('antiCheatOverlay');
+const mainContainer = document.querySelector('main');
+
+// 1. Запрет контекстного меню (правый клик)
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  showToast("Копирование контекстным меню отключено 🔒");
+});
+
+// 2. Блокировка событий буфера обмена и перетаскивания
+['copy', 'cut', 'paste', 'dragstart', 'drop'].forEach((event) => {
+  document.addEventListener(event, (e) => {
+    e.preventDefault();
+    if (e.clipboardData) {
+      e.clipboardData.setData('text/plain', 'Копирование материалов теста запрещено политикой кафедры!');
+    }
+  });
+});
+
+// 3. Блокировка PrintScreen и сочетаний клавиш
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'PrintScreen' || e.code === 'PrintScreen') {
+    e.preventDefault();
+    triggerScreenGuard("Скриншоты экрана заблокированы!");
+    clearClipboard();
+    return false;
+  }
+
+  // Ctrl+C, Ctrl+A, Ctrl+X, Ctrl+U, Ctrl+P, Ctrl+S
+  if (e.ctrlKey && ['c', 'C', 'a', 'A', 'x', 'X', 'u', 'U', 'p', 'P', 's', 'S'].includes(e.key)) {
+    e.preventDefault();
+    showToast("Данное сочетание клавиш заблокировано 🔒");
+    return false;
+  }
+
+  // F12 и инструменты разработчика
+  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key))) {
+    e.preventDefault();
+    return false;
+  }
+});
+
+// 4. Детекция потери фокуса (переключение окон, утилиты захвата экрана)
+window.addEventListener('blur', () => {
+  const quizScreen = document.getElementById('screenQuiz');
+  if (quizScreen && quizScreen.style.display !== 'none') {
+    triggerScreenGuard("Обнаружен уход с экрана теста или захват экрана!");
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    const quizScreen = document.getElementById('screenQuiz');
+    if (quizScreen && quizScreen.style.display !== 'none') {
+      triggerScreenGuard("Смена активной вкладки заблокирована регламентом!");
+    }
+  }
+});
+
+function triggerScreenGuard(reasonText) {
+  if (mainContainer) mainContainer.classList.add('screen-protected');
+  if (overlay) overlay.style.display = 'flex';
+  showToast(reasonText || "Действие ограничено политикой безопасности 🛡️");
+}
+
+function resumeTest() {
+  if (mainContainer) mainContainer.classList.remove('screen-protected');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function clearClipboard() {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText("Копирование защищено регламентом кафедры.");
+  }
+}
+
+// --- ЛОГИКА ТЕСТИРОВАНИЯ ---
 function shuffle(array) {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -550,7 +680,6 @@ function renderQuestion() {
   const pct = (currentIndex / currentQuizSet.length) * 100;
   document.getElementById('progressBar').style.width = `${pct}%`;
 
-  // Отображение подсказки количества верных вариантов
   const badgeEl = document.getElementById('questionModeBadge');
   if (isSingle) {
     badgeEl.className = 'mode-badge badge-single';
@@ -650,7 +779,7 @@ function finishQuiz() {
   generateReview();
 }
 
-// --- ОТРИСОВКА СЕРТИФИКАТА (CANVAS) ---
+// --- ОТРИСОВКА СЕРТИФИКАТА В CANVAS ---
 function drawCertificate(pct) {
   const canvas = document.getElementById('certCanvas');
   const ctx = canvas.getContext('2d');
@@ -694,7 +823,7 @@ function drawCertificate(pct) {
   ctx.fillStyle = '#64748b';
   ctx.fillText('Настоящий документ подтверждает, что студент:', canvas.width / 2, 140);
 
-  ctx.font = '800 26px Inter, sans-serif';
+  ctx.font = '800 24px Inter, sans-serif';
   ctx.fillStyle = '#1e3a8a';
   ctx.fillText(studentName, canvas.width / 2, 180);
 
