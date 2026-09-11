@@ -198,7 +198,6 @@ input[type="text"]:focus {
 }
 .review-item.correct { border-left: 5px solid var(--green); }
 .review-item.incorrect { border-left: 5px solid var(--red); }
-.review-item.unanswered { border-left: 5px solid var(--amber); }
 .review-opt {
   padding: 0.4rem 0.6rem; border-radius: 0.4rem; margin: 0.25rem 0; font-size: 0.9rem;
 }
@@ -261,7 +260,7 @@ footer {
     <div class="eyebrow" style="margin-bottom:.5rem;">КАФЕДРАЛЬНЫЙ БАНК (100 ВОПРОСОВ)</div>
     <h1>Тестирование: Анестезиология и реаниматология</h1>
     <p class="sub" style="margin-top:.6rem;">
-      Для каждого вопроса указано: <b>один</b> или <b>несколько</b> правильных ответов. На экспресс-тест (20 заданий) отводится строго <b>20 минут</b>. При истечении времени тест завершается автоматически с подсчетом уже данных ответов.
+      Для каждого вопроса указано: <b>один</b> или <b>несколько</b> правильных ответов. На экспресс-тест (20 заданий) отводится <b>20 минут</b>. При досрочном завершении отображается разбор только тех вопросов, на которые был дан ответ.
     </p>
 
     <div style="margin-top: 1.8rem;">
@@ -485,6 +484,7 @@ const fullQuizData = [
   { q: "100. Что верно в отношении прекращения реанимационных мероприятий?", options: ["СЛР продолжают так долго, как на ЭКГ/кардиомониторе сохраняется фибрилляция желудочков", "При асистолии или ЭАБП без потенциально обратимой причины СЛР проводят не менее 30 минут, при неэффективности прекращают", "Время прекращения реанимационных мероприятий фиксируется как время смерти пациента", "СЛР при асистолии прекращают через 5 минут"], correct: [0, 1, 2] }
 ];
 
+  
 const TEACHER_EMAIL = "i@ibabkow.ru";
 const TG_GROUP_LINK = "https://t.me/+_vy3U_9RG6E3OGVi";
 
@@ -548,7 +548,7 @@ function showToast(text) {
 window.addEventListener('keyup', (e) => {
   if (e.key === 'PrintScreen') {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText('Скриншот защищен регламентом кафедры.');
+      navigator.clipboard.writeText('Скриншот защищен регламентом безопасности.');
     }
     showToast('Снятие скриншота ограничено регламентом 🔒');
   }
@@ -799,16 +799,15 @@ function finishQuiz() {
   document.getElementById('screenQuiz').style.display = 'none';
   document.getElementById('screenResult').style.display = 'block';
 
-  const total = currentQuizSet.length;
   const answeredCount = userAnswers.length;
-  const pct = Math.round((correctCount / total) * 100);
+  const pct = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
 
   document.getElementById('scorePercent').textContent = `${pct}%`;
-  document.getElementById('scoreDetail').textContent = `Успешно решено: ${correctCount} из ${total} заданий (Отвечено на ${answeredCount} из ${total})`;
+  document.getElementById('scoreDetail').textContent = `Успешно решено: ${correctCount} из ${answeredCount} отвеченных заданий (всего в тесте: ${currentQuizSet.length})`;
 
   // Генерация контрольного хэша
   const salt = "BIL_BSMU_2026";
-  const rawHash = `${studentName}_${pct}%_${correctCount}/${total}_${Date.now()}_${salt}`;
+  const rawHash = `${studentName}_${pct}%_${correctCount}/${answeredCount}_${Date.now()}_${salt}`;
   let hashNum = 0;
   for (let i = 0; i < rawHash.length; i++) {
     hashNum = ((hashNum << 5) - hashNum) + rawHash.charCodeAt(i);
@@ -816,12 +815,12 @@ function finishQuiz() {
   }
   verificationHash = "VRF-" + Math.abs(hashNum).toString(16).toUpperCase() + "-" + Math.floor(1000 + Math.random() * 9000);
 
-  drawCertificate(pct);
+  drawCertificate(pct, answeredCount);
   generateReview();
 }
 
 // Отрисовка сертификата
-function drawCertificate(pct) {
+function drawCertificate(pct, answeredCount) {
   const canvas = document.getElementById('certCanvas');
   const ctx = canvas.getContext('2d');
 
@@ -878,7 +877,7 @@ function drawCertificate(pct) {
 
   ctx.font = '600 14px Inter, sans-serif';
   ctx.fillStyle = '#475569';
-  ctx.fillText(`Верно решено: ${correctCount} из ${currentQuizSet.length} заданий (4 курс)`, canvas.width / 2, 310);
+  ctx.fillText(`Верно решено: ${correctCount} из ${answeredCount} отвеченных заданий (4 курс)`, canvas.width / 2, 310);
 
   ctx.textAlign = 'left';
   ctx.font = '500 11px JetBrains Mono, monospace';
@@ -898,7 +897,7 @@ function drawCertificate(pct) {
 function downloadCertificateImage() {
   const canvas = document.getElementById('certCanvas');
   const link = document.createElement('a');
-  link.download = `Сертификат_${studentName.replace(/\s+/g, '_')}_${correctCount}_из_${currentQuizSet.length}.png`;
+  link.download = `Сертификат_${studentName.replace(/\s+/g, '_')}_${correctCount}_из_${userAnswers.length}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
   showToast("Сертификат успешно сохранен на устройство! 📥");
@@ -908,20 +907,32 @@ function generateReview() {
   const container = document.getElementById('reviewSection');
   container.innerHTML = '';
 
-  currentQuizSet.forEach((q, idx) => {
+  const answeredCount = userAnswers.length;
+
+  if (answeredCount === 0) {
+    container.innerHTML = `
+      <div class="review-item" style="text-align: center; color: var(--text-sub); padding: 1.5rem;">
+        ⚠️ Тестирование было завершено до того, как был дан хотя бы один ответ. Разбор ответов не сформирован.
+      </div>
+    `;
+    return;
+  }
+
+  // Отображаем ТОЛЬКО отвеченные вопросы
+  for (let idx = 0; idx < answeredCount; idx++) {
+    const q = currentQuizSet[idx];
     const userAns = userAnswers[idx];
-    const isAnswered = Array.isArray(userAns);
     const correctAns = q.correct;
-    const isFullCorrect = isAnswered && userAns.length === correctAns.length &&
+    const isFullCorrect = userAns.length === correctAns.length &&
                           userAns.every((val, i) => val === correctAns[i]);
 
     const box = document.createElement('div');
-    box.className = `review-item ${!isAnswered ? 'unanswered' : (isFullCorrect ? 'correct' : 'incorrect')}`;
+    box.className = `review-item ${isFullCorrect ? 'correct' : 'incorrect'}`;
 
     let optsHtml = '';
     q.options.forEach((optText, oIdx) => {
       const isTarget = correctAns.includes(oIdx);
-      const isUser = isAnswered && userAns.includes(oIdx);
+      const isUser = userAns.includes(oIdx);
 
       let cls = '';
       let badge = '';
@@ -937,14 +948,9 @@ function generateReview() {
     });
 
     const isSingle = q.correct.length === 1;
-    let statusTitle = '';
-    if (!isAnswered) {
-      statusTitle = `<div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem; color:var(--amber);">⚠️ Время истекло (Ответ не был дан)</div>`;
-    } else if (isFullCorrect) {
-      statusTitle = `<div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem; color:var(--green);">✅ Полностью верно (+1 балл)</div>`;
-    } else {
-      statusTitle = `<div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem; color:var(--red);">❌ Ошибка в выборе</div>`;
-    }
+    const statusTitle = isFullCorrect 
+      ? `<div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem; color:var(--green);">✅ Полностью верно (+1 балл)</div>`
+      : `<div style="font-size:0.85rem; font-weight:600; margin-bottom:0.5rem; color:var(--red);">❌ Ошибка в выборе</div>`;
 
     box.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
@@ -959,7 +965,7 @@ function generateReview() {
       ${optsHtml}
     `;
     container.appendChild(box);
-  });
+  }
 }
 
 function toggleReview() {
@@ -975,8 +981,8 @@ function toggleReview() {
 }
 
 function sendToEmail() {
-  const total = currentQuizSet.length;
-  const pct = Math.round((correctCount / total) * 100);
+  const totalAnswered = userAnswers.length;
+  const pct = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
   const subject = encodeURIComponent(`Результат теста - ${studentName} - 4 курс`);
   const body = encodeURIComponent(
 `Здравствуйте, Иван Леонидович!
@@ -985,7 +991,7 @@ function sendToEmail() {
 
 • Студент: ${studentName}
 • Курс: 4 курс (ЛД/ПД)
-• Результат: ${correctCount} из ${total} (${pct}%)
+• Результат: ${correctCount} из ${totalAnswered} (${pct}%)
 • Дата: ${new Date().toLocaleDateString('ru-RU')} ${new Date().toLocaleTimeString('ru-RU')}
 • Защитный хэш верификации: ${verificationHash}
 
@@ -997,13 +1003,13 @@ function sendToEmail() {
 }
 
 async function sendToTelegram() {
-  const total = currentQuizSet.length;
-  const pct = Math.round((correctCount / total) * 100);
+  const totalAnswered = userAnswers.length;
+  const pct = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
   const text = 
 `🎓 Результат тестирования:
 Студент: ${studentName}
 Курс: 4 курс (ЛД/ПД)
-Балл: ${pct}% (${correctCount} из ${total})
+Балл: ${pct}% (${correctCount} из ${totalAnswered})
 Контрольный код: ${verificationHash}
 Кафедра АиР БГМУ (Бабков И. Л.)`;
 
